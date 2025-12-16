@@ -3,6 +3,7 @@ import puppeteer from "puppeteer-core";
 import mongoose from "mongoose";
 import Invoice from "../models/Invoice.js";
 import { plans } from "../utils/currentPrices.js";
+import Customer from "../models/Customer.js";
 export async function generarFacturaPDF(id) {
   let browser;
 
@@ -327,7 +328,13 @@ export async function createInvoiceInDB({ dbId, dia_instalacion }) {
     if (!dbId) {
       throw new Error("The id is not incluided");
     }
-    const customerDetails = await getCustomer(dbId);
+
+    const customerDetails = await Customer.findById(dbId);
+
+    if (!customerDetails) {
+      throw new Error(`Customer with id ${id} not found`);
+    }
+
     console.log(customerDetails);
     const { plan, megas, services, _id: customerId } = customerDetails;
 
@@ -394,22 +401,5 @@ export async function getAllInvoices(clientId) {
   } catch (error) {
     console.error("Error en getAllInvoices:", error);
     throw error;
-  }
-}
-
-import Customer from "../models/Customer.js";
-
-async function getCustomer(id) {
-  try {
-    const customerDetails = await Customer.findById(id);
-
-    if (!customerDetails) {
-      throw new Error(`Customer with id ${id} not found`);
-    }
-
-    return customerDetails;
-  } catch (error) {
-    console.error("Error obteniendo customer:", error);
-    return error; // 🔥 NUNCA return error
   }
 }
