@@ -74,7 +74,7 @@ const formatExcelRows = (payload) => {
       .filter(
         (item) =>
           planes[item.plan] !== undefined &&
-          !["Iniciado", "Agendado"].includes(item.status)
+          !["Iniciado", "Agendado", "Inactive"].includes(item.status)
       ),
   ].map(({ status, ...item }) => ({ ...item }));
 };
