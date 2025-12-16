@@ -1,6 +1,5 @@
 import chromium from "@sparticuz/chromium";
 import puppeteer from "puppeteer-core";
-import { getCustomer } from "./customers.js";
 import mongoose from "mongoose";
 import Invoice from "../models/Invoice.js";
 import { plans } from "../utils/currentPrices.js";
@@ -395,5 +394,22 @@ export async function getAllInvoices(clientId) {
   } catch (error) {
     console.error("Error en getAllInvoices:", error);
     throw error;
+  }
+}
+
+import Customer from "../models/Customer.js";
+
+async function getCustomer(id) {
+  try {
+    const customerDetails = await Customer.findById(id);
+
+    if (!customerDetails) {
+      throw new Error(`Customer with id ${id} not found`);
+    }
+
+    return customerDetails;
+  } catch (error) {
+    console.error("Error obteniendo customer:", error);
+    return error; // 🔥 NUNCA return error
   }
 }
