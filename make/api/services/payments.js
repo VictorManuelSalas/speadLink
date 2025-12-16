@@ -1,9 +1,9 @@
 import chromium from "@sparticuz/chromium";
 import puppeteer from "puppeteer-core";
-import { formatDate } from "../utils/formatJson.js";
+import { getCustomer } from "./customers.js";
 import mongoose from "mongoose";
 import Invoice from "../models/Invoice.js";
-
+import { plans } from "../utils/currentPrices.js";
 export async function generarFacturaPDF(id) {
   let browser;
 
@@ -322,19 +322,22 @@ const recreateHTML = (data) => {
   }
 };
 
-export async function createInvoiceInDB(invoiceData) {
+export async function createInvoiceInDB({ dbId, dia_instalacion }) {
   try {
-    if (!invoiceData.dbId) {
+    console.log("Iniciando Creacion");
+    if (!dbId) {
       throw new Error("The id is not incluided");
     }
+    const customerDetails = await getCustomer(dbId);
+    console.log(customerDetails);
+    const { plan, megas, services, _id: customerId } = customerDetails;
 
-    const {
-      dia_instalacion,
-      plan,
-      megas,
-      precio,
-      dbId: customerId,
-    } = invoiceData;
+    const itemsServcies = services.map(({ name, price }) => ({
+      description: `${name}`,
+      quantity: 1,
+      unitPrice: price,
+      total: price * 1,
+    }));
 
     const newInvoice = new Invoice({
       customerId,
@@ -344,16 +347,18 @@ export async function createInvoiceInDB(invoiceData) {
         {
           description: `Servicio de Internet - Plan: ${plan}, Megas: ${megas}`,
           quantity: 1,
-          unitPrice: precio,
-          total: precio * 1,
+          unitPrice: plans[plan],
+          total: plans[plan] * 1,
         },
+        ...itemsServcies,
       ],
       installationDate: dia_instalacion,
     });
     const savedInvoice = await newInvoice.save();
+    console.log(savedInvoice);
     return savedInvoice;
   } catch (error) {
-    return error;
+    throw error;
   }
 }
 export async function updateInvoiceInDB(id, payload) {

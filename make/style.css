@@ -173,9 +173,12 @@ li {
 .modal h3 {
   margin-top: 0;
 }
-.checkbox{
-  display: flex;justify-content: flex-start;
+
+.checkbox {
+  display: flex;
+  justify-content: flex-start;
 }
+
 .options {
   width: 100%;
   padding: 10px;
@@ -204,4 +207,28 @@ li {
 
 .hidden {
   display: none;
+}
+
+.status {
+  padding: 10px 15px;
+  font-size: 15px;
+  border-radius: 1em;
+  cursor: none; color: #ffff;
+  transition: all 0.3s;
+}
+
+.status-green {
+  color: green;
+}
+
+.status-yellow {
+ 
+
+  background: orange;
+
+}
+
+
+.status-gray {
+  color: red;
 }
