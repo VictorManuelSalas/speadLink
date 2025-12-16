@@ -1,14 +1,16 @@
 import express from "express";
 import cors from "cors";
 // import serverless from "serverless-http";
-app.use(cors());
+
 const app = express();
 
 app.use(express.json({ limit: "50mb" }));
 
 // 🔌 Conectar DB
 import connectDB from "./config/db.js";
-connectDB();
+connectDB(); 
+
+app.use(cors());
 
 
 // Rutas
