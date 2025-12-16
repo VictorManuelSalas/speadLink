@@ -2,8 +2,13 @@ import chromium from "@sparticuz/chromium";
 import puppeteer from "puppeteer-core";
 import mongoose from "mongoose";
 import Invoice from "../models/Invoice.js";
-import { plans } from "../utils/currentPrices.js";
 import Customer from "../models/Customer.js";
+const plans = {
+  Basico: 300,
+  Custom: 400,
+  Intermedio: 350,
+};
+
 export async function generarFacturaPDF(id) {
   let browser;
 
