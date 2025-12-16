@@ -1,6 +1,7 @@
 // const API_URL = "http://localhost:3000/api/v1";
 const API_URL = "https://make-gold.vercel.app/api/v1";
 
+// 
 
 // ---------- CLIENTES ----------
 const currentCustomers = [];
@@ -254,8 +255,8 @@ function setCustomersPickList() {
   <label for="i_cliente">Cliente</label>
     <select class="options customer" id="i_cliente"> 
       ${currentCustomers.map((customer) => {
-        return `<option value="${customer._id}">${customer.name}</option>`;
-      })}
+    return `<option value="${customer._id}">${customer.name}</option>`;
+  })}
     </select> 
   `;
 

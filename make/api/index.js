@@ -1,6 +1,7 @@
-import express from "express"; 
+import express from "express";
+import cors from "cors";
 // import serverless from "serverless-http";
- 
+app.use(cors());
 const app = express();
 
 app.use(express.json({ limit: "50mb" }));
@@ -8,7 +9,7 @@ app.use(express.json({ limit: "50mb" }));
 // 🔌 Conectar DB
 import connectDB from "./config/db.js";
 connectDB();
- 
+
 
 // Rutas
 import routerApi from "./router/index.js";

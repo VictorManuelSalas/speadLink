@@ -1,21 +1,123 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <title>Recibos de Pago</title>
-  <link rel="stylesheet" href="./style.css" />
-</head>
-<body>
-  <div class="container">
-    <h1>📄 Recibos de Pago</h1>
-    <a href="./admin/index.html">Admin Panel</a>
-    <p id="client-info"></p>
+  <head>
+    <meta charset="UTF-8" />
+    <title>SpeadLink | Dashboard</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <header>
+      <h1>📊 Bienvenido a SpeadLink🚀</h1>
+      <button onclick="goToSecurePage()">🔐 Página segura</button>
+    </header>
+ 
+    <main>
+      <!-- CLIENTES -->
+      <section id="client-info">
+        <p id="error"></p>
+      </section>
 
-    <div id="receipts" class="receipts"></div>
+      <!-- FACTURAS -->
+      <section>
+        <div
+          style="margin: 10px 0px; display: flex; justify-content: space-between;">
+          <h2>🧾 Facturas</h2>
+          <button style="height: fit-content;"
+            onclick="getInvoices()">Recargar</button>
+        </div>
 
-    <p id="error" class="error"></p>
-  </div>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Cliente</th>
+              <th>Status</th>
+              <th>Fecha Limite</th>
+              <th>Total</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="invoicesTable"></tbody>
+        </table>
+      </section>
+    </main>
+    <!-- MODAL BACKDROP -->
+    <div id="modalBackdrop" class="modal-backdrop hidden"></div>
 
-  <script src="./script.js"></script>
-</body>
+    <!-- MODAL CLIENTE -->
+    <div id="modalCustomer" class="modal hidden">
+      <h3>➕ Crear Cliente</h3>
+      <div>
+        <select class="options" id="c_status">
+          <option value="Processed">Processed</option>
+          <option value="Agendado">Agendado</option>
+          <option value="Inactive">Inactive</option>
+        </select>
+
+        <input id="c_name" placeholder="Nombre" />
+        <input id="c_email" placeholder="Correo" />
+        <input id="c_phone" placeholder="Teléfono" />
+        <select class="options" id="c_plan">
+          <option value="Basico">Basico</option>
+          <option value="Intermedio">Intermedio</option>
+          <option value="Custom">Custom</option>
+        </select>
+
+        <input id="c_megas" type="number" placeholder="Megas" />
+        <input id="c_date" type="date" />
+
+        <span
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          ">
+          <h4>🧩 Servicios</h4>
+          <button
+            onclick="addNewService()"
+            style="height: fit-content; padding: 10px 20px">
+            +
+          </button>
+        </span>
+
+        <div id="servicesContainer"></div>
+      </div>
+
+      <div class="modal-actions">
+        <button onclick="closeModal()">Cancelar</button>
+        <button class="primary" onclick="submitCustomer()">Guardar</button>
+      </div>
+    </div>
+
+    <!-- MODAL FACTURA -->
+    <div id="modalInvoice" class="modal hidden">
+      <h3>🧾 Crear Factura</h3>
+
+      <div>
+        <div id="invoiceForm"></div>
+        <input id="i_dia_instalacion" type="date" />
+
+        <select class="options" id="i_plan">
+          <option value="Basico">Basico</option>
+          <option value="Intermedio">Intermedio</option>
+          <option value="Custom">Custom</option>
+        </select>
+        <input id="i_megas" placeholder="Megas (ej: 10mbts)" />
+        <input id="i_precio" type="number" placeholder="Precio" />
+
+        <label class="checkbox">
+          <label for="i_pagado">Pagado</label>
+          <input style="width: fit-content;" id="i_pagado" type="checkbox"
+            placeholder="Pagado" />
+        </label>
+      </div>
+
+      <div class="modal-actions">
+        <button onclick="closeModal()">Cancelar</button>
+        <button class="primary" onclick="submitInvoice()">Crear</button>
+      </div>
+    </div>
+
+    <script src="./script.js"></script>
+  </body>
 </html>
