@@ -1,4 +1,6 @@
-const API_URL = "http://localhost:3000/api/v1";
+// const API_URL = "http://localhost:3000/api/v1";
+const API_URL = "https://make-9odakbh69-victor-manuel-nunez-salas-projects.vercel.app/api/v1";
+
 
 // ---------- CLIENTES ----------
 const currentCustomers = [];
