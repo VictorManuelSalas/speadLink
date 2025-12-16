@@ -2,6 +2,24 @@
 const API_URL = "https://make-gold.vercel.app/api/v1";
 
 //
+const months = [
+  "Enero",
+  "Febrero",
+  "Marzo",
+  "Abril",
+  "Mayo",
+  "Junio",
+  "Julio",
+  "Agosto",
+  "Septiembre",
+  "Octubre",
+  "Noviembre",
+  "Diciembre",
+];
+const getMonth = (number) => {
+  const currentDate = new Date(`${number.split("-")[1]}-01-2026`);
+  return months[currentDate.getMonth()];
+};
 
 // ---------- CLIENTES ----------
 const currentCustomers = [];
@@ -51,6 +69,7 @@ async function getCustomers() {
 // ---------- FACTURAS ----------
 async function getInvoices() {
   const table = document.getElementById("invoicesTable");
+  const tableFoot = document.getElementById("invoiceCount");
   const clientId = document.getElementById("clientIdInput").value;
 
   table.innerHTML = `<tr><td colspan="5">Cargando...</td></tr>`;
@@ -63,20 +82,30 @@ async function getInvoices() {
     const invoices = await res.json();
 
     table.innerHTML = "";
+    tableFoot.innerHTML = "";
 
     if (invoices.data.length === 0) {
       table.innerHTML = `<tr><td colspan="5">No hay facturas</td></tr>`;
+      tableFoot.innerHTML = ` <tr>
+              <th scope="row" colspan="7">Count: 0</th>
+            </tr>`;
       return;
     }
 
     invoices.data.forEach((inv) => {
-      console.log(inv);
+      let statusClass = "";
+
+      if (inv.status === "Pagado") statusClass = "status-green";
+      else if (inv.status === "Processed") statusClass = "status-yellow";
+      else if (inv.status === "Canceled") statusClass = "status-gray";
+
       const limitDate = inv.dueDate.split("T")[0];
       table.innerHTML += `
         <tr>
           <td>${inv.invoiceNumber}</td>
           <td>${inv.customerId?.name || "—"}</td>
-          <td>${inv.status}</td>
+          <td><b class="${statusClass} status">${inv.status}</b></td>
+          <td>${getMonth(inv.issueDate)}</td>
           <td>${limitDate}</td>
           <td>$${inv.total} ${inv.currency}</td>
           <td>
@@ -85,6 +114,14 @@ async function getInvoices() {
         </tr>
       `;
     });
+    tableFoot.innerHTML = ` <tr>
+              <th scope="row" colspan="7">
+              Count: ${invoices.data.length}  -  Total: $${invoices.data.reduce(
+      (acc, obj) => acc + obj.total,
+      0
+    )} MXN
+              </th>
+            </tr>`;
   } catch (err) {
     console.error(err);
     table.innerHTML = `<tr><td colspan="5">Error cargando facturas</td></tr>`;

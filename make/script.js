@@ -5,7 +5,6 @@ const API_URL = "https://make-gold.vercel.app/api/v1";
 const params = new URLSearchParams(window.location.search);
 const clientId = params.get("clientId");
 async function getCustomerData() {
-
   const clientInfo = document.getElementById("client-info");
   const error = document.getElementById("error");
 
@@ -18,26 +17,44 @@ async function getCustomerData() {
     const res = await fetch(`${API_URL}/customers/db`);
     const customers = await res.json();
 
-    const [customerDetails] = customers.data.filter((customer) => customer._id == clientId)
-    console.log('customer', customerDetails);
+    const [customerDetails] = customers.data.filter(
+      (customer) => customer._id == clientId
+    );
+    console.log("customer", customerDetails);
     clientInfo.innerHTML = `
      <h3>👤 ${customerDetails.name}</h3>
-    <div class="plan">📦 Plan: <strong>${customerDetails.plan}</strong> · ${customerDetails.megas}mbts</div>
+    <div class="plan">📦 Plan: <strong>${customerDetails.plan}</strong> · ${
+      customerDetails.megas
+    }mbts</div>
 
     <div class="info">
       <span>📧 ${customerDetails.email || "Sin correo"}</span>
       <span>📞 ${customerDetails.phone || "—"}</span>
     </div> 
     `;
-
-
   } catch (err) {
     list.innerHTML = "Error cargando clientes";
   }
-
 }
 
-
+const months = [
+  "Enero",
+  "Febrero",
+  "Marzo",
+  "Abril",
+  "Mayo",
+  "Junio",
+  "Julio",
+  "Agosto",
+  "Septiembre",
+  "Octubre",
+  "Noviembre",
+  "Diciembre",
+];
+const getMonth = (number) => {
+  const currentDate = new Date(`${number.split("-")[1]}-01-2026`);
+  return months[currentDate.getMonth()];
+};
 async function getInvoices() {
   const table = document.getElementById("invoicesTable");
 
@@ -58,13 +75,20 @@ async function getInvoices() {
     }
 
     invoices.data.forEach((inv) => {
-      console.log(inv);
+      let statusClass = "";
+
+      if (inv.status === "Pagado") statusClass = "status-green";
+      else if (inv.status === "Processed") statusClass = "status-yellow";
+      else if (inv.status === "Canceled") statusClass = "status-gray";
       const limitDate = inv.dueDate.split("T")[0];
       table.innerHTML += `
         <tr>
           <td>${inv.invoiceNumber}</td>
           <td>${inv.customerId?.name || "—"}</td>
-          <td>${inv.status}</td>
+         <td><b class="${statusClass} status">${
+        inv.status == "Processed" ? "Pendiente" : inv.status
+      }</b></td>
+          <td>${getMonth(inv.issueDate)}</td>
           <td>${limitDate}</td>
           <td>$${inv.total} ${inv.currency}</td>
           <td>
@@ -84,7 +108,6 @@ function downloadPDF(invoiceId) {
   window.open(`${API_URL}/payments/pdf?invoice_id=${invoiceId}`, "_blank");
 }
 
-
 function goToSecurePage() {
   const codigoCorrecto = "19080545vmnS."; // ← CAMBIA ESTE CÓDIGO
 
@@ -99,5 +122,5 @@ function goToSecurePage() {
   }
 }
 
-getCustomerData()
-getInvoices()
+getCustomerData();
+getInvoices();

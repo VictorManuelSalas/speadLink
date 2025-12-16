@@ -40,12 +40,16 @@
               <th>#</th>
               <th>Cliente</th>
               <th>Status</th>
+              <th>Mes</th>
               <th>Fecha Limite</th>
               <th>Total</th>
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody id="invoicesTable"></tbody>
+          <tfoot id="invoiceCount">
+            
+          </tfoot>
         </table>
       </section>
     </main>
@@ -103,7 +107,7 @@
     <div id="modalInvoice" class="modal hidden">
       <h3>🧾 Crear Factura</h3>
 
-      <div >
+      <div>
         <div id="invoiceForm"></div>
         <input id="i_dia_instalacion" type="date" />
 
@@ -117,7 +121,12 @@
 
         <label class="checkbox">
           <label for="i_pagado">Pagado</label>
-          <input style="width: fit-content;" id="i_pagado" type="checkbox" placeholder="Pagado" />
+          <input
+            style="width: fit-content"
+            id="i_pagado"
+            type="checkbox"
+            placeholder="Pagado"
+          />
         </label>
       </div>
 
