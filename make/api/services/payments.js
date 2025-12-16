@@ -1,9 +1,14 @@
 import chromium from "@sparticuz/chromium";
 import puppeteer from "puppeteer-core";
-import { getCustomer } from "./customers.js";
 import mongoose from "mongoose";
 import Invoice from "../models/Invoice.js";
-import { plans } from "../utils/currentPrices.js";
+import Customer from "../models/Customer.js";
+const plans = {
+  Basico: 300,
+  Custom: 400,
+  Intermedio: 350,
+};
+
 export async function generarFacturaPDF(id) {
   let browser;
 
@@ -328,7 +333,13 @@ export async function createInvoiceInDB({ dbId, dia_instalacion }) {
     if (!dbId) {
       throw new Error("The id is not incluided");
     }
-    const customerDetails = await getCustomer(dbId);
+
+    const customerDetails = await Customer.findById(dbId);
+
+    if (!customerDetails) {
+      throw new Error(`Customer with id ${id} not found`);
+    }
+
     console.log(customerDetails);
     const { plan, megas, services, _id: customerId } = customerDetails;
 
