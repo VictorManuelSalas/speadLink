@@ -121,7 +121,7 @@ function closeModal() {
 function resetServices() {
   const container = document.getElementById("servicesContainer");
 
-  container.innerHTML = ` `;
+  container.innerHTML = ``;
 }
 
 function resetModalFields(modalId) {
