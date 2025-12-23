@@ -133,7 +133,7 @@ li {
   color: #999;
 }
 
-.copy-btn {
+.btn {
   background: #1c3879;
   color: white;
   border: none;
@@ -143,7 +143,7 @@ li {
   cursor: pointer;
 }
 
-.copy-btn:hover {
+.btn:hover {
   opacity: 0.9;
 }
 
@@ -213,22 +213,76 @@ li {
   padding: 10px 15px;
   font-size: 15px;
   border-radius: 1em;
-  cursor: none; color: #ffff;
+  cursor: none;
   transition: all 0.3s;
 }
 
 .status-green {
-  color: green;
+  background: green;
+  color: #ffff;
 }
 
 .status-yellow {
- 
-
+  color: #ffff;
   background: orange;
-
 }
 
-
 .status-gray {
-  color: red;
+  color: #ffff;
+  background: red;
+}
+
+.customer-detail {
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 420px;
+  font-family: system-ui, sans-serif;
+}
+
+.customer-detail h2 {
+  margin-bottom: 16px;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.label {
+  font-weight: 600;
+  color: #555;
+}
+
+.value {
+  color: #222;
+}
+
+.status.processed {
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+.actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+}
+
+.btn {
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.btn.edit {
+  background: #1976d2;
+  color: white;
+}
+
+.btn.delete {
+  background: #d32f2f;
+  color: white;
 }

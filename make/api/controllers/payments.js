@@ -5,6 +5,8 @@ import {
   createInvoiceInDB,
   updateInvoiceInDB,
   getAllInvoices,
+   
+  deleteInvoice
 } from "../services/payments.js";
 
 const createMonthPayment = async (req, res) => {
@@ -22,7 +24,7 @@ const createMonthPayment = async (req, res) => {
     const formattedData = formatExcelRows(details);
 
     //Introduce the new invoices into the database
-     for (const invoice of formattedData) {
+    for (const invoice of formattedData) {
       if (invoice.dbId) {
         const { _id = null } = await createInvoiceInDB(invoice);
         console.log("Invoice created:", _id);
@@ -31,7 +33,7 @@ const createMonthPayment = async (req, res) => {
         invoice["invoiceId"] = "";
         console.log("No dbId provided, skipping invoice creation.");
       }
-    } 
+    }
 
     return response(res, 200, formattedData, "success");
   } catch (error) {
@@ -95,6 +97,19 @@ const updatePaymentStatus = async (req, res) => {
   }
 };
 
+const deletePayment = async (req, res) => {
+ try {
+     const invoice = await deleteInvoice(req.params.id);
+
+     if (!invoice) {
+       return response(res, 404, "Factura no encontrada", "error");
+     }
+
+     return response(res, 200, { deleted: invoice && true }, "success");
+   } catch (error) {
+     res.status(400).json({ error: err.message });
+   }
+};
 const getAllInvoice = async (req, res) => {
   try {
     const { clientId } = req.params;
@@ -114,4 +129,5 @@ export {
   updatePaymentStatus,
   createInvoice,
   getAllInvoice,
+  deletePayment,
 };

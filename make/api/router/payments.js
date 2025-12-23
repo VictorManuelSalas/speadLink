@@ -2,7 +2,7 @@ import { Router } from "express";
 import {
   createMonthPayment,
   createPaymentPDF,
-  updatePaymentStatus,getAllInvoice,createInvoice
+  updatePaymentStatus,getAllInvoice,createInvoice,deletePayment
 } from "../controllers/payments.js";
 
 const router = Router();
@@ -15,5 +15,5 @@ router.post("/pdf", createPaymentPDF);
 router.get("/pdf", createPaymentPDF);
 router.get("/:clientId", getAllInvoice);
 router.get("/", getAllInvoice);
-
+router.delete("/:id", deletePayment);
 export default router;
