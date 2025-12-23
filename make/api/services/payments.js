@@ -408,3 +408,14 @@ export async function getAllInvoices(clientId) {
     throw error;
   }
 }
+
+export async function deleteInvoice(invoiceId) {
+  try {
+    const invoice = await Invoice.findByIdAndDelete(invoiceId);
+
+    return invoice;
+  } catch (error) {
+    console.error("Error en getAllInvoices:", error);
+    throw error;
+  }
+}

@@ -22,8 +22,11 @@ const getMonth = (number) => {
 };
 
 // ---------- CLIENTES ----------
-const currentCustomers = [];
+let currentCustomers = [];
+
 async function getCustomers() {
+  console.log("Fetching customers...");
+  currentCustomers = [];
   const list = document.getElementById("customersList");
   list.innerHTML = "Cargando...";
 
@@ -48,8 +51,11 @@ async function getCustomers() {
       <span>📞 ${c.phone || "—"}</span>
     </div>
 
-    <div class="copy-id"> 
-      <button class="copy-btn" data-id="${c._id}">Copiar ID</button>
+    <div class="actions-customer"> 
+      <button class="copy-btn btn" data-id="${c._id}">Copiar ID</button>
+      <button class="show-btn btn" data-id="${c._id}">Ver</button>
+      <button class="edit-btn btn" data-id="${c._id}">Editar</button>
+      <button class="delete-btn btn" data-id="${c._id}">Eliminar</button>
     </div>
   `;
 
@@ -59,12 +65,169 @@ async function getCustomers() {
         setTimeout(() => (e.target.innerText = "Copiar"), 1500);
       });
 
+      card.querySelector(".delete-btn").addEventListener("click", (e) => {
+        const id = e.target.dataset.id;
+        showAlert(
+          "¿Eliminar cliente?",
+          "Esta acción no se puede deshacer",
+          "warning",
+          true,
+          deleteCustomer,
+          "customer",
+          id,
+          "eliminado"
+        );
+      });
+
+      card.querySelector(".show-btn").addEventListener("click", (e) => {
+        const customer2View = currentCustomers.find(
+          (cust) => cust._id === e.target.dataset.id
+        );
+        document.getElementById("client_view_name").innerText =
+          customer2View.name;
+        document.getElementById("client_view_stage").innerText =
+          customer2View.status;
+        document.getElementById("client_view_phone").innerText =
+          (customer2View.phone && `📞 ${customer2View.phone}`) || "—";
+        document.getElementById("client_view_email").innerText =
+          (customer2View.email && `📧 ${customer2View.email}`) || "—";
+        document.getElementById(
+          "client_view_plan"
+        ).innerText = `📦 ${customer2View.plan} · ${customer2View.megas} Mbps`;
+        document.getElementById("client_view_date").innerText = new Date(
+          customer2View.date_to_Pay
+        ).toLocaleDateString();
+        document.getElementById("client_view_registred_date").innerText =
+          new Date(customer2View.createdAt).toLocaleDateString();
+
+        const tableBody = document.getElementById("client_view_services");
+        tableBody.innerHTML = "";
+        customer2View.services.forEach((service) => {
+          tableBody.innerHTML += `
+        <tr>
+          <td style="text-align: center;">${service.name}</td>
+          <td style="text-align: center;">$${service.price}</td>
+          
+        </tr>
+      `;
+        });
+
+        openModal("viewCustomer");
+      });
+
+      card.querySelector(".edit-btn").addEventListener("click", (e) => {
+        const customer2View = currentCustomers.find(
+          (cust) => cust._id === e.target.dataset.id
+        );
+
+        console.log("Editing customer:", customer2View);
+        document.getElementById("c_e_name").value = customer2View.name;
+        document.getElementById("c_e_id").value = customer2View._id;
+        document.getElementById("c_e_email").value = customer2View.email;
+        document.getElementById("c_e_phone").value = customer2View.phone;
+        document.getElementById("c_e_plan").value = customer2View.plan;
+        document.getElementById("c_e_megas").value = customer2View.megas;
+        document.getElementById("c_e_date").value = new Date(
+          customer2View.date_to_Pay
+        )
+          .toISOString()
+          .substring(0, 10);
+        document.getElementById("c_e_status").value = customer2View.status;
+
+        const container = document.getElementById("servicesContainerEdit");
+        container.innerHTML = "";
+        customer2View.services.forEach((service) => {
+          console.log("Adding service to edit modal:", service);
+
+          const div = document.createElement("div");
+          div.className = "service-row";
+
+          div.innerHTML = `
+            <select class="options service-name" value="${service.name}"> 
+              <option value="Netflix">Netflix</option>
+            </select>
+
+            <input
+              type="number"
+              class="service-price"
+              placeholder="Precio" value="${service.price}"
+            />
+
+            <button onclick="this.parentElement.remove()" title="Eliminar">
+              ❌
+            </button>
+          `;
+
+          container.appendChild(div);
+        });
+        openModal("modalCustomerEdit");
+      });
+
       customersList.appendChild(card);
     });
   } catch (err) {
     list.innerHTML = "Error cargando clientes";
   }
 }
+//Show Alert
+function showAlert(
+  title,
+  text,
+  icon,
+  showCancelButton,
+  customFunction,
+  type,
+  id,
+  method
+) {
+  Swal.fire({
+    title,
+    text,
+    icon,
+    showCancelButton,
+    confirmButtonText: "Sí",
+    cancelButtonText: "Cancelar",
+  })
+    .then((result) => {
+      if (result.isConfirmed) {
+        const data = customFunction(id);
+
+        let typeText = type === "customer" ? "Cliente" : "Factura";
+        Swal.fire(
+          data ? `Success` : "Error",
+          data
+            ? `${typeText} ${method} correctamente`
+            : `${typeText} no  ${method}`,
+          data ? "success" : "error"
+        );
+
+        setTimeout(() => {
+          closeModal();
+          getCustomers();
+          getInvoices();
+        }, 2000);
+      }
+    })
+    .finally(() => {});
+
+  return true;
+}
+//--------- CRUD Custmers-----------------
+async function deleteCustomer(customerId) {
+  try {
+    console.log("Deleting customer:", customerId);
+    await fetch(`${API_URL}/customers/${customerId}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    return true;
+  } catch (error) {
+    console.error("Error deleting customer:", error);
+    return false;
+  }
+}
+//-----------------
 
 // ---------- FACTURAS ----------
 async function getInvoices() {
@@ -104,12 +267,17 @@ async function getInvoices() {
         <tr>
           <td>${inv.invoiceNumber}</td>
           <td>${inv.customerId?.name || "—"}</td>
-          <td><b class="${statusClass} status">${inv.status}</b></td>
+          <td><b class="${statusClass} status">${
+        inv.status == "Processed" ? "Pendiente" : inv.status
+      }</b></td>
           <td>${getMonth(inv.issueDate)}</td>
           <td>${limitDate}</td>
           <td>$${inv.total} ${inv.currency}</td>
           <td>
             <button onclick="downloadPDF('${inv._id}')">PDF</button>
+            <button style="background-color: red;" onclick="deleteInvoice('${
+              inv._id
+            }', '${inv.invoiceNumber}')">Delete</button>
           </td>
         </tr>
       `;
@@ -132,6 +300,28 @@ async function getInvoices() {
 function downloadPDF(invoiceId) {
   window.open(`${API_URL}/payments/pdf?invoice_id=${invoiceId}`, "_blank");
 }
+function deleteInvoice(invoiceId, invoiceNumber) {
+  try {
+    console.log("Deleting invoice:", { invoiceId, invoiceNumber });
+    showAlert(
+      `Estas seguro de eliminar la factura ${invoiceNumber}?`,
+      `Esta acción no se puede deshacer`,
+      "warning",
+      true,
+      async (id) => {
+        await fetch(`${API_URL}/payments/${id}`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+        });
+      },
+      "invoice",
+      invoiceId,
+      "eliminada"
+    );
+  } catch (error) {
+    console.error("Error deleting invoice:", error);
+  }
+}
 
 function openModal(type) {
   document.getElementById("modalBackdrop").classList.remove("hidden");
@@ -139,7 +329,12 @@ function openModal(type) {
   if (type === "customer") {
     document.getElementById("modalCustomer").classList.remove("hidden");
   }
-
+  if (type === "viewCustomer") {
+    document.getElementById("modalCustomerView").classList.remove("hidden");
+  }
+  if (type === "modalCustomerEdit") {
+    document.getElementById("modalCustomerEdit").classList.remove("hidden");
+  }
   if (type === "invoice") {
     setCustomersPickList();
     document.getElementById("modalInvoice").classList.remove("hidden");
@@ -153,6 +348,8 @@ function closeModal() {
   document.getElementById("modalBackdrop").classList.add("hidden");
   document.getElementById("modalCustomer").classList.add("hidden");
   document.getElementById("modalInvoice").classList.add("hidden");
+  document.getElementById("modalCustomerView").classList.add("hidden");
+  document.getElementById("modalCustomerEdit").classList.add("hidden");
 }
 
 function resetServices() {
@@ -207,6 +404,42 @@ async function submitCustomer() {
   getCustomers();
 }
 
+async function saveCustomer() {
+  try {
+    const payload = {
+      status: c_e_status.value,
+      name: c_e_name.value,
+      email: c_e_email.value,
+      phone: c_e_phone.value,
+      plan: c_e_plan.value,
+      megas: Number(c_e_megas.value),
+      date_to_Pay: new Date(c_e_date.value).toISOString(),
+      services: getServicesPayload(),
+    };
+
+    console.log("Updating customer:", payload);
+
+    showAlert(
+      "Actualizar cliente?",
+      null,
+      "info",
+      true,
+      async () => {
+        await fetch(`${API_URL}/customers/${c_e_id.value}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      },
+      "customer",
+      c_e_id.value,
+      "actualizado"
+    );
+  } catch (error) {
+    console.error("Error updating customer:", error);
+  }
+}
+
 function getServicesPayload() {
   const services = [];
   console.log(document.querySelectorAll(".service-row"));
@@ -248,8 +481,8 @@ async function submitInvoice() {
   getInvoices();
 }
 
-function addNewService() {
-  const container = document.getElementById("servicesContainer");
+function addNewService(modal) {
+  const container = document.getElementById(modal);
 
   const div = document.createElement("div");
   div.className = "service-row";
@@ -274,10 +507,11 @@ function addNewService() {
 }
 
 function setCustomersPickList() {
+  console.log("Setting customers pick list...", currentCustomers);
   const container = document.getElementById("invoiceForm");
-  if (document.getElementById("i_cliente")) {
-    return;
-  }
+
+  container.querySelectorAll(".customers_list").forEach((el) => el.remove());
+
   const div = document.createElement("div");
   div.className = "customers_list";
 

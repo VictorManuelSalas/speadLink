@@ -33,6 +33,28 @@ const createDBCustomers = async (req, res) => {
   }
 };
 
+const updateDBCustomers = async (req, res) => {
+  try {
+    const updateData = req.body;
+    const { id } = req.params;
+
+    console.log("Updating customer with ID:", id);
+    console.log("Update data:", updateData);
+    const customer = await Customer.findByIdAndUpdate(id, updateData, {
+      new: true,
+    });
+
+    console.log("Updated customer:", customer);
+    if (!customer) {
+      return response(res, 404, "Cliente no encontrado", "error");
+    }
+
+    return response(res, 200, customer, "success");
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+
 const getDBCustomers = async (req, res) => {
   try {
     const customers = await Customer.find();
@@ -43,4 +65,24 @@ const getDBCustomers = async (req, res) => {
   }
 };
 
-export { getAllCustomers, getDBCustomers, createDBCustomers };
+const deleteCustomer = async (req, res) => {
+  try {
+    const customer = await Customer.findByIdAndDelete(req.params.id);
+
+    if (!customer) {
+      return response(res, 404, "Cliente no encontrado", "error");
+    }
+
+    return response(res, 200, { deleted: customer && true }, "success");
+  } catch (error) {
+    res.status(400).json({ error: err.message });
+  }
+};
+
+export {
+  getAllCustomers,
+  updateDBCustomers,
+  getDBCustomers,
+  createDBCustomers,
+  deleteCustomer,
+};
