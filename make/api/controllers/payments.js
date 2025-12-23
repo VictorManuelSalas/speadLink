@@ -68,10 +68,10 @@ const createPaymentPDF = async (req, res) => {
       return res.status(400).send("Invoice ID is required");
     }
 
-    const { pdf } = await generarFacturaPDF(invoice_id);
+    const { pdf, invoiceNumber } = await generarFacturaPDF(invoice_id);
 
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", "inline; filename=factura.pdf");
+    res.setHeader("Content-Disposition",  `attachment; filename=factura_${invoiceNumber}.pdf`);
     res.send(pdf);
   } catch (error) {
     console.error("Error generando PDF:", error);
