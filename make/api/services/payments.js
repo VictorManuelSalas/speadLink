@@ -45,6 +45,7 @@ export async function generarFacturaPDF(id) {
       pdf: pdfBuffer,
       client: invoiceDetails.customerId?.name || "Cliente",
       paymentDate: invoiceDetails.paidDate,
+      invoiceNumber: invoiceDetails.invoiceNumber,
     };
   } catch (error) {
     console.error("Error generando PDF:", error);
