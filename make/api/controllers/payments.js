@@ -5,7 +5,7 @@ import {
   createInvoiceInDB,
   updateInvoiceInDB,
   getAllInvoices,
-   
+
   deleteInvoice
 } from "../services/payments.js";
 
@@ -23,15 +23,21 @@ const createMonthPayment = async (req, res) => {
     }
     const formattedData = formatExcelRows(details);
 
+    console.log("---------------Formateo---------------")
+    console.log(formattedData)
+    console.log("--------------------------------------");
+    
     //Introduce the new invoices into the database
     for (const invoice of formattedData) {
-      if (invoice.dbId) {
+      const { dbId = null } = invoice
+      if (dbId) {
         const { _id = null } = await createInvoiceInDB(invoice);
         console.log("Invoice created:", _id);
         invoice["invoiceId"] = _id;
       } else {
         invoice["invoiceId"] = "";
         console.log("No dbId provided, skipping invoice creation.");
+        continue;
       }
     }
 
@@ -71,7 +77,7 @@ const createPaymentPDF = async (req, res) => {
     const { pdf, invoiceNumber } = await generarFacturaPDF(invoice_id);
 
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition",  `attachment; filename=${invoiceNumber}.pdf`);
+    res.setHeader("Content-Disposition", `attachment; filename=${invoiceNumber}.pdf`);
     res.send(pdf);
   } catch (error) {
     console.error("Error generando PDF:", error);
@@ -98,17 +104,17 @@ const updatePaymentStatus = async (req, res) => {
 };
 
 const deletePayment = async (req, res) => {
- try {
-     const invoice = await deleteInvoice(req.params.id);
+  try {
+    const invoice = await deleteInvoice(req.params.id);
 
-     if (!invoice) {
-       return response(res, 404, "Factura no encontrada", "error");
-     }
+    if (!invoice) {
+      return response(res, 404, "Factura no encontrada", "error");
+    }
 
-     return response(res, 200, { deleted: invoice && true }, "success");
-   } catch (error) {
-     res.status(400).json({ error: err.message });
-   }
+    return response(res, 200, { deleted: invoice && true }, "success");
+  } catch (error) {
+    res.status(400).json({ error: err.message });
+  }
 };
 const getAllInvoice = async (req, res) => {
   try {
