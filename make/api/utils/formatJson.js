@@ -63,13 +63,13 @@ const formatExcelRows = (payload) => {
       .map((item) => ({
         dia_instalacion: getDate(item.row?.b?.value) || "",
         cliente: item.row?.c?.value || "",
-        plan: item.row?.m?.value || "",
-        megas: item.row?.n?.value || "",
+        plan: item.row?.l?.value || "",
+        megas: item.row?.m?.value || "",
         precio: planes[item.row?.m?.value] || 0,
         pagado: false,
         status: item.row?.a?.value || "",
-        whatsapp: item.row?.s?.value || "",
-        dbId: item.row?.t?.value || "",
+        whatsapp: item.row?.r?.value || "",
+        dbId: item.row?.s?.value || "",
       }))
       .filter(
         (item) =>
