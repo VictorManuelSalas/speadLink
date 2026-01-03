@@ -65,7 +65,7 @@ const formatExcelRows = (payload) => {
         cliente: item.row?.c?.value || "",
         plan: item.row?.l?.value || "",
         megas: item.row?.m?.value || "",
-        precio: planes[item.row?.m?.value] || 0,
+        precio: planes[item.row?.l?.value] || 0,
         pagado: false,
         status: item.row?.a?.value || "",
         whatsapp: item.row?.r?.value || "",
