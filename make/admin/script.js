@@ -38,15 +38,26 @@ async function getCustomers() {
     list.innerHTML = "";
 
     customers.data.forEach((c) => {
+      const currentStatusClass =
+        c.status === "Processed"
+          ? "status-green"
+          : c.status === "Agendado"
+          ? "status-yellow"
+          : "status-red";
       currentCustomers.push(c);
       const card = document.createElement("div");
       card.className = "card";
 
       card.innerHTML = `
-    <h3>${c.name}</h3>
+      
+    
+    <div id="header_card"> 
+    <h3>${c.name}</h3> 
+    <span class="status_client ${currentStatusClass}">${c.status}</span>
+    </div>
     <div class="plan">📦 Plan: <strong>${c.plan}</strong> · ${c.megas}mbts</div>
 
-    <div class="info">
+    <div class="info"> 
       <span>📧 ${c.email || "Sin correo"}</span>
       <span>📞 ${c.phone || "—"}</span>
     </div>
