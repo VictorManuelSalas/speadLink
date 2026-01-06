@@ -241,7 +241,7 @@ async function deleteCustomer(customerId) {
 //-----------------
 
 // ---------- FACTURAS ----------
-async function getInvoices() {
+async function getInvoices(filters_ = null) {
   const table = document.getElementById("invoicesTable");
   const tableFoot = document.getElementById("invoiceCount");
   const clientId = document.getElementById("clientIdInput").value;
@@ -254,7 +254,7 @@ async function getInvoices() {
   try {
     const res = await fetch(url);
     const invoices = await res.json();
-
+    console.log(invoices);
     table.innerHTML = "";
     tableFoot.innerHTML = "";
 
@@ -265,8 +265,28 @@ async function getInvoices() {
             </tr>`;
       return;
     }
+    const invoicesFiltered = invoices.data.filter(({ status, month }) => {
+      console.log("filters_", filters_);
 
-    invoices.data.forEach((inv) => {
+      const filterMonth = filters_ ? filters_[1] : null;
+      const filterStatus = filters_ ? filters_[0] : null;
+
+      console.log("filterMonth", filterMonth);
+      console.log("filterStatus", filterStatus);
+
+      if (!filterMonth && !filterStatus) {
+        return true;
+      } else {
+        if (!filterMonth) {
+          if (filterStatus === status.toLowerCase()) return true;
+        } else {
+          if (filterMonth === month && filterStatus === status.toLowerCase())
+            return true;
+        }
+      }
+    });
+
+    invoicesFiltered.forEach((inv) => {
       let statusClass = "";
 
       if (inv.status === "Pagado") statusClass = "status-green";
@@ -293,9 +313,12 @@ async function getInvoices() {
         </tr>
       `;
     });
+
     tableFoot.innerHTML = ` <tr>
               <th scope="row" colspan="7">
-              Count: ${invoices.data.length}  -  Total: $${invoices.data.reduce(
+              Count: ${
+                invoicesFiltered.length
+              }  -  Total: $${invoicesFiltered.reduce(
       (acc, obj) => acc + obj.total,
       0
     )} MXN
@@ -537,5 +560,19 @@ function setCustomersPickList() {
 
   container.appendChild(div);
 }
+
+const filtersCurrent = [];
+const filterByStatus = document.getElementById("status_filter");
+filterByStatus.addEventListener("change", () => {
+  filtersCurrent[0] = filterByStatus.value;
+
+  getInvoices(filtersCurrent);
+});
+
+const filterByMonth = document.getElementById("month_filter");
+filterByMonth.addEventListener("change", () => {
+  filtersCurrent[1] = filterByMonth.value;
+  getInvoices(filtersCurrent);
+});
 getCustomers();
 getInvoices();

@@ -13,43 +13,75 @@
 
     <main>
       <!-- CLIENTES -->
-      <section>
-        <h2>👤 Clientes</h2>
-        <button onclick="openModal('customer')">Crear Cliente</button>
-        <button onclick="getCustomers()">Cargar Clientes</button>
-        <div id="customersList" class="cards"></div>
-      </section>
+      <section id="accordion">
+        <details name="faq-accordion" class="section">
+          <summary>👤 Clientes</summary>
+          <button onclick="openModal('customer')">Crear Cliente</button>
+          <button onclick="getCustomers()">Cargar Clientes</button>
+          <div id="customersList" class="cards"></div>
+        </details>
 
-      <!-- FACTURAS -->
-      <section>
-        <h2>🧾 Facturas</h2>
+        <!-- FACTURAS -->
+        <details name="faq-accordion" class="section">
+          <summary>🧾 Facturas</summary>
 
-        <div class="filters">
-          <input
-            type="text"
-            id="clientIdInput"
-            placeholder="Client ID (opcional)"
-          />
-          <button onclick="getInvoices()">Cargar Facturas</button>
+          <div class="filters">
+            <input
+              type="text"
+              id="clientIdInput"
+              placeholder="Client ID (opcional)"
+            />
+            <button onclick="getInvoices()">Cargar Facturas</button>
 
-          <button onclick="openModal('invoice')">Nueva Factura</button>
-        </div>
+            <button onclick="openModal('invoice')">Nueva Factura</button>
 
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Cliente</th>
-              <th>Status</th>
-              <th>Mes</th>
-              <th>Fecha Limite</th>
-              <th>Total</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody id="invoicesTable"></tbody>
-          <tfoot id="invoiceCount"></tfoot>
-        </table>
+            <span class="filter_picklist">
+              <b>Filtros</b>
+              <span  >
+                <label for="status_filter">Status:</label>
+                <select id="status_filter">
+                  <option value="" selected></option>
+                  <option value="processed">Pendiente</option>
+                  <option value="pagado">Pagado</option>
+                  <option value="draft">Draft</option>
+                </select>
+
+                <label for="month_filter">Mes:</label>
+                <select id="month_filter">
+                  <option value="" selected></option>
+                  <option value="01">Enero</option>
+                  <option value="02">Febrero</option>
+                  <option value="03">Marzo</option>
+                  <option value="04">Abril</option>
+                  <option value="05">Mayo</option>
+                  <option value="06">Junio</option>
+                  <option value="07">Julio</option>
+                  <option value="08">Agosto</option>
+                  <option value="09">Septiembre</option>
+                  <option value="10">Octubre</option>
+                  <option value="11">Noviembre</option>
+                  <option value="12">Diciembre</option>
+                </select>
+              </span>
+            </span>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Cliente</th>
+                <th>Status</th>
+                <th>Mes</th>
+                <th>Fecha Limite</th>
+                <th>Total</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="invoicesTable"></tbody>
+            <tfoot id="invoiceCount"></tfoot>
+          </table>
+        </details>
       </section>
     </main>
     <!-- MODAL BACKDROP -->
@@ -170,7 +202,8 @@
           <option value="Inactive">Inactive</option>
         </select>
 
-        <input id="c_e_name" placeholder="Nombre" /> <input id="c_e_id" hidden/>
+        <input id="c_e_name" placeholder="Nombre" />
+        <input id="c_e_id" hidden />
         <input id="c_e_email" placeholder="Correo" />
         <input id="c_e_phone" placeholder="Teléfono" />
         <select class="options" id="c_e_plan">

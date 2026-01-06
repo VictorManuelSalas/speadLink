@@ -18,7 +18,8 @@ main {
   margin: auto;
 }
 
-section {
+section,
+.section {
   background: white;
   padding: 20px;
   border-radius: 8px;
@@ -28,6 +29,13 @@ section {
 
 h2 {
   margin-top: 0;
+}
+
+summary {
+  cursor: pointer;
+  font-weight: bold;
+  padding: 10px;
+  border-radius: 5px;
 }
 
 button {
@@ -43,9 +51,7 @@ button:hover {
   opacity: .9;
 }
 
-.filters {
-  margin-bottom: 15px;
-}
+
 
 input {
   padding: 8px;
@@ -147,6 +153,8 @@ li {
   opacity: 0.9;
 }
 
+
+
 .modal-backdrop {
   position: fixed;
   top: 0;
@@ -216,17 +224,20 @@ li {
   cursor: none;
   transition: all 0.3s;
 }
-#header_card{
+
+#header_card {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
-.status_client{
+
+.status_client {
   border-radius: 10rem;
   padding: 5px 10px !important;
   font-size: small;
   color: #ffff;
 }
+
 .status-green {
   background: green;
   color: #ffff;
@@ -295,4 +306,35 @@ li {
 .btn.delete {
   background: #d32f2f;
   color: white;
+}
+
+.filters { 
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 15px;
+  padding: 0%;
+}
+
+.filter_picklist {
+  display: flex;
+  flex-direction: column;
+  height: fit-content;
+  background: #1c3879;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 12px;
+  cursor: pointer;
+
+  b{ 
+    margin-bottom: 5px;
+  }
+  select {
+    cursor: pointer;
+    background: #1c3879;
+    color: white;
+    border: none;
+    font-size: 12px;
+  }
 }
