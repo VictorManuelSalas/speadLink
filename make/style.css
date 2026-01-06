@@ -216,7 +216,17 @@ li {
   cursor: none;
   transition: all 0.3s;
 }
-
+#header_card{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.status_client{
+  border-radius: 10rem;
+  padding: 5px 10px !important;
+  font-size: small;
+  color: #ffff;
+}
 .status-green {
   background: green;
   color: #ffff;
