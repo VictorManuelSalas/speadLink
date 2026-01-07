@@ -65,7 +65,8 @@ const recreateHTML = (data) => {
       status,
       subtotal,
       currency,
-      tax,discount,
+      tax,
+      discount = 0,
       total,
       items,
       customerId: { name: clientName, email: clientCorreo, phone: clientPhone },
@@ -424,5 +425,3 @@ export async function deleteInvoice(invoiceId) {
     throw error;
   }
 }
-
- 
