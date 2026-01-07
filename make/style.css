@@ -51,6 +51,10 @@ button:hover {
   opacity: .9;
 }
 
+.btn_filter {
+  margin: 10px 1px 0px 0px;
+  background: #000000;
+}
 
 
 input {
@@ -95,11 +99,28 @@ li {
 }
 
 .card {
+  position: relative;
   background: #ffffff;
+  overflow: hidden;
   border-radius: 12px;
   padding: 18px;
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.status_client {
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: end;
+  padding: 5px 10px !important;
+  font-size: small;
+  color: #ffff;
+  width: 260px;
+  height: 50px;
+  transform: rotate(45deg);
+  right: -120px;
+  top: -10px;
 }
 
 .card:hover {
@@ -231,12 +252,13 @@ li {
   align-items: center;
 }
 
-.status_client {
+/* .status_client {
   border-radius: 10rem;
   padding: 5px 10px !important;
   font-size: small;
   color: #ffff;
-}
+} */
+
 
 .status-green {
   background: green;
@@ -254,6 +276,8 @@ li {
 }
 
 .customer-detail {
+  position: relative;
+  overflow: hidden;
   background: #fff;
   padding: 20px;
   border-radius: 10px;
@@ -308,7 +332,7 @@ li {
   color: white;
 }
 
-.filters { 
+.filters {
   display: flex;
   gap: 1rem;
   margin-bottom: 15px;
@@ -327,9 +351,10 @@ li {
   font-size: 12px;
   cursor: pointer;
 
-  b{ 
+  b {
     margin-bottom: 5px;
   }
+
   select {
     cursor: pointer;
     background: #1c3879;

@@ -37,23 +37,24 @@ async function getCustomers() {
     console.log(customers);
     list.innerHTML = "";
 
+    const currentStatusClass = (status) => {
+     return  status === "Processed"
+        ? "status-green"
+        : status === "Agendado"
+        ? "status-yellow"
+        : "status-red";
+    };
     customers.data.forEach((c) => {
-      const currentStatusClass =
-        c.status === "Processed"
-          ? "status-green"
-          : c.status === "Agendado"
-          ? "status-yellow"
-          : "status-red";
       currentCustomers.push(c);
       const card = document.createElement("div");
       card.className = "card";
 
       card.innerHTML = `
-      
-    
     <div id="header_card"> 
     <h3>${c.name}</h3> 
-    <span class="status_client ${currentStatusClass}">${c.status}</span>
+  <span class="status_client ${currentStatusClass(c.status)}"
+            ><b>${c.status}</b></span
+          >
     </div>
     <div class="plan">📦 Plan: <strong>${c.plan}</strong> · ${c.megas}mbts</div>
 
@@ -96,8 +97,13 @@ async function getCustomers() {
         );
         document.getElementById("client_view_name").innerText =
           customer2View.name;
-        document.getElementById("client_view_stage").innerText =
-          customer2View.status;
+        //
+        const client_view_stage = document.getElementById("client_view_stage");
+        client_view_stage.classList.add(
+          currentStatusClass(customer2View.status)
+        );
+        client_view_stage.innerHTML = `<b>${customer2View.status}</b>`;
+        //
         document.getElementById("client_view_phone").innerText =
           (customer2View.phone && `📞 ${customer2View.phone}`) || "—";
         document.getElementById("client_view_email").innerText =
@@ -118,7 +124,6 @@ async function getCustomers() {
         <tr>
           <td style="text-align: center;">${service.name}</td>
           <td style="text-align: center;">$${service.price}</td>
-          
         </tr>
       `;
         });
@@ -265,26 +270,20 @@ async function getInvoices(filters_ = null) {
             </tr>`;
       return;
     }
-    const invoicesFiltered = invoices.data.filter(({ status, month }) => {
-      console.log("filters_", filters_);
 
-      const filterMonth = filters_ ? filters_[1] : null;
-      const filterStatus = filters_ ? filters_[0] : null;
+    const invoicesFiltered = invoices.data.filter(
+      ({ status, installationDate }) => {
+        const month = installationDate.split("-")[1];
+        const filterMonth = filters_?.[1] ?? null;
+        const filterStatus = filters_?.[0]?.toLowerCase() ?? null;
 
-      console.log("filterMonth", filterMonth);
-      console.log("filterStatus", filterStatus);
+        const matchMonth = !filterMonth || filterMonth === month;
+        const matchStatus =
+          !filterStatus || filterStatus === status.toLowerCase();
 
-      if (!filterMonth && !filterStatus) {
-        return true;
-      } else {
-        if (!filterMonth) {
-          if (filterStatus === status.toLowerCase()) return true;
-        } else {
-          if (filterMonth === month && filterStatus === status.toLowerCase())
-            return true;
-        }
+        return matchMonth && matchStatus;
       }
-    });
+    );
 
     invoicesFiltered.forEach((inv) => {
       let statusClass = "";
@@ -561,18 +560,13 @@ function setCustomersPickList() {
   container.appendChild(div);
 }
 
-const filtersCurrent = [];
-const filterByStatus = document.getElementById("status_filter");
-filterByStatus.addEventListener("change", () => {
+function filter() {
+  const filtersCurrent = [];
+  const filterByStatus = document.getElementById("status_filter");
   filtersCurrent[0] = filterByStatus.value;
-
-  getInvoices(filtersCurrent);
-});
-
-const filterByMonth = document.getElementById("month_filter");
-filterByMonth.addEventListener("change", () => {
+  const filterByMonth = document.getElementById("month_filter");
   filtersCurrent[1] = filterByMonth.value;
   getInvoices(filtersCurrent);
-});
+}
 getCustomers();
 getInvoices();

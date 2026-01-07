@@ -14,7 +14,7 @@
     <main>
       <!-- CLIENTES -->
       <section id="accordion">
-        <details name="faq-accordion" class="section">
+        <details name="faq-accordion" class="section" open>
           <summary>👤 Clientes</summary>
           <button onclick="openModal('customer')">Crear Cliente</button>
           <button onclick="getCustomers()">Cargar Clientes</button>
@@ -26,18 +26,22 @@
           <summary>🧾 Facturas</summary>
 
           <div class="filters">
-            <input
-              type="text"
-              id="clientIdInput"
-              placeholder="Client ID (opcional)"
-            />
-            <button onclick="getInvoices()">Cargar Facturas</button>
+            <span>
+              <input
+                type="text"
+                id="clientIdInput"
+                placeholder="Client ID (opcional)"
+              />
+              <button onclick="getInvoices()">Cargar Facturas</button>
 
-            <button onclick="openModal('invoice')">Nueva Factura</button>
+              <button onclick="openModal('invoice')">
+                Nueva Factura
+              </button></span
+            >
 
             <span class="filter_picklist">
               <b>Filtros</b>
-              <span  >
+              <span>
                 <label for="status_filter">Status:</label>
                 <select id="status_filter">
                   <option value="" selected></option>
@@ -63,6 +67,7 @@
                   <option value="12">Diciembre</option>
                 </select>
               </span>
+              <button class="btn_filter" onclick="filter()">Filtrar</button>
             </span>
           </div>
 
@@ -136,16 +141,14 @@
 
     <div id="modalCustomerView" class="modal hidden">
       <div id="customerDetails" class="customer-detail">
+        <span id="client_view_stage" class="status_client"
+          ></span
+        >
         <h2>👤 Detalle del Cliente</h2>
 
         <div class="row">
           <span class="label">Nombre:</span>
           <span class="value" id="client_view_name"></span>
-        </div>
-
-        <div class="row">
-          <span class="label">Estado:</span>
-          <span class="value" id="client_view_stage"></span>
         </div>
 
         <div class="row">
