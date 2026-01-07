@@ -62,6 +62,11 @@ const invoiceSchema = new mongoose.Schema(
       default: 0,
     },
 
+    discount: {
+      type: Number,
+      default: 0,
+    },
+
     total: {
       type: Number,
     },
@@ -113,12 +118,9 @@ invoiceSchema.pre("save", function () {
 
   // Totales
   if (this.items?.length) {
-    this.subtotal = this.items.reduce(
-      (acc, item) => acc + item.total,
-      0
-    );
+    this.subtotal = this.items.reduce((acc, item) => acc + item.total, 0);
 
-    this.total = this.subtotal + (this.tax || 0);
+    this.total = this.subtotal + (this.tax || 0) - this.discount;
   }
 
   // Pagado
