@@ -14,7 +14,7 @@
     <main>
       <!-- CLIENTES -->
       <section id="accordion">
-        <details name="faq-accordion" class="section">
+        <details name="faq-accordion" class="section" open>
           <summary>📶 Grants</summary>
           <span class="filter_picklist">
             <b style="font-size: medium">Filtros</b>
@@ -43,7 +43,28 @@
             </button>
           </span>
 
-          <div id="piechart"></div>
+          <div>
+            <div id="piechart"></div>
+            <div >
+              <h3>Resumen mensual</h3>
+              <div class="stats">
+                <div class="stat">
+                  <span>Ingresos</span>
+                  <strong id="ingresos">$0</strong>
+                </div>
+
+                <div class="stat">
+                  <span>Gastos Internet</span>
+                  <strong id="gastos">$0</strong>
+                </div>
+
+                <div id="gn-m" class="stat">
+                  <span>Ganancia</span>
+                  <strong id="ganancia">$0</strong>
+                </div>
+              </div>
+            </div>
+          </div>
         </details>
         <details name="faq-accordion" class="section">
           <summary>👤 Clientes</summary>
@@ -53,7 +74,7 @@
         </details>
 
         <!-- FACTURAS -->
-        <details name="faq-accordion" class="section" open>
+        <details name="faq-accordion" class="section">
           <summary>🧾 Facturas</summary>
 
           <div class="filters">
