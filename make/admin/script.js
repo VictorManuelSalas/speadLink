@@ -25,7 +25,6 @@ const getMonth = (number) => {
 let currentCustomers = [];
 
 async function getCustomers() {
-  console.log("Fetching customers...");
   currentCustomers = [];
   const list = document.getElementById("customersList");
   list.innerHTML = "Cargando...";
@@ -34,11 +33,11 @@ async function getCustomers() {
     const res = await fetch(`${API_URL}/customers/db`);
 
     const customers = await res.json();
-    console.log(customers);
+
     list.innerHTML = "";
 
     const currentStatusClass = (status) => {
-     return  status === "Processed"
+      return status === "Processed"
         ? "status-green"
         : status === "Agendado"
         ? "status-yellow"
@@ -136,7 +135,6 @@ async function getCustomers() {
           (cust) => cust._id === e.target.dataset.id
         );
 
-        console.log("Editing customer:", customer2View);
         document.getElementById("c_e_name").value = customer2View.name;
         document.getElementById("c_e_id").value = customer2View._id;
         document.getElementById("c_e_email").value = customer2View.email;
@@ -153,8 +151,6 @@ async function getCustomers() {
         const container = document.getElementById("servicesContainerEdit");
         container.innerHTML = "";
         customer2View.services.forEach((service) => {
-          console.log("Adding service to edit modal:", service);
-
           const div = document.createElement("div");
           div.className = "service-row";
 
@@ -231,7 +227,6 @@ function showAlert(
 //--------- CRUD Custmers-----------------
 async function deleteCustomer(customerId) {
   try {
-    console.log("Deleting customer:", customerId);
     await fetch(`${API_URL}/customers/${customerId}`, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
@@ -246,20 +241,27 @@ async function deleteCustomer(customerId) {
 //-----------------
 
 // ---------- FACTURAS ----------
+
+async function fetchInvoices(clientId = null) {
+  try {
+    let url = `${API_URL}/payments`;
+    if (clientId) url += `/${clientId}`;
+    const res = await fetch(url);
+    const invoices = await res.json();
+    return invoices;
+  } catch (error) {
+    console.error(err);
+  }
+}
+
 async function getInvoices(filters_ = null) {
   const table = document.getElementById("invoicesTable");
   const tableFoot = document.getElementById("invoiceCount");
   const clientId = document.getElementById("clientIdInput").value;
-
   table.innerHTML = `<tr><td colspan="5">Cargando...</td></tr>`;
 
-  let url = `${API_URL}/payments`;
-  if (clientId) url += `/${clientId}`;
-  console.log(url);
   try {
-    const res = await fetch(url);
-    const invoices = await res.json();
-    console.log(invoices);
+    const invoices = await fetchInvoices(clientId);
     table.innerHTML = "";
     tableFoot.innerHTML = "";
 
@@ -271,21 +273,11 @@ async function getInvoices(filters_ = null) {
       return;
     }
 
-    const invoicesFiltered = invoices.data.filter(
-      ({ status, installationDate }) => {
-        const month = installationDate.split("-")[1];
-        const filterMonth = filters_?.[1] ?? null;
-        const filterStatus = filters_?.[0]?.toLowerCase() ?? null;
-
-        const matchMonth = !filterMonth || filterMonth === month;
-        const matchStatus =
-          !filterStatus || filterStatus === status.toLowerCase();
-
-        return matchMonth && matchStatus;
-      }
+    const invoiceFilterResponse = await invoicesFiltered(
+      invoices.data,
+      filters_
     );
-
-    invoicesFiltered.forEach((inv) => {
+    invoiceFilterResponse.forEach((inv) => {
       let statusClass = "";
 
       if (inv.status === "Pagado") statusClass = "status-green";
@@ -316,8 +308,8 @@ async function getInvoices(filters_ = null) {
     tableFoot.innerHTML = ` <tr>
               <th scope="row" colspan="7">
               Count: ${
-                invoicesFiltered.length
-              }  -  Total: $${invoicesFiltered.reduce(
+                invoiceFilterResponse.length
+              }  -  Total: $${invoiceFilterResponse.reduce(
       (acc, obj) => acc + obj.total,
       0
     )} MXN
@@ -329,13 +321,27 @@ async function getInvoices(filters_ = null) {
   }
 }
 
+const invoicesFiltered = (data, filters_) => {
+  return data.filter(({ status, installationDate }) => {
+    const month = installationDate.split("-")[1];
+    const year = installationDate.split("-")[2];
+    const filterYear = filters_?.[2] ?? null;
+    const filterMonth = filters_?.[1] ?? null;
+    const filterStatus = filters_?.[0]?.toLowerCase() ?? null;
+
+    const matchMonth = !filterMonth || filterMonth === month;
+    const matchStatus = !filterStatus || filterStatus === status.toLowerCase();
+    const matchYear = !filterYear || filterYear === year;
+
+    return matchMonth && matchStatus && matchYear;
+  });
+};
 // ---------- PDF ----------
 function downloadPDF(invoiceId) {
   window.open(`${API_URL}/payments/pdf?invoice_id=${invoiceId}`, "_blank");
 }
 function deleteInvoice(invoiceId, invoiceNumber) {
   try {
-    console.log("Deleting invoice:", { invoiceId, invoiceNumber });
     showAlert(
       `Estas seguro de eliminar la factura ${invoiceNumber}?`,
       `Esta acción no se puede deshacer`,
@@ -425,8 +431,6 @@ async function submitCustomer() {
     services: getServicesPayload(),
   };
 
-  console.log("Creating customer:", payload);
-
   await fetch(`${API_URL}/customers`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -449,8 +453,6 @@ async function saveCustomer() {
       date_to_Pay: new Date(c_e_date.value).toISOString(),
       services: getServicesPayload(),
     };
-
-    console.log("Updating customer:", payload);
 
     showAlert(
       "Actualizar cliente?",
@@ -475,7 +477,6 @@ async function saveCustomer() {
 
 function getServicesPayload() {
   const services = [];
-  console.log(document.querySelectorAll(".service-row"));
   document.querySelectorAll(".service-row").forEach((row) => {
     const name = row.querySelector(".service-name").value;
     const price = Number(row.querySelector(".service-price").value || 0);
@@ -501,8 +502,6 @@ async function submitInvoice() {
     pagado: i_pagado.checked,
     dueDate: null,
   };
-
-  console.log("Creating invoice:", payload);
 
   await fetch(`${API_URL}/payments`, {
     method: "POST",
@@ -540,7 +539,6 @@ function addNewService(modal) {
 }
 
 function setCustomersPickList() {
-  console.log("Setting customers pick list...", currentCustomers);
   const container = document.getElementById("invoiceForm");
 
   container.querySelectorAll(".customers_list").forEach((el) => el.remove());
@@ -566,7 +564,63 @@ function filter() {
   filtersCurrent[0] = filterByStatus.value;
   const filterByMonth = document.getElementById("month_filter");
   filtersCurrent[1] = filterByMonth.value;
+  const filterByYear = document.getElementById("year_filter");
+  filtersCurrent[2] = filterByYear.value;
   getInvoices(filtersCurrent);
+}
+
+async function loadGoogleCharts() {
+  const year = document.getElementById("year_filter_chart").value;
+  const month = document.getElementById("month_filter_chart").value;
+  const invoices = await fetchInvoices(null);
+
+  const invoicesFilterResponse = await invoicesFiltered(invoices.data, [
+    null,
+    month,
+    year,
+  ]);
+
+  const starlinkPricesTotal = [1305, 680].reduce((a, b) => a + b, 0);
+
+  const priceCompleted =
+    invoicesFilterResponse
+      .filter((i) => i.status === "Pagado")
+      .map((i) => i.total)
+      .reduce((a, b) => a + b, 0) || 0;
+  //
+  const pricePending = Math.max(starlinkPricesTotal - priceCompleted, 0);
+
+  const percentCompleted = (priceCompleted / starlinkPricesTotal) * 100;
+
+  const percentPending = (pricePending / starlinkPricesTotal) * 100;
+
+  // Load google charts
+  google.charts.load("current", { packages: ["corechart"] });
+  google.charts.setOnLoadCallback(drawChart);
+
+  // Draw the chart and set the chart values
+  function drawChart() {
+    var data = google.visualization.arrayToDataTable([
+      ["Estado", "Porcentaje"],
+      ["Costo cubierto", percentCompleted],
+      ["Costo pendiente", percentPending],
+    ]);
+
+    // Optional; add a title and set the width and height of the chart
+    var options = {
+      title: "Costo Cubierto de Internet Starlink",
+      pieSliceTextStyle: {
+        color: "black",
+      },
+      legend: "none",
+    };
+
+    // Display the chart inside the <div> element with id="piechart"
+    var chart = new google.visualization.PieChart(
+      document.getElementById("piechart")
+    );
+    chart.draw(data, options);
+  }
 }
 getCustomers();
 getInvoices();
