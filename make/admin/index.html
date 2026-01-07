@@ -14,7 +14,38 @@
     <main>
       <!-- CLIENTES -->
       <section id="accordion">
-        <details name="faq-accordion" class="section" open>
+        <details name="faq-accordion" class="section">
+          <summary>📶 Grants</summary>
+          <span class="filter_picklist">
+            <b style="font-size: medium">Filtros</b>
+            <span>
+              <label for="month_filter_chart">Mes:</label>
+              <select id="month_filter_chart">
+                <option value="" selected></option>
+                <option value="01">Enero</option>
+                <option value="02">Febrero</option>
+                <option value="03">Marzo</option>
+                <option value="04">Abril</option>
+                <option value="05">Mayo</option>
+                <option value="06">Junio</option>
+                <option value="07">Julio</option>
+                <option value="08">Agosto</option>
+                <option value="09">Septiembre</option>
+                <option value="10">Octubre</option>
+                <option value="11">Noviembre</option>
+                <option value="12">Diciembre</option>
+              </select>
+              <label for="year_filter_chart">Año:</label>
+              <select id="year_filter_chart"></select>
+            </span>
+            <button class="btn_filter" onclick="loadGoogleCharts()">
+              Generar
+            </button>
+          </span>
+
+          <div id="piechart"></div>
+        </details>
+        <details name="faq-accordion" class="section">
           <summary>👤 Clientes</summary>
           <button onclick="openModal('customer')">Crear Cliente</button>
           <button onclick="getCustomers()">Cargar Clientes</button>
@@ -22,7 +53,7 @@
         </details>
 
         <!-- FACTURAS -->
-        <details name="faq-accordion" class="section">
+        <details name="faq-accordion" class="section" open>
           <summary>🧾 Facturas</summary>
 
           <div class="filters">
@@ -66,6 +97,9 @@
                   <option value="11">Noviembre</option>
                   <option value="12">Diciembre</option>
                 </select>
+
+                <label for="year_filter">Año:</label>
+                <select id="year_filter"></select>
               </span>
               <button class="btn_filter" onclick="filter()">Filtrar</button>
             </span>
@@ -141,9 +175,7 @@
 
     <div id="modalCustomerView" class="modal hidden">
       <div id="customerDetails" class="customer-detail">
-        <span id="client_view_stage" class="status_client"
-          ></span
-        >
+        <span id="client_view_stage" class="status_client"></span>
         <h2>👤 Detalle del Cliente</h2>
 
         <div class="row">
@@ -275,6 +307,49 @@
       </div>
     </div>
 
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const selectYear = document.getElementById("year_filter_chart");
+        const selectYear2 = document.getElementById("year_filter");
+
+        const currentYear = new Date().getFullYear();
+        const startYear = 2023;
+
+        // Opción vacía
+        const createEmptyOption = () => {
+          const opt = document.createElement("option");
+          opt.value = "";
+          opt.textContent = "Selecciona año";
+          return opt;
+        };
+
+        selectYear.appendChild(createEmptyOption());
+        selectYear2.appendChild(createEmptyOption());
+
+        // Generar años
+        for (let year = currentYear; year >= startYear; year--) {
+          const option1 = document.createElement("option");
+          option1.value = year;
+          option1.textContent = year;
+
+          const option2 = document.createElement("option");
+          option2.value = year;
+          option2.textContent = year;
+
+          selectYear.appendChild(option1);
+          selectYear2.appendChild(option2);
+        }
+
+        // Autoseleccionar año actual
+        selectYear.value = currentYear;
+        selectYear2.value = currentYear;
+      });
+    </script>
+
+    <script
+      type="text/javascript"
+      src="https://www.gstatic.com/charts/loader.js"
+    ></script>
     <script src="./script.js"></script>
   </body>
 </html>
