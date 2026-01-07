@@ -65,7 +65,7 @@ const recreateHTML = (data) => {
       status,
       subtotal,
       currency,
-      tax,
+      tax,discount,
       total,
       items,
       customerId: { name: clientName, email: clientCorreo, phone: clientPhone },
@@ -301,6 +301,10 @@ const recreateHTML = (data) => {
           <tr>
             <td>Subtotal</td>
             <td>$ ${subtotal} ${currency}</td>
+          </tr>
+           <tr>
+            <td>Descuento</td>
+            <td>$ ${discount} ${currency}</td>
           </tr>
           <tr>
             <td>Impuestos</td>
