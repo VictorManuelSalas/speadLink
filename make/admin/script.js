@@ -572,6 +572,7 @@ function filter() {
 async function loadGoogleCharts() {
   const year = document.getElementById("year_filter_chart").value;
   const month = document.getElementById("month_filter_chart").value;
+
   const invoices = await fetchInvoices(null);
 
   const invoicesFilterResponse = await invoicesFiltered(invoices.data, [
@@ -581,7 +582,6 @@ async function loadGoogleCharts() {
   ]);
 
   const starlinkPricesTotal = [1305, 680].reduce((a, b) => a + b, 0);
-
   const priceCompleted =
     invoicesFilterResponse
       .filter((i) => i.status === "Pagado")
@@ -594,6 +594,7 @@ async function loadGoogleCharts() {
 
   const percentPending = (pricePending / starlinkPricesTotal) * 100;
 
+  summaryMonth(starlinkPricesTotal, priceCompleted);
   // Load google charts
   google.charts.load("current", { packages: ["corechart"] });
   google.charts.setOnLoadCallback(drawChart);
@@ -621,6 +622,16 @@ async function loadGoogleCharts() {
     );
     chart.draw(data, options);
   }
+}
+
+function summaryMonth(gastos, ingresos) {
+  document.getElementById("gastos").innerText = `$${gastos}`;
+  document.getElementById("ingresos").innerText = `$${ingresos}`;
+
+  document.getElementById("ganancia").innerText = `$${ingresos - gastos}`;
+  document
+    .getElementById("gn-m")
+    .classList.add(ingresos - gastos > 0 ? "green" : "red");
 }
 getCustomers();
 getInvoices();

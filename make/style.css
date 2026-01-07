@@ -363,3 +363,27 @@ li {
     font-size: 12px;
   }
 }
+
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.stat {
+  background: #f4f6f8;
+  padding: 12px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.red {
+  background-color: red;
+  color: #f0f2f5;
+}
+
+.green {
+  background-color: rgb(0, 99, 13);
+  color: #f0f2f5;
+}
