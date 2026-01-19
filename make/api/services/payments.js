@@ -253,7 +253,7 @@ const recreateHTML = (data) => {
           </svg>
         </div>
         <div>
-          <h1>Factura</h1>
+          <h1>Recibo</h1>
           <p><strong>No:</strong> ${invoiceNumber}</p>
           <p class="companyContactData">
             <strong>Correo:</strong> speadinternetmd@gmail.com

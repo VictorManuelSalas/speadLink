@@ -272,7 +272,12 @@ li {
 
 .status-gray {
   color: #ffff;
-  background: red;
+  background: rgb(122, 122, 122);
+}
+
+.status-red {
+  color: #ffff;
+  background: rgb(172, 0, 0);
 }
 
 .customer-detail {
