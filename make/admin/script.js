@@ -40,8 +40,10 @@ async function getCustomers() {
       return status === "Processed"
         ? "status-green"
         : status === "Agendado"
-        ? "status-yellow"
-        : "status-red";
+          ? "status-yellow"
+          : status === "Canceled"
+            ? "status-gray"
+            : "status-red";
     };
     customers.data.forEach((c) => {
       currentCustomers.push(c);
@@ -107,9 +109,8 @@ async function getCustomers() {
           (customer2View.phone && `📞 ${customer2View.phone}`) || "—";
         document.getElementById("client_view_email").innerText =
           (customer2View.email && `📧 ${customer2View.email}`) || "—";
-        document.getElementById(
-          "client_view_plan"
-        ).innerText = `📦 ${customer2View.plan} · ${customer2View.megas} Mbps`;
+        document.getElementById("client_view_plan").innerText =
+          `📦 ${customer2View.plan} · ${customer2View.megas} Mbps`;
         document.getElementById("client_view_date").innerText = new Date(
           customer2View.date_to_Pay
         ).toLocaleDateString();
@@ -177,6 +178,8 @@ async function getCustomers() {
 
       customersList.appendChild(card);
     });
+
+    console.log(currentCustomers);
   } catch (err) {
     list.innerHTML = "Error cargando clientes";
   }
@@ -290,8 +293,8 @@ async function getInvoices(filters_ = null) {
           <td>${inv.invoiceNumber}</td>
           <td>${inv.customerId?.name || "—"}</td>
           <td><b class="${statusClass} status">${
-        inv.status == "Processed" ? "Pendiente" : inv.status
-      }</b></td>
+            inv.status == "Processed" ? "Pendiente" : inv.status
+          }</b></td>
           <td>${getMonth(inv.issueDate)}</td>
           <td>${limitDate}</td>
           <td>$${inv.total} ${inv.currency}</td>
@@ -310,9 +313,9 @@ async function getInvoices(filters_ = null) {
               Count: ${
                 invoiceFilterResponse.length
               }  -  Total: $${invoiceFilterResponse.reduce(
-      (acc, obj) => acc + obj.total,
-      0
-    )} MXN
+                (acc, obj) => acc + obj.total,
+                0
+              )} MXN
               </th>
             </tr>`;
   } catch (err) {
