@@ -1,6 +1,6 @@
 import { Router } from "express";
 import {
-  getAllCustomers, createDBCustomers, getDBCustomers,deleteCustomer,updateDBCustomers
+  getAllCustomers,getDBCustomer, createDBCustomers, getDBCustomers,deleteCustomer,updateDBCustomers
 } from "../controllers/customers.js";
 
 const router = Router();
@@ -9,6 +9,7 @@ const router = Router();
 router.get("/", getAllCustomers);
 router.post("/", createDBCustomers);
 router.put("/:id", updateDBCustomers);
+router.put("/:id", getDBCustomer);
 router.get("/db", getDBCustomers);
 router.delete("/:id", deleteCustomer);
 
