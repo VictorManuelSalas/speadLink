@@ -65,6 +65,16 @@ const getDBCustomers = async (req, res) => {
   }
 };
 
+const getDBCustomer = async (req, res) => {
+  try {
+    const customer = await Customer.findById(req.params.id);
+    return response(res, 200, customer, "success");
+  } catch (error) {
+    res.status(400).json({ error: err.message });
+  }
+};
+
+
 const deleteCustomer = async (req, res) => {
   try {
     const customer = await Customer.findByIdAndDelete(req.params.id);
@@ -82,7 +92,7 @@ const deleteCustomer = async (req, res) => {
 export {
   getAllCustomers,
   updateDBCustomers,
-  getDBCustomers,
+  getDBCustomers,getDBCustomer,
   createDBCustomers,
   deleteCustomer,
 };
