@@ -253,7 +253,7 @@ async function fetchInvoices(clientId = null) {
     const invoices = await res.json();
     return invoices;
   } catch (error) {
-    console.error(err);
+    console.error(error);
   }
 }
 
