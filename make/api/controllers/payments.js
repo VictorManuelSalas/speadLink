@@ -118,6 +118,7 @@ const deletePayment = async (req, res) => {
 };
 const getAllInvoice = async (req, res) => {
   try {
+    console.log('Iniciando')
     const { clientId } = req.params;
 
     const invoices = await getAllInvoices(clientId);
