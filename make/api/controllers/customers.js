@@ -57,10 +57,12 @@ const updateDBCustomers = async (req, res) => {
 
 const getDBCustomers = async (req, res) => {
   try {
+    console.log('Obteniendo customers)
     const customers = await Customer.find();
-
+console.log('Response: '+customers)
     return response(res, 200, customers, "success");
   } catch (error) {
+    console.error()
     res.status(400).json({ error: error.message });
   }
 };
