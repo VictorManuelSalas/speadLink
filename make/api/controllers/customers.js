@@ -61,7 +61,7 @@ const getDBCustomers = async (req, res) => {
 
     return response(res, 200, customers, "success");
   } catch (error) {
-    res.status(400).json({ error: err.message });
+    res.status(400).json({ error: error.message });
   }
 };
 
@@ -70,7 +70,7 @@ const getDBCustomer = async (req, res) => {
     const customer = await Customer.findById(req.params.id);
     return response(res, 200, customer, "success");
   } catch (error) {
-    res.status(400).json({ error: err.message });
+    res.status(400).json({ error: error.message });
   }
 };
 
