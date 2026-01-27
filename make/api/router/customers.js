@@ -9,7 +9,7 @@ const router = Router();
 router.get("/", getAllCustomers);
 router.post("/", createDBCustomers);
 router.put("/:id", updateDBCustomers);
-router.get("/:id", getDBCustomer);
+router.get("/db/:id", getDBCustomer);
 router.get("/db", getDBCustomers);
 router.delete("/:id", deleteCustomer);
 
