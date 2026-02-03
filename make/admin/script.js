@@ -259,6 +259,28 @@ async function fetchInvoices(clientId = null) {
   }
 }
 
+function parseDate(dateStr) {
+  const [day, month, year] = dateStr.split('-');
+  return new Date(year, month - 1, day);
+}
+let currentSort = false
+
+function sortTableByDate() {
+
+  currentSort = !currentSort
+  const tbody = document.getElementById('invoicesTable');
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+
+  rows.sort((a, b) => {
+    const dateA = parseDate(a.children[4].innerText.trim());
+    const dateB = parseDate(b.children[4].innerText.trim());
+    return currentSort ? dateA - dateB : dateB - dateA; // ascendente o descendente según currentSort
+  });
+
+  rows.forEach(row => tbody.appendChild(row));
+}
+
+
 async function getInvoices(filters_ = null) {
   const table = document.getElementById("invoicesTable");
   const tableFoot = document.getElementById("invoiceCount");

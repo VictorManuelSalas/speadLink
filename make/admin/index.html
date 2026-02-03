@@ -1,26 +1,106 @@
 <!DOCTYPE html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <title>SpeadLink | Dashboard</title>
-    <link rel="stylesheet" href="../style.css" />
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  </head>
-  <body>
-    <header>
-      <h1>📊 SpeadLink Dashboard</h1>
-    </header>
 
-    <main>
-      <!-- CLIENTES -->
-      <section id="accordion">
-        <details name="faq-accordion" class="section" open>
-          <summary>📶 Grants</summary>
+<head>
+  <meta charset="UTF-8" />
+  <title>SpeadLink | Dashboard</title>
+  <link rel="stylesheet" href="../style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body>
+  <header>
+    <h1>📊 SpeadLink Dashboard</h1>
+  </header>
+
+  <main>
+    <!-- CLIENTES -->
+    <section id="accordion">
+      <details name="faq-accordion" class="section" open>
+        <summary>📶 Grants</summary>
+        <span class="filter_picklist">
+          <b style="font-size: medium">Filtros</b>
+          <span>
+            <label for="month_filter_chart">Mes:</label>
+            <select id="month_filter_chart">
+              <option value="" selected></option>
+              <option value="01">Enero</option>
+              <option value="02">Febrero</option>
+              <option value="03">Marzo</option>
+              <option value="04">Abril</option>
+              <option value="05">Mayo</option>
+              <option value="06">Junio</option>
+              <option value="07">Julio</option>
+              <option value="08">Agosto</option>
+              <option value="09">Septiembre</option>
+              <option value="10">Octubre</option>
+              <option value="11">Noviembre</option>
+              <option value="12">Diciembre</option>
+            </select>
+            <label for="year_filter_chart">Año:</label>
+            <select id="year_filter_chart"></select>
+          </span>
+          <button class="btn_filter" onclick="loadGoogleCharts()">
+            Generar
+          </button>
+        </span>
+
+        <div>
+          <div id="piechart"></div>
+          <div>
+            <h3>Resumen mensual</h3>
+            <div class="stats">
+              <div class="stat">
+                <span>Ingresos</span>
+                <strong id="ingresos">$0</strong>
+              </div>
+
+              <div class="stat">
+                <span>Gastos Internet</span>
+                <strong id="gastos">$0</strong>
+              </div>
+
+              <div id="gn-m" class="stat">
+                <span>Ganancia</span>
+                <strong id="ganancia">$0</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </details>
+      <details name="faq-accordion" class="section">
+        <summary>👤 Clientes</summary>
+        <button onclick="openModal('customer')">Crear Cliente</button>
+        <button onclick="getCustomers()">Cargar Clientes</button>
+        <div id="customersList" class="cards"></div>
+      </details>
+
+      <!-- FACTURAS -->
+      <details name="faq-accordion" class="section">
+        <summary>🧾 Facturas</summary>
+
+        <div class="filters">
+          <span>
+            <input type="text" id="clientIdInput" placeholder="Client ID (opcional)" />
+            <button onclick="getInvoices()">Cargar Facturas</button>
+
+            <button onclick="openModal('invoice')">
+              Nueva Factura
+            </button></span>
+
           <span class="filter_picklist">
-            <b style="font-size: medium">Filtros</b>
+            <b>Filtros</b>
             <span>
-              <label for="month_filter_chart">Mes:</label>
-              <select id="month_filter_chart">
+              <label for="status_filter">Status:</label>
+              <select id="status_filter">
+                <option value="" selected></option>
+                <option value="processed">Pendiente</option>
+                <option value="pagado">Pagado</option>
+                <option value="draft">Draft</option>
+              </select>
+
+              <label for="month_filter">Mes:</label>
+              <select id="month_filter">
                 <option value="" selected></option>
                 <option value="01">Enero</option>
                 <option value="02">Febrero</option>
@@ -35,344 +115,245 @@
                 <option value="11">Noviembre</option>
                 <option value="12">Diciembre</option>
               </select>
-              <label for="year_filter_chart">Año:</label>
-              <select id="year_filter_chart"></select>
+
+              <label for="year_filter">Año:</label>
+              <select id="year_filter"></select>
             </span>
-            <button class="btn_filter" onclick="loadGoogleCharts()">
-              Generar
-            </button>
+            <button class="btn_filter" onclick="filter()">Filtrar</button>
           </span>
-
-          <div>
-            <div id="piechart"></div>
-            <div >
-              <h3>Resumen mensual</h3>
-              <div class="stats">
-                <div class="stat">
-                  <span>Ingresos</span>
-                  <strong id="ingresos">$0</strong>
-                </div>
-
-                <div class="stat">
-                  <span>Gastos Internet</span>
-                  <strong id="gastos">$0</strong>
-                </div>
-
-                <div id="gn-m" class="stat">
-                  <span>Ganancia</span>
-                  <strong id="ganancia">$0</strong>
-                </div>
-              </div>
-            </div>
-          </div>
-        </details>
-        <details name="faq-accordion" class="section">
-          <summary>👤 Clientes</summary>
-          <button onclick="openModal('customer')">Crear Cliente</button>
-          <button onclick="getCustomers()">Cargar Clientes</button>
-          <div id="customersList" class="cards"></div>
-        </details>
-
-        <!-- FACTURAS -->
-        <details name="faq-accordion" class="section">
-          <summary>🧾 Facturas</summary>
-
-          <div class="filters">
-            <span>
-              <input
-                type="text"
-                id="clientIdInput"
-                placeholder="Client ID (opcional)"
-              />
-              <button onclick="getInvoices()">Cargar Facturas</button>
-
-              <button onclick="openModal('invoice')">
-                Nueva Factura
-              </button></span
-            >
-
-            <span class="filter_picklist">
-              <b>Filtros</b>
-              <span>
-                <label for="status_filter">Status:</label>
-                <select id="status_filter">
-                  <option value="" selected></option>
-                  <option value="processed">Pendiente</option>
-                  <option value="pagado">Pagado</option>
-                  <option value="draft">Draft</option>
-                </select>
-
-                <label for="month_filter">Mes:</label>
-                <select id="month_filter">
-                  <option value="" selected></option>
-                  <option value="01">Enero</option>
-                  <option value="02">Febrero</option>
-                  <option value="03">Marzo</option>
-                  <option value="04">Abril</option>
-                  <option value="05">Mayo</option>
-                  <option value="06">Junio</option>
-                  <option value="07">Julio</option>
-                  <option value="08">Agosto</option>
-                  <option value="09">Septiembre</option>
-                  <option value="10">Octubre</option>
-                  <option value="11">Noviembre</option>
-                  <option value="12">Diciembre</option>
-                </select>
-
-                <label for="year_filter">Año:</label>
-                <select id="year_filter"></select>
-              </span>
-              <button class="btn_filter" onclick="filter()">Filtrar</button>
-            </span>
-          </div>
-
-          <table>
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Cliente</th>
-                <th>Status</th>
-                <th>Mes</th>
-                <th>Fecha Limite</th>
-                <th>Total</th>
-                <th>Notificado</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody id="invoicesTable"></tbody>
-            <tfoot id="invoiceCount"></tfoot>
-          </table>
-        </details>
-      </section>
-    </main>
-    <!-- MODAL BACKDROP -->
-    <div id="modalBackdrop" class="modal-backdrop hidden"></div>
-
-    <!-- MODAL CREAR CLIENTE -->
-    <div id="modalCustomer" class="modal hidden">
-      <h3>➕ Crear Cliente</h3>
-      <div>
-        <select class="options" id="c_status">
-          <option value="Processed">Processed</option>
-          <option value="Agendado">Agendado</option>
-          <option value="Inactive">Inactive</option>
-          <option value="Canceled">Canceled</option>
-        </select>
-
-        <input id="c_name" placeholder="Nombre" />
-        <input id="c_email" placeholder="Correo" />
-        <input id="c_phone" placeholder="Teléfono" />
-        <select class="options" id="c_plan">
-          <option value="Basico">Basico</option>
-          <option value="Intermedio">Intermedio</option>
-          <option value="Custom">Custom</option>
-        </select>
-
-        <input id="c_megas" type="number" placeholder="Megas" />
-        <input id="c_date" type="date" />
-
-        <span
-          style="
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-          "
-        >
-          <h4>🧩 Servicios</h4>
-          <button
-            onclick="addNewService('servicesContainer')"
-            style="height: fit-content; padding: 10px 20px"
-          >
-            +
-          </button>
-        </span>
-
-        <div id="servicesContainer"></div>
-      </div>
-
-      <div class="modal-actions">
-        <button onclick="closeModal()">Cancelar</button>
-        <button class="primary" onclick="submitCustomer()">Guardar</button>
-      </div>
-    </div>
-
-    <div id="modalCustomerView" class="modal hidden">
-      <div id="customerDetails" class="customer-detail">
-        <span id="client_view_stage" class="status_client"></span>
-        <h2>👤 Detalle del Cliente</h2>
-
-        <div class="row">
-          <span class="label">Nombre:</span>
-          <span class="value" id="client_view_name"></span>
         </div>
 
-        <div class="row">
-          <span class="label">Teléfono:</span>
-          <span class="value" id="client_view_phone"></span>
-        </div>
-
-        <div class="row">
-          <span class="label">Correo:</span>
-          <span class="value" id="client_view_email"></span>
-        </div>
-
-        <div class="row">
-          <span class="label">Plan:</span>
-          <span class="value" id="client_view_plan"></span>
-        </div>
-
-        <div class="row">
-          <span class="label">Fecha de instalación:</span>
-          <span class="value" id="client_view_date"></span>
-        </div>
-
-        <div class="row">
-          <span class="label">Fecha de creación:</span>
-          <span class="value" id="client_view_registred_date"></span>
-        </div>
-
-        <div class="row">
-          <span class="label">Servicios Adicionales:</span>
-        </div>
         <table>
           <thead>
             <tr>
-              <th>Servicio</th>
-              <th>Precio</th>
+              <th>#</th>
+              <th>Cliente</th>
+              <th>Status</th>
+              <th>Mes</th>
+              <th style="cursor: pointer;" onclick="sortTableByDate()">Fecha Limite</th>
+              <th>Total</th>
+              <th>Notificado</th>
+              <th>Acciones</th>
             </tr>
           </thead>
-          <tbody id="client_view_services">
-            <!-- Services will be populated here -->
-          </tbody>
+          <tbody id="invoicesTable"></tbody>
+          <tfoot id="invoiceCount"></tfoot>
         </table>
-      </div>
+      </details>
+    </section>
+  </main>
+  <!-- MODAL BACKDROP -->
+  <div id="modalBackdrop" class="modal-backdrop hidden"></div>
 
-      <div class="modal-actions">
-        <button onclick="closeModal()">Close</button>
-      </div>
-    </div>
-    <div id="modalCustomerEdit" class="modal hidden">
-      <h3>✏️Editar Cliente</h3>
-      <div>
-        <select class="options" id="c_e_status">
-          <option value="Processed">Processed</option>
-          <option value="Agendado">Agendado</option>
-          <option value="Inactive">Inactive</option>   <option value="Canceled">Canceled</option>
-        </select>
+  <!-- MODAL CREAR CLIENTE -->
+  <div id="modalCustomer" class="modal hidden">
+    <h3>➕ Crear Cliente</h3>
+    <div>
+      <select class="options" id="c_status">
+        <option value="Processed">Processed</option>
+        <option value="Agendado">Agendado</option>
+        <option value="Inactive">Inactive</option>
+        <option value="Canceled">Canceled</option>
+      </select>
 
-        <input id="c_e_name" placeholder="Nombre" />
-        <input id="c_e_id" hidden />
-        <input id="c_e_email" placeholder="Correo" />
-        <input id="c_e_phone" placeholder="Teléfono" />
-        <select class="options" id="c_e_plan">
-          <option value="Basico">Basico</option>
-          <option value="Intermedio">Intermedio</option>
-          <option value="Custom">Custom</option>
-        </select>
+      <input id="c_name" placeholder="Nombre" />
+      <input id="c_email" placeholder="Correo" />
+      <input id="c_phone" placeholder="Teléfono" />
+      <select class="options" id="c_plan">
+        <option value="Basico">Basico</option>
+        <option value="Intermedio">Intermedio</option>
+        <option value="Custom">Custom</option>
+      </select>
 
-        <input id="c_e_megas" type="number" placeholder="Megas" />
-        <input id="c_e_date" type="date" />
+      <input id="c_megas" type="number" placeholder="Megas" />
+      <input id="c_date" type="date" />
 
-        <span
-          style="
+      <span style="
             display: flex;
             justify-content: space-between;
             align-items: center;
-          "
-        >
-          <h4>🧩 Servicios</h4>
-          <button
-            onclick="addNewService('servicesContainerEdit')"
-            style="height: fit-content; padding: 10px 20px"
-          >
-            +
-          </button>
-        </span>
+          ">
+        <h4>🧩 Servicios</h4>
+        <button onclick="addNewService('servicesContainer')" style="height: fit-content; padding: 10px 20px">
+          +
+        </button>
+      </span>
 
-        <div id="servicesContainerEdit"></div>
-      </div>
-
-      <div class="modal-actions">
-        <button onclick="closeModal()">Cancelar</button>
-        <button class="primary" onclick="saveCustomer()">Guardar</button>
-      </div>
-    </div>
-    <!-- MODAL CREAR FACTURA -->
-    <div id="modalInvoice" class="modal hidden">
-      <h3>🧾 Crear Factura</h3>
-
-      <div>
-        <div id="invoiceForm"></div>
-        <input id="i_dia_instalacion" type="date" />
-
-        <select class="options" id="i_plan">
-          <option value="Basico">Basico</option>
-          <option value="Intermedio">Intermedio</option>
-          <option value="Custom">Custom</option>
-        </select>
-        <input id="i_megas" placeholder="Megas (ej: 10mbts)" />
-        <input id="i_precio" type="number" placeholder="Precio" />
-
-        <label class="checkbox">
-          <label for="i_pagado">Pagado</label>
-          <input
-            style="width: fit-content"
-            id="i_pagado"
-            type="checkbox"
-            placeholder="Pagado"
-          />
-        </label>
-      </div>
-
-      <div class="modal-actions">
-        <button onclick="closeModal()">Cancelar</button>
-        <button class="primary" onclick="submitInvoice()">Crear</button>
-      </div>
+      <div id="servicesContainer"></div>
     </div>
 
-    <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        const selectYear = document.getElementById("year_filter_chart");
-        const selectYear2 = document.getElementById("year_filter");
+    <div class="modal-actions">
+      <button onclick="closeModal()">Cancelar</button>
+      <button class="primary" onclick="submitCustomer()">Guardar</button>
+    </div>
+  </div>
 
-        const currentYear = new Date().getFullYear();
-        const startYear = 2023;
+  <div id="modalCustomerView" class="modal hidden">
+    <div id="customerDetails" class="customer-detail">
+      <span id="client_view_stage" class="status_client"></span>
+      <h2>👤 Detalle del Cliente</h2>
 
-        // Opción vacía
-        const createEmptyOption = () => {
-          const opt = document.createElement("option");
-          opt.value = "";
-          opt.textContent = "Selecciona año";
-          return opt;
-        };
+      <div class="row">
+        <span class="label">Nombre:</span>
+        <span class="value" id="client_view_name"></span>
+      </div>
 
-        selectYear.appendChild(createEmptyOption());
-        selectYear2.appendChild(createEmptyOption());
+      <div class="row">
+        <span class="label">Teléfono:</span>
+        <span class="value" id="client_view_phone"></span>
+      </div>
 
-        // Generar años
-        for (let year = currentYear; year >= startYear; year--) {
-          const option1 = document.createElement("option");
-          option1.value = year;
-          option1.textContent = year;
+      <div class="row">
+        <span class="label">Correo:</span>
+        <span class="value" id="client_view_email"></span>
+      </div>
 
-          const option2 = document.createElement("option");
-          option2.value = year;
-          option2.textContent = year;
+      <div class="row">
+        <span class="label">Plan:</span>
+        <span class="value" id="client_view_plan"></span>
+      </div>
 
-          selectYear.appendChild(option1);
-          selectYear2.appendChild(option2);
-        }
+      <div class="row">
+        <span class="label">Fecha de instalación:</span>
+        <span class="value" id="client_view_date"></span>
+      </div>
 
-        // Autoseleccionar año actual
-        selectYear.value = currentYear;
-        selectYear2.value = currentYear;
-      });
-    </script>
+      <div class="row">
+        <span class="label">Fecha de creación:</span>
+        <span class="value" id="client_view_registred_date"></span>
+      </div>
 
-    <script
-      type="text/javascript"
-      src="https://www.gstatic.com/charts/loader.js"
-    ></script>
-    <script src="./script.js"></script>
-  </body>
+      <div class="row">
+        <span class="label">Servicios Adicionales:</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Servicio</th>
+            <th>Precio</th>
+          </tr>
+        </thead>
+        <tbody id="client_view_services">
+          <!-- Services will be populated here -->
+        </tbody>
+      </table>
+    </div>
+
+    <div class="modal-actions">
+      <button onclick="closeModal()">Close</button>
+    </div>
+  </div>
+  <div id="modalCustomerEdit" class="modal hidden">
+    <h3>✏️Editar Cliente</h3>
+    <div>
+      <select class="options" id="c_e_status">
+        <option value="Processed">Processed</option>
+        <option value="Agendado">Agendado</option>
+        <option value="Inactive">Inactive</option>
+        <option value="Canceled">Canceled</option>
+      </select>
+
+      <input id="c_e_name" placeholder="Nombre" />
+      <input id="c_e_id" hidden />
+      <input id="c_e_email" placeholder="Correo" />
+      <input id="c_e_phone" placeholder="Teléfono" />
+      <select class="options" id="c_e_plan">
+        <option value="Basico">Basico</option>
+        <option value="Intermedio">Intermedio</option>
+        <option value="Custom">Custom</option>
+      </select>
+
+      <input id="c_e_megas" type="number" placeholder="Megas" />
+      <input id="c_e_date" type="date" />
+
+      <span style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          ">
+        <h4>🧩 Servicios</h4>
+        <button onclick="addNewService('servicesContainerEdit')" style="height: fit-content; padding: 10px 20px">
+          +
+        </button>
+      </span>
+
+      <div id="servicesContainerEdit"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button onclick="closeModal()">Cancelar</button>
+      <button class="primary" onclick="saveCustomer()">Guardar</button>
+    </div>
+  </div>
+  <!-- MODAL CREAR FACTURA -->
+  <div id="modalInvoice" class="modal hidden">
+    <h3>🧾 Crear Factura</h3>
+
+    <div>
+      <div id="invoiceForm"></div>
+      <input id="i_dia_instalacion" type="date" />
+
+      <select class="options" id="i_plan">
+        <option value="Basico">Basico</option>
+        <option value="Intermedio">Intermedio</option>
+        <option value="Custom">Custom</option>
+      </select>
+      <input id="i_megas" placeholder="Megas (ej: 10mbts)" />
+      <input id="i_precio" type="number" placeholder="Precio" />
+
+      <label class="checkbox">
+        <label for="i_pagado">Pagado</label>
+        <input style="width: fit-content" id="i_pagado" type="checkbox" placeholder="Pagado" />
+      </label>
+    </div>
+
+    <div class="modal-actions">
+      <button onclick="closeModal()">Cancelar</button>
+      <button class="primary" onclick="submitInvoice()">Crear</button>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const selectYear = document.getElementById("year_filter_chart");
+      const selectYear2 = document.getElementById("year_filter");
+
+      const currentYear = new Date().getFullYear();
+      const startYear = 2023;
+
+      // Opción vacía
+      const createEmptyOption = () => {
+        const opt = document.createElement("option");
+        opt.value = "";
+        opt.textContent = "Selecciona año";
+        return opt;
+      };
+
+      selectYear.appendChild(createEmptyOption());
+      selectYear2.appendChild(createEmptyOption());
+
+      // Generar años
+      for (let year = currentYear; year >= startYear; year--) {
+        const option1 = document.createElement("option");
+        option1.value = year;
+        option1.textContent = year;
+
+        const option2 = document.createElement("option");
+        option2.value = year;
+        option2.textContent = year;
+
+        selectYear.appendChild(option1);
+        selectYear2.appendChild(option2);
+      }
+
+      // Autoseleccionar año actual
+      selectYear.value = currentYear;
+      selectYear2.value = currentYear;
+    });
+  </script>
+
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  <script src="./script.js"></script>
+</body>
+
 </html>
