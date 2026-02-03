@@ -380,6 +380,8 @@ export async function createInvoiceInDB({ dbId, dia_instalacion }) {
 }
 export async function updateInvoiceInDB(id, payload) {
   try {
+
+    console.log("Iniciando Update", payload);
     if (!id) throw new Error("Invoice ID is required");
 
     const invoice = await Invoice.findById(id);

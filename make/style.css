@@ -14,7 +14,7 @@ header {
 
 main {
   padding: 30px;
-  max-width: 1100px;
+  max-width: 1500px;
   margin: auto;
 }
 
@@ -70,7 +70,7 @@ table {
 }
 
 thead {
-background: #1c3879;
+  background: #1c3879;
 }
 
 td,
@@ -393,4 +393,49 @@ li {
 .green {
   background-color: rgb(0, 99, 13);
   color: #f0f2f5;
+}
+
+.btnsText {
+  position: relative;
+}
+
+/* Tooltip / modal */
+.btnsText::after {
+  content: attr(data-text);
+  position: absolute;
+  bottom: 120%;
+  left: 50%;
+  transform: translateX(-50%);
+
+  background: #111;
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+  white-space: nowrap;
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+/* Flechita */
+.btnsText::before {
+  content: '';
+  position: absolute;
+  bottom: 105%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: #111;
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+/* Hover */
+.btnsText:hover::after,
+.btnsText:hover::before {
+  opacity: 1;
 }

@@ -223,7 +223,7 @@ function showAlert(
         }, 2000);
       }
     })
-    .finally(() => {});
+    .finally(() => { });
 
   return true;
 }
@@ -265,6 +265,11 @@ async function getInvoices(filters_ = null) {
 
   try {
     const invoices = await fetchInvoices(clientId);
+
+    invoices.data.forEach(element => {
+      console.log(element);
+    });
+
     table.innerHTML = "";
     tableFoot.innerHTML = "";
 
@@ -292,17 +297,17 @@ async function getInvoices(filters_ = null) {
         <tr>
           <td>${inv.invoiceNumber}</td>
           <td>${inv.customerId?.name || "—"}</td>
-          <td><b class="${statusClass} status">${
-            inv.status == "Processed" ? "Pendiente" : inv.status
-          }</b></td>
+          <td><b class="${statusClass} status">${inv.status == "Processed" ? "Pendiente" : inv.status
+        }</b></td>
           <td>${getMonth(inv.issueDate)}</td>
           <td>${limitDate}</td>
           <td>$${inv.total} ${inv.currency}</td>
+          <td>${inv.sendNotification ? "✅" : "❌"}  </td>
           <td>
-            <button onclick="downloadPDF('${inv._id}')">PDF</button>
-            <button style="background-color: red;" onclick="deleteInvoice('${
-              inv._id
-            }', '${inv.invoiceNumber}')">Delete</button>
+            <button data-text="Descargar PDF" class="btnsText" id="downloadPDF" onclick="downloadPDF('${inv._id}')">🧾</button> 
+            <button  data-text="Notificar al cliente" class="btnsText" id="sendNotification" style="background-color: rgb(255, 252, 99);" onclick="sendNotification('${inv._id}')">✉️</button>
+            <button data-text="Eliminar factura" class="btnsText" id="deleteInvoice" style="background-color: rgb(250, 137, 137);" onclick="deleteInvoice('${inv._id
+        }', '${inv.invoiceNumber}')">🚫</button>
           </td>
         </tr>
       `;
@@ -310,12 +315,11 @@ async function getInvoices(filters_ = null) {
 
     tableFoot.innerHTML = ` <tr>
               <th scope="row" colspan="7">
-              Count: ${
-                invoiceFilterResponse.length
-              }  -  Total: $${invoiceFilterResponse.reduce(
-                (acc, obj) => acc + obj.total,
-                0
-              )} MXN
+              Count: ${invoiceFilterResponse.length
+      }  -  Total: $${invoiceFilterResponse.reduce(
+        (acc, obj) => acc + obj.total,
+        0
+      )} MXN
               </th>
             </tr>`;
   } catch (err) {
@@ -553,8 +557,8 @@ function setCustomersPickList() {
   <label for="i_cliente">Cliente</label>
     <select class="options customer" id="i_cliente"> 
       ${currentCustomers.map((customer) => {
-        return `<option value="${customer._id}">${customer.name}</option>`;
-      })}
+    return `<option value="${customer._id}">${customer.name}</option>`;
+  })}
     </select> 
   `;
 
