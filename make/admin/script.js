@@ -88,7 +88,8 @@ async function getCustomers() {
           deleteCustomer,
           "customer",
           id,
-          "eliminado"
+          "eliminado",
+          2000
         );
       });
 
@@ -193,7 +194,8 @@ function showAlert(
   customFunction,
   type,
   id,
-  method
+  method,
+  Timeout
 ) {
   Swal.fire({
     title,
@@ -207,7 +209,7 @@ function showAlert(
       if (result.isConfirmed) {
         const data = customFunction(id);
 
-        let typeText = type === "customer" ? "Cliente" : "Factura";
+        let typeText = type === "noti" ? "Notificacion" : type === "customer" ? "Cliente" : "Factura";
         Swal.fire(
           data ? `Success` : "Error",
           data
@@ -220,7 +222,7 @@ function showAlert(
           closeModal();
           getCustomers();
           getInvoices();
-        }, 2000);
+        }, Timeout);
       }
     })
     .finally(() => { });
@@ -288,16 +290,17 @@ async function getInvoices(filters_ = null) {
     invoiceFilterResponse.forEach((inv) => {
       let statusClass = "";
 
-      if (inv.status === "Pagado") statusClass = "status-green";
-      else if (inv.status === "Processed") statusClass = "status-yellow";
-      else if (inv.status === "Canceled") statusClass = "status-gray";
+      const { customerId: { _id: customerId }, _id, total, dueDate, status } = inv;
+      if (status === "Pagado") statusClass = "status-green";
+      else if (status === "Processed") statusClass = "status-yellow";
+      else if (status === "Canceled") statusClass = "status-gray";
 
       const limitDate = inv.dueDate.split("T")[0];
       table.innerHTML += `
         <tr>
           <td>${inv.invoiceNumber}</td>
           <td>${inv.customerId?.name || "—"}</td>
-          <td><b class="${statusClass} status">${inv.status == "Processed" ? "Pendiente" : inv.status
+          <td><b class="${statusClass} status">${status == "Processed" ? "Pendiente" : status
         }</b></td>
           <td>${getMonth(inv.issueDate)}</td>
           <td>${limitDate}</td>
@@ -305,7 +308,8 @@ async function getInvoices(filters_ = null) {
           <td>${inv.sendNotification ? "✅" : "❌"}  </td>
           <td>
             <button data-text="Descargar PDF" class="btnsText" id="downloadPDF" onclick="downloadPDF('${inv._id}')">🧾</button> 
-            <button  data-text="Notificar al cliente" class="btnsText" id="sendNotification" style="background-color: rgb(255, 252, 99);" onclick="sendNotification('${inv._id}')">✉️</button>
+            <button data-text="Notificar al cliente" class="btnsText" id="sendNotification" style="background-color: rgb(255, 252, 99);" 
+            onclick="sendNotification('${customerId}', '${_id}', ${total}, '${dueDate}')" ${inv.sendNotification ? 'disabled' : ''}>✉️</button>
             <button data-text="Eliminar factura" class="btnsText" id="deleteInvoice" style="background-color: rgb(250, 137, 137);" onclick="deleteInvoice('${inv._id
         }', '${inv.invoiceNumber}')">🚫</button>
           </td>
@@ -362,7 +366,8 @@ function deleteInvoice(invoiceId, invoiceNumber) {
       },
       "invoice",
       invoiceId,
-      "eliminada"
+      "eliminada",
+      2000
     );
   } catch (error) {
     console.error("Error deleting invoice:", error);
@@ -475,7 +480,8 @@ async function saveCustomer() {
       },
       "customer",
       c_e_id.value,
-      "actualizado"
+      "actualizado",
+      2000
     );
   } catch (error) {
     console.error("Error updating customer:", error);
@@ -640,5 +646,74 @@ function summaryMonth(gastos, ingresos) {
     .getElementById("gn-m")
     .classList.add(ingresos - gastos > 0 ? "green" : "red");
 }
+
+async function sendNotification(customerId, invoiceId, price, limit_Date) {
+  try {
+    const month = getMonth(limit_Date)
+    const { name: customer, phone: whats, email, plan } = currentCustomers.find((c) => c._id === customerId)
+
+    if (!customer || !whats || !email || !plan || !price || !limit_Date) {
+      throw new Error("Faltan datos para enviar la notificación");
+    }
+
+    const payload = {
+      event: "Notificacion",
+      details: {
+        customer,
+        month,
+        limit_Date: limit_Date.split("T")[0].split("-").reverse().join("/"),
+        plan,
+        price,
+        whats,
+        email,
+        invoiceId
+      }
+    };
+
+    console.log("Payload a enviar:", payload);
+
+
+    showAlert(
+      "Enviar notificación al cliente?",
+      "Estas a punto de enviar una notificación al cliente, dependiendo de su información de contacto se usaran diferentes medios (whatsapp, correo). La notificación demora aproximadamente 2min en reflejarse en el sistema.",
+      "info",
+      true,
+      async () => {
+        const response = await fetch(
+          "https://hook.us2.make.com/m7l8aoluopdumpr5oigpxy3figygylt7",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+          }
+        );
+
+        if (!response.ok) {
+          const text = await response.text();
+          throw new Error(`Make error: ${response.status} - ${text}`);
+        }
+
+        const result = await response.text();
+        console.log("Webhook enviado:", result);
+        return result;
+      },
+      "noti",
+      null,
+      "enviada",
+      5000
+    );
+
+
+
+
+    return true;
+  } catch (error) {
+    console.error("Error enviando notificación:", error.message);
+    return false;
+  }
+}
+
 getCustomers();
 getInvoices();

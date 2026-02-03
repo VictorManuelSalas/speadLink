@@ -259,7 +259,7 @@ const recreateHTML = (data) => {
             <strong>Correo:</strong> speadinternetmd@gmail.com
           </p>
           <p class="companyContactData"><strong>Tel:</strong> +52 8716156932</p>
-          <span class="status">${status}</span>
+          <span class="status">${status === "Pagado" ? "Pagado" : "Pendiente"}</span>
         </div>
       </div>
 
