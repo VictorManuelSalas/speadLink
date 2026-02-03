@@ -23,7 +23,7 @@ const invoiceSchema = new mongoose.Schema(
       default: "Draft",
       index: true,
     },
-
+    sendNotification: { type: Boolean, default: false },
     // 💱 Moneda
     currency: {
       type: String,
