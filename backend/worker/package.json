@@ -1,0 +1,15 @@
+{
+    "name": "speadlink-worker",
+    "version": "1.0.0",
+    "scripts": {
+        "build": "tsc",
+        "start": "node dist/main.js"
+    },
+    "dependencies": {
+        "bullmq": "^4",
+        "ioredis": "^5"
+    },
+    "devDependencies": {
+        "typescript": "^5"
+    }
+}

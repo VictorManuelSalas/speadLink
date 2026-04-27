@@ -1,0 +1,99 @@
+version: "3.9"
+
+services:
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: speed-api
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+      - mongo
+      - redis
+    networks:
+      - speed-network
+    command: npm run start:dev
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    volumes:
+      - ./api:/app
+      - /app/node_modules
+
+  worker:
+    build:
+      context: ./worker
+      dockerfile: Dockerfile
+    container_name: speed-worker
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+      - mongo
+      - redis
+    networks:
+      - speed-network
+
+  postgres:
+    image: postgres:15
+    container_name: speed-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: speedlink
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - speed-network
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: speed-pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@speed.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - speed-network
+
+  mongo:
+    image: mongo:6
+    container_name: speed-mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - speed-network
+
+  redis:
+    image: redis:7
+    container_name: speed-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - speed-network
+
+volumes:
+  postgres_data:
+  mongo_data:
+  pgadmin_data:
+
+networks:
+  speed-network:
