@@ -1,0 +1,48 @@
+<div class="page dashboard-page">
+  <div class="page-heading">
+    <div><h1>{{ 'dashboard.welcome' | t: { name: 'Eddy Scotch Roje' } }}</h1><p>{{ 'dashboard.summary' | t }}</p></div>
+    <div class="heading-actions"><span class="date-pill"><img src="/icons/dashboard/fi-sr-calendar.svg" alt=""> Agosto 2026</span><button><img src="/icons/actions/fi-br-upload.svg" alt=""> {{ 'common.export' | t }}</button></div>
+  </div>
+
+  <section class="metric-grid">
+    @for (metric of metrics; track metric.label) {
+      <article class="panel metric-card">
+        <header><span><i><img [src]="metric.icon" alt=""></i>{{ metric.label | t }}</span><button class="more">•••</button></header>
+        <strong>{{ metric.value }} <small>MXN</small></strong>
+        <footer><span class="pill" [class]="metric.tone">{{ metric.trend.startsWith('dashboard.') ? (metric.trend | t: { count: 4 }) : metric.trend }}</span><small>{{ metric.detail ? (metric.detail | t) : '' }}</small></footer>
+      </article>
+    }
+  </section>
+
+  <section class="dashboard-grid">
+    <article class="panel chart-card">
+      <header><b><img class="heading-icon" src="/icons/dashboard/fi-br-chart-histogram.svg" alt=""> {{ 'dashboard.overview' | t }}</b><div><span class="pill selected">{{ 'dashboard.revenue' | t }}</span><span class="pill year"><img src="/icons/dashboard/fi-sr-calendar.svg" alt=""> {{ 'dashboard.year' | t: { year: 2026 } }}</span></div></header>
+      <div class="chart">
+        <div class="axis"><span>$3000</span><span>$2500</span><span>$2000</span><span>$1500</span><span>$1000</span><span>$500</span><span>$0</span></div>
+        <div class="bars">
+          @for (height of bars; track $index) {
+            <div class="bar-column"><i [style.height.%]="height"></i><small>{{ ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][$index] }}</small></div>
+          }
+        </div>
+      </div>
+    </article>
+
+    <article class="panel installation-card">
+      <header><b><img class="heading-icon" src="/icons/dashboard/fi-sr-calendar-2.svg" alt=""> {{ 'dashboard.nextInstallations' | t }}</b><button class="more">•••</button></header>
+      @for (item of installations; track item.name) {
+        <div class="installation"><span class="day" [style.background]="item.color">{{ item.day }}</span><span><b>{{ item.name }}</b><small>{{ item.time }}</small></span><i>◉</i></div>
+      }
+      <small class="centered">{{ 'dashboard.noMoreInstallations' | t }}</small>
+    </article>
+
+    <div class="side-cards">
+      <article class="panel compact"><header><b><img class="heading-icon" src="/icons/status/fi-sr-exclamation-2.svg" alt=""> {{ 'dashboard.overdueInvoices' | t }}</b><button class="more">•••</button></header><strong>$ 2,890.50 <small>MXN</small></strong><span class="pill danger">{{ 'dashboard.invoicesCount' | t: { count: 10 } }}</span></article>
+      <article class="panel compact services"><header><b><img class="heading-icon" src="/icons/dashboard/fi-sr-star.svg" alt=""> {{ 'dashboard.topServices' | t }}</b><button class="more">•••</button></header><div><i style="width:65%"></i><span>Básico 4/5⭐</span></div><div><i style="width:42%"></i><span>Custom 1/5⭐</span></div><div><i style="width:54%"></i><span>Intermedio 3/5⭐</span></div></article>
+    </div>
+  </section>
+
+  <section class="tables-grid">
+    <article class="panel table-card"><header><b><img class="heading-icon" src="/icons/menu/fi-rr-document.svg" alt=""> Facturas pendientes</b></header><div class="table-head"><span>Factura</span><span>Vencimiento</span><span>Total</span><span>Estado</span></div>@for (row of [1,2,3,4]; track row) {<div class="table-row"><b>INV-2026-394{{ row + 3 }}</b><span>Lun, 12 Jun 2026</span><b>$400.00</b><span><i class="pill danger">Vencida</i></span></div>}</article>
+    <article class="panel table-card"><header><b><img class="heading-icon" src="/icons/menu/fi-rr-document.svg" alt=""> Facturas por vencer</b></header><div class="table-head wide"><span>Cliente</span><span>Factura</span><span>Vencimiento</span><span>Total</span><span>Estado</span></div><div class="table-row wide"><b>Rocío Macías</b><span>INV-2026-39437</span><span>Lun, 12 Jun 2026</span><b>$400.00</b><span><i class="pill warning">Pendiente</i></span></div></article>
+  </section>
+</div>

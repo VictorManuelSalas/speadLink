@@ -1,0 +1,30 @@
+<div class="page settings-page">
+  <section class="panel organization-card">
+    <nav class="tabs">
+      @for (tab of tabs; track tab) { <button [class.active]="activeTab() === tab" (click)="activeTab.set(tab)">{{ tab | t }}</button> }
+    </nav>
+
+    @if (activeTab() === 'settings.companyDetails') {
+      <div class="company-details">
+        <div class="company-mark"><span>▦</span><button>{{ 'settings.edit' | t }}</button></div>
+        <div class="company-copy">
+          <h2>Spead Link 💫 <button class="edit">✎</button></h2>
+          <p>Org ID: 45679</p>
+          <p>✉ &nbsp;<u>victorsalasnz&#64;gmail.com</u> <button class="edit">✎</button></p>
+          <p>☎ &nbsp;+52 8141448826 <button class="edit">✎</button></p>
+          <p>▣ &nbsp;+52 8713961676 <button class="edit">✎</button></p>
+          <p>⌾ &nbsp;San Fernando #410, Gomez Palacio 35017 <button class="edit">✎</button></p>
+          <div class="description"><span>●</span><p>Spead Link es una empresa tecnológica especializada en sistemas de gestión de clientes, automatización de cobros y optimización de procesos. Desarrollamos soluciones CRM modernas para ayudar a los proveedores de servicios a optimizar sus operaciones.</p><button class="edit">✎</button></div>
+
+          <h3>{{ 'settings.locationInformation' | t }}</h3>
+          <div class="timezone-wrap">
+            <button class="timezone" (click)="toggleTimezone()"><span>⌾ &nbsp;(GMT -6:0) Hora estándar central (America/Monterrey)</span><b>{{ timezoneOpen() ? '▲' : '▼' }}</b></button>
+            @if (timezoneOpen()) {<div class="timezone-list"><button>(GMT -8:00) Hora del Pacífico</button><button>(GMT -7:00) Hora de la Montaña</button><button>(GMT -6:00) Hora estándar central</button><button>(GMT +0:00) Greenwich Mean Time</button></div>}
+          </div>
+        </div>
+      </div>
+    } @else {
+      <div class="tab-placeholder"><span>⚙</span><h2>{{ activeTab() | t }}</h2><p>{{ 'settings.sectionReady' | t }}</p></div>
+    }
+  </section>
+</div>

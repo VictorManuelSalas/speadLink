@@ -1,0 +1,23 @@
+<aside class="sidebar" [class.is-collapsed]="collapsed">
+  <a class="brand" routerLink="/dashboard" aria-label="ISP Hub inicio">
+    <span class="logo"><img src="/icons/brand/speedlink-logo.svg" alt=""></span>
+    <strong>ISP Hub</strong>
+  </a>
+
+  <nav>
+    @for (group of (settingsMode() ? settingsGroups : mainGroups); track group.label) {
+      <section class="nav-group">
+        <span class="group-label">{{ group.label | t }}</span>
+        @for (item of group.items; track item.path) {
+          <a [routerLink]="item.path" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" [title]="collapsed ? (item.label | t) : ''">
+            <span class="nav-icon"><img [src]="item.icon" alt=""></span><span class="nav-label">{{ item.label | t }}</span>
+          </a>
+        }
+      </section>
+    }
+  </nav>
+
+  <button class="collapse" (click)="toggleCollapsed.emit()" [attr.aria-label]="collapsed ? 'Expandir menú' : 'Colapsar menú'">
+    {{ collapsed ? '»' : '«' }}
+  </button>
+</aside>

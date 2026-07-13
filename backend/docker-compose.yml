@@ -44,8 +44,8 @@ services:
     container_name: speed-postgres
     restart: always
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: vmanuel
+      POSTGRES_PASSWORD: 19080545
       POSTGRES_DB: speedlink
     ports:
       - "5432:5432"

@@ -1,0 +1,89 @@
+<div class="app-shell" [class.dark]="darkMode()" [class.collapsed]="collapsed()" [class.settings-mode]="settingsMode()">
+  <app-sidebar [collapsed]="collapsed()" (toggleCollapsed)="toggleSidebar()" />
+
+  <div class="workspace">
+    <header class="topbar">
+      <div class="search-shell" (mouseleave)="closeQuickAccess()">
+        <label class="search">
+          <img class="search-icon" src="/icons/actions/fi-br-search.svg" alt="">
+          <input #globalSearch type="search" [placeholder]="'common.search' | t" [attr.aria-label]="'common.search' | t"
+            (focus)="searchOpen.set(true)" (input)="updateSearch($event)" (keydown)="handleSearchKeydown($event)">
+          <kbd><img src="/icons/ui/command.svg" alt="Command"> K</kbd>
+        </label>
+        @if (searchOpen()) {
+        <section class="search-palette">
+          <header><span>{{ 'common.quickAccess' | t }}</span><small>{{ 'common.openHint' | t }}</small></header>
+          @for (item of searchResults(); track item.path) {
+          <button (mousedown)="$event.preventDefault()" (click)="openSearchResult(item.path)">
+            <img [src]="item.icon" alt=""><span><b>{{ item.label | t }}</b><small>{{ item.section | t }}</small></span><i>↵</i>
+          </button>
+          } @empty {
+          <p>{{ 'common.noResults' | t }}</p>
+          }
+        </section>
+        }
+      </div>
+
+      <div class="top-actions">
+        <a class="icon-button preferences-button" [class.close-settings]="settingsMode()"
+          [routerLink]="settingsMode() ? '/dashboard' : '/settings/organization'"
+          [attr.aria-label]="(settingsMode() ? 'common.closeSettings' : 'common.preferences') | t"
+          [title]="(settingsMode() ? 'common.closeSettings' : 'common.preferences') | t">@if (settingsMode()) { × } @else { <img
+            src="/icons/ui/settings-sliders.svg" alt=""> }</a>
+        <div class="hover-menu" (mouseenter)="notificationsOpen.set(true)" (mouseleave)="notificationsOpen.set(false)">
+          <button class="icon-button alert-button" [attr.aria-label]="'common.notifications' | t">
+            <img src="/icons/ui/bell.svg" alt="">@if (unreadNotificationCount() > 0) { <span class="badge">{{ unreadNotificationCount() }}</span> }
+          </button>
+          @if (notificationsOpen()) {
+          <section class="popover notifications">
+            <div class="popover-title"><strong>{{ 'common.notifications' | t }}</strong><span>{{ 'common.newNotifications' | t }}</span></div>
+            <button><i class="dot orange"></i><span><b>Factura próxima a vencer</b><small>Rocío Macías · hace 10
+                  min</small></span></button>
+            <button><i class="dot blue"></i><span><b>Nueva instalación programada</b><small>Karime Galves · hace 35
+                  min</small></span></button>
+            <button><i class="dot red"></i><span><b>Factura vencida</b><small>INV-2026-39407 · hace 1
+                  h</small></span></button>
+            <button class="see-all" (click)="openNotificationDrawer()">{{ 'common.viewAll' | t }}</button>
+          </section>
+          }
+        </div>
+
+        <div class="hover-menu" (mouseenter)="profileOpen.set(true)" (mouseleave)="profileOpen.set(false)">
+          <button class="avatar" aria-label="Abrir perfil">ER</button>
+          @if (profileOpen()) {
+          <section class="popover profile-menu">
+            <div class="profile-summary"><span class="avatar profile-avatar">ER</span><span><b>Eddy Scotch Roje</b><small>{{ 'common.viewProfile' | t }}</small></span></div>
+            <button class="profile-action" (click)="toggleTheme()">
+              <img class="theme-icon" [src]="darkMode() ? '/icons/ui/fi-sr-rec.svg' : '/icons/ui/fi-sr-moon.svg'" alt="">
+              {{ (darkMode() ? 'common.lightMode' : 'common.darkMode') | t }}
+            </button>
+            <button class="profile-action sign-out"><img class="menu-action-icon" src="/icons/actions/fi-sr-sign-out-alt.svg" alt="">{{ 'common.signOut' | t }}</button>
+          </section>
+          }
+        </div>
+      </div>
+    </header>
+
+    <main><router-outlet /></main>
+  </div>
+
+  @if (notificationDrawerOpen()) {
+  <div class="drawer-backdrop" [class.closing]="notificationDrawerClosing()" (click)="closeNotificationDrawer()"></div>
+  <aside class="notification-drawer" [class.closing]="notificationDrawerClosing()" aria-label="Todas las notificaciones">
+    <header>
+      <div><span class="eyebrow">ISP Hub</span><h2>{{ 'common.allNotifications' | t }}</h2></div>
+      <button class="drawer-close" (click)="closeNotificationDrawer()" [attr.aria-label]="'common.close' | t">×</button>
+    </header>
+    <div class="drawer-summary"><span><b>{{ unreadNotificationCount() }}</b> {{ 'common.unread' | t }}</span><button (click)="markAllNotificationsRead()">{{ 'common.markAllRead' | t }}</button></div>
+    <div class="notification-list">
+      @for (notification of allNotifications; track notification.title) {
+      <article [class.unread]="notification.unread">
+        <i class="dot" [class]="notification.tone"></i>
+        <div><b>{{ notification.title }}</b><p>{{ notification.detail }}</p><small>{{ notification.time }}</small></div>
+        @if (notification.unread) { <span class="unread-marker"></span> }
+      </article>
+      }
+    </div>
+  </aside>
+  }
+</div>
