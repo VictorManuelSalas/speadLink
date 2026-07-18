@@ -1,0 +1,9 @@
+node_modules
+dist
+.angular
+.git
+.vscode
+npm-debug.log
+Dockerfile*
+docker-compose*.yml
+SPEEDLINK_CODEX_BRIEF.md
