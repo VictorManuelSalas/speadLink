@@ -1,0 +1,114 @@
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { SETTINGS_GROUPS, SETTINGS_SECTIONS, SettingsSectionKey } from './settings.data';
+
+@Component({
+  selector: 'app-settings-overview-page',
+  imports: [RouterLink],
+  template: `
+    <header class="settings-header">
+      <div>
+        <div class="breadcrumbs"><span>SpeedLink CRM</span><b>›</b><span>Ajustes</span></div>
+        <h1>Centro de configuración</h1>
+        <p>
+          Administra la organización, seguridad, automatizaciones e integraciones desde un solo
+          lugar.
+        </p>
+      </div>
+      <a class="button" routerLink="/settings/activity">Ver actividad administrativa</a>
+    </header>
+
+    <section class="settings-health">
+      <div class="settings-health__score">
+        <strong>92%</strong><span>Configuración completada</span>
+      </div>
+      <div class="settings-health__progress"><i></i></div>
+      <div class="settings-health__items">
+        <span><i class="dot dot--ok"></i>Correo y SMS conectados</span>
+        <span><i class="dot dot--ok"></i>Políticas de acceso activas</span>
+        <span><i class="dot dot--warn"></i>1 integración requiere atención</span>
+      </div>
+    </section>
+
+    <div class="settings-layout">
+      <main class="settings-groups">
+        @for (group of groups; track group.name) {
+          <section class="settings-group">
+            <header>
+              <div>
+                <h2>{{ group.name }}</h2>
+                <p>{{ group.description }}</p>
+              </div>
+            </header>
+            <div class="settings-card-grid">
+              @for (key of group.keys; track key) {
+                @if (section(key); as item) {
+                  <a class="settings-nav-card" [routerLink]="'/settings/' + item.key">
+                    <span class="settings-icon"><img [src]="item.icon" alt="" /></span>
+                    <span
+                      ><b>{{ item.shortTitle }}</b
+                      ><small>{{ item.description }}</small></span
+                    >
+                    <i>›</i>
+                  </a>
+                }
+              }
+            </div>
+          </section>
+        }
+      </main>
+
+      <aside class="settings-aside">
+        <article class="settings-aside-card">
+          <header>
+            <span class="live-dot"></span>
+            <div>
+              <h2>Estado del sistema</h2>
+              <p>Todos los servicios responden</p>
+            </div>
+          </header>
+          <dl>
+            <div>
+              <dt>API principal</dt>
+              <dd>Operativa</dd>
+            </div>
+            <div>
+              <dt>Correo saliente</dt>
+              <dd>Operativo</dd>
+            </div>
+            <div>
+              <dt>Automatizaciones</dt>
+              <dd>6 activas</dd>
+            </div>
+            <div>
+              <dt>Último respaldo</dt>
+              <dd>Hoy, 02:00</dd>
+            </div>
+          </dl>
+        </article>
+        <article class="settings-aside-card">
+          <header>
+            <span class="settings-icon settings-icon--small"
+              ><img src="/icons/settings/fi-rr-lock.svg" alt=""
+            /></span>
+            <div>
+              <h2>Recomendación</h2>
+              <p>Mejora la protección de tu cuenta</p>
+            </div>
+          </header>
+          <p class="aside-copy">6 usuarios aún no activan la autenticación de dos factores.</p>
+          <a class="button button--full" routerLink="/settings/2fa">Revisar política 2FA</a>
+        </article>
+      </aside>
+    </div>
+  `,
+  styleUrl: './settings-pages.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class SettingsOverviewPage {
+  readonly groups = SETTINGS_GROUPS;
+
+  section(key: string) {
+    return SETTINGS_SECTIONS[key as SettingsSectionKey];
+  }
+}

@@ -6,6 +6,8 @@ import { ConfigModule } from '@nestjs/config';
 //Guards 
 
 import { PrismaModule } from './prisma/prisma.module';
+import { TicketsModule } from './tickets/tickets.module';
+import { UsersModule } from './users/users.module';
 
 //Controllers + Modules 
 
@@ -18,7 +20,9 @@ import { PrismaModule } from './prisma/prisma.module';
             isGlobal: true,
             envFilePath: `.env.${process.env.NODE_ENV}`,
         }), 
-        PrismaModule
+        PrismaModule,
+        TicketsModule,
+        UsersModule
     ],
     controllers: [
 

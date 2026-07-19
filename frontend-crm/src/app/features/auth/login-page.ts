@@ -1,0 +1,225 @@
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import { SessionContext } from '../../core/auth/session-context';
+import { LanguageService } from '../../core/i18n/language.service';
+
+@Component({
+  selector: 'app-login-page',
+  imports: [FormsModule],
+  template: `
+    <main class="login-page">
+      <section class="login-showcase">
+        <div class="login-showcase__glow login-showcase__glow--one"></div>
+        <div class="login-showcase__glow login-showcase__glow--two"></div>
+        <header class="login-brand">
+          <span><img src="/icons/brand/speedlink-logo.svg" alt="" /></span>
+          <b>SpeedLink <em>CRM</em></b>
+        </header>
+        <div class="login-showcase__content">
+          <span class="login-eyebrow">OPERACIÓN CONECTADA</span>
+          <h1>Tu operación completa,<br />en un solo lugar.</h1>
+          <p>
+            Clientes, red, cobranza y soporte trabajando con la misma información en tiempo real.
+          </p>
+          <div class="login-benefits">
+            <article>
+              <span>✓</span>
+              <div>
+                <b>Información centralizada</b
+                ><small>Una vista confiable de cada cliente y servicio.</small>
+              </div>
+            </article>
+            <article>
+              <span>✓</span>
+              <div>
+                <b>Seguimiento sin fricción</b
+                ><small>Actividad, notas y eventos conectados a cada registro.</small>
+              </div>
+            </article>
+            <article>
+              <span>✓</span>
+              <div>
+                <b>Acceso protegido</b><small>Permisos y trazabilidad para todo el equipo.</small>
+              </div>
+            </article>
+          </div>
+        </div>
+        <footer>© 2026 SpeedLink Telecom · Plataforma administrativa</footer>
+      </section>
+
+      <section class="login-access">
+        <div class="login-language" aria-label="Idioma">
+          <button
+            type="button"
+            [class.is-active]="i18n.language() === 'es'"
+            (click)="i18n.setLanguage('es')"
+          >
+            ES
+          </button>
+          <button
+            type="button"
+            [class.is-active]="i18n.language() === 'en'"
+            (click)="i18n.setLanguage('en')"
+          >
+            EN
+          </button>
+        </div>
+        <div class="login-card">
+          <div class="login-mobile-brand">
+            <span><img src="/icons/brand/speedlink-logo.svg" alt="" /></span><b>SpeedLink CRM</b>
+          </div>
+          <span class="login-eyebrow">BIENVENIDO DE NUEVO</span>
+          <h2>Inicia sesión en tu cuenta</h2>
+          <p class="login-subtitle">Ingresa tus credenciales para continuar al CRM.</p>
+
+          @if (error()) {
+            <div class="login-alert" role="alert">
+              <span>!</span>
+              <p>{{ error() }}</p>
+            </div>
+          }
+
+          <form (ngSubmit)="submit()" #loginForm="ngForm" novalidate>
+            <label>
+              <span>Correo electrónico</span>
+              <div
+                class="login-input"
+                [class.has-error]="emailControl.invalid && emailControl.touched"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M3 5h18v14H3zM3 7l9 6 9-6" />
+                </svg>
+                <input
+                  #emailControl="ngModel"
+                  name="email"
+                  type="email"
+                  autocomplete="username"
+                  inputmode="email"
+                  placeholder="nombre@empresa.com"
+                  required
+                  email
+                  [(ngModel)]="email"
+                  (input)="clearError()"
+                />
+              </div>
+              @if (emailControl.invalid && emailControl.touched) {
+                <small>Ingresa un correo electrónico válido.</small>
+              }
+            </label>
+
+            <label>
+              <span>Contraseña</span>
+              <div
+                class="login-input"
+                [class.has-error]="passwordControl.invalid && passwordControl.touched"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="4" y="10" width="16" height="11" rx="2" />
+                  <path d="M8 10V7a4 4 0 018 0v3" />
+                </svg>
+                <input
+                  #passwordControl="ngModel"
+                  name="password"
+                  [type]="showPassword() ? 'text' : 'password'"
+                  autocomplete="current-password"
+                  placeholder="Mínimo 8 caracteres"
+                  required
+                  minlength="8"
+                  [(ngModel)]="password"
+                  (input)="clearError()"
+                />
+                <button
+                  type="button"
+                  class="password-toggle"
+                  [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                  (click)="showPassword.set(!showPassword())"
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z" />
+                    <circle cx="12" cy="12" r="2.5" />
+                  </svg>
+                </button>
+              </div>
+              @if (passwordControl.invalid && passwordControl.touched) {
+                <small>La contraseña debe tener al menos 8 caracteres.</small>
+              }
+            </label>
+
+            <div class="login-options">
+              <label class="login-check"
+                ><input type="checkbox" name="remember" [(ngModel)]="remember" /><span
+                  >Recordarme</span
+                ></label
+              >
+              <a href="mailto:soporte@speedlink.mx?subject=Recuperar acceso a SpeedLink CRM"
+                >¿Olvidaste tu contraseña?</a
+              >
+            </div>
+
+            <button class="login-submit" type="submit" [disabled]="loading()">
+              @if (loading()) {
+                <span class="login-spinner"></span> Verificando…
+              } @else {
+                Iniciar sesión <span>→</span>
+              }
+            </button>
+          </form>
+
+          <div class="login-demo">
+            <span>CUENTA DE DEMOSTRACIÓN</span>
+            <button type="button" (click)="useDemoCredentials()">
+              <b>andrea.torres&#64;speedlink.mx</b
+              ><small>Haz clic para completar las credenciales</small>
+            </button>
+          </div>
+          <p class="login-help">
+            ¿Necesitas ayuda? <a href="mailto:soporte@speedlink.mx">Contacta a soporte</a>
+          </p>
+        </div>
+      </section>
+    </main>
+  `,
+  styleUrl: './login-page.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class LoginPage {
+  private readonly session = inject(SessionContext);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  readonly i18n = inject(LanguageService);
+  readonly loading = signal(false);
+  readonly showPassword = signal(false);
+  readonly error = signal('');
+  email = '';
+  password = '';
+  remember = true;
+
+  useDemoCredentials(): void {
+    this.email = 'andrea.torres@speedlink.mx';
+    this.password = 'SpeedLink2026!';
+    this.error.set('');
+  }
+
+  clearError(): void {
+    this.error.set('');
+  }
+
+  submit(): void {
+    if (this.loading() || !this.email || this.password.length < 8) return;
+    this.loading.set(true);
+    this.error.set('');
+    window.setTimeout(() => {
+      const result = this.session.login(this.email, this.password, this.remember);
+      this.loading.set(false);
+      if (!result.success) {
+        this.error.set(result.message ?? 'No se pudo iniciar sesión. Inténtalo de nuevo.');
+        return;
+      }
+      const requested = this.route.snapshot.queryParamMap.get('returnUrl');
+      const returnUrl =
+        requested?.startsWith('/') && !requested.startsWith('//') ? requested : '/dashboard';
+      void this.router.navigateByUrl(returnUrl, { replaceUrl: true });
+    }, 450);
+  }
+}

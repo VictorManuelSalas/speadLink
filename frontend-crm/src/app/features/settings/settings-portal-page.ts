@@ -1,0 +1,247 @@
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
+import { ClientPortalStore } from '../../core/portal/client-portal.store';
+
+@Component({
+  selector: 'app-settings-portal-page',
+  imports: [FormsModule, RouterLink],
+  template: `
+    <header class="portal-settings-header">
+      <div>
+        <div class="breadcrumbs">
+          <a routerLink="/settings">Ajustes</a><b>›</b><span>Canales</span><b>›</b
+          ><span>Portal de clientes</span>
+        </div>
+        <h1>Portal de clientes</h1>
+        <p>
+          Controla la experiencia de autoservicio, los datos visibles y las acciones disponibles.
+        </p>
+      </div>
+      <a
+        class="button"
+        [class.is-disabled]="!store.config().enabled"
+        [href]="previewUrl()"
+        target="_blank"
+        rel="noopener"
+        >↗ Abrir portal</a
+      >
+    </header>
+
+    <section class="portal-publish-card" [class.is-enabled]="store.config().enabled">
+      <div class="portal-publish-card__icon">
+        <img src="/icons/settings/fi-rr-layers.svg" alt="" />
+      </div>
+      <div>
+        <span>{{ store.config().enabled ? 'PUBLICADO' : 'DESPUBLICADO' }}</span>
+        <h2>
+          {{
+            store.config().enabled
+              ? 'El portal está disponible para tus clientes'
+              : 'El portal está deshabilitado'
+          }}
+        </h2>
+        <p>{{ previewUrl() }}</p>
+      </div>
+      <label class="portal-switch"
+        ><input
+          type="checkbox"
+          [ngModel]="store.config().enabled"
+          (ngModelChange)="togglePortal($event)"
+        /><i></i><span>{{ store.config().enabled ? 'Activo' : 'Inactivo' }}</span></label
+      >
+    </section>
+
+    <div class="portal-settings-layout">
+      <main>
+        <section class="portal-settings-card">
+          <header>
+            <div>
+              <h2>Identidad del portal</h2>
+              <p>Nombre, dirección pública y color de tu marca.</p>
+            </div>
+            <span class="step-badge">01</span>
+          </header>
+          <div class="portal-form-grid">
+            <label><span>Nombre del portal</span><input [(ngModel)]="name" /></label>
+            <label
+              ><span>Dirección pública</span>
+              <div class="slug-field"><small>/portal/</small><input [(ngModel)]="slug" /></div
+            ></label>
+            <label
+              ><span>Correo de soporte</span><input type="email" [(ngModel)]="supportEmail"
+            /></label>
+            <label
+              ><span>Color principal</span>
+              <div class="color-field">
+                <input type="color" [(ngModel)]="primaryColor" /><input
+                  [(ngModel)]="primaryColor"
+                /></div
+            ></label>
+          </div>
+        </section>
+
+        <section class="portal-settings-card">
+          <header>
+            <div>
+              <h2>Contenido visible</h2>
+              <p>Selecciona qué información puede consultar el cliente.</p>
+            </div>
+            <span class="step-badge">02</span>
+          </header>
+          <div class="permission-list">
+            <label
+              ><span class="permission-icon">▤</span
+              ><span><b>Facturas</b><small>Importes, fechas y estado de facturación.</small></span
+              ><input type="checkbox" [(ngModel)]="showInvoices" /><i></i
+            ></label>
+            <label
+              ><span class="permission-icon">✓</span
+              ><span
+                ><b>Historial de pagos</b><small>Pagos aplicados, método y referencia.</small></span
+              ><input type="checkbox" [(ngModel)]="showPayments" /><i></i
+            ></label>
+            <label
+              ><span class="permission-icon">◇</span
+              ><span
+                ><b>Tickets de soporte</b><small>Solicitudes y seguimiento del equipo.</small></span
+              ><input type="checkbox" [(ngModel)]="showTickets" /><i></i
+            ></label>
+            <label
+              ><span class="permission-icon">▧</span
+              ><span
+                ><b>Archivos adjuntos</b><small>Contratos y documentos compartidos.</small></span
+              ><input type="checkbox" [(ngModel)]="showAttachments" /><i></i
+            ></label>
+          </div>
+        </section>
+
+        <section class="portal-settings-card">
+          <header>
+            <div>
+              <h2>Permisos de autoservicio</h2>
+              <p>Acciones que el cliente puede realizar sin asistencia.</p>
+            </div>
+            <span class="step-badge">03</span>
+          </header>
+          <div class="permission-list permission-list--compact">
+            <label
+              ><span class="permission-icon">✎</span
+              ><span
+                ><b>Editar información básica</b
+                ><small>Correo, teléfono y domicilio de contacto.</small></span
+              ><input type="checkbox" [(ngModel)]="allowProfileEdit" /><i></i
+            ></label>
+            <label
+              ><span class="permission-icon">＋</span
+              ><span
+                ><b>Crear tickets</b
+                ><small>Permite registrar nuevas solicitudes de soporte.</small></span
+              ><input type="checkbox" [(ngModel)]="allowTicketCreation" /><i></i
+            ></label>
+          </div>
+        </section>
+
+        <footer class="portal-settings-actions">
+          <span>
+            @if (saved()) {
+              ✓ Cambios guardados correctamente
+            }</span
+          ><button class="button" (click)="resetDraft()">Descartar</button
+          ><button class="button button--primary" (click)="save()">Guardar cambios</button>
+        </footer>
+      </main>
+
+      <aside>
+        <article class="portal-preview" [style.--portal-color]="primaryColor">
+          <header>
+            <span><img src="/icons/brand/speedlink-logo.svg" alt="" /></span
+            ><b>{{ name || 'Mi SpeedLink' }}</b>
+          </header>
+          <div class="portal-preview__hero">
+            <span>Hola, José Luis</span><b>Tu servicio está en línea</b
+            ><small>Básico · 5 Mbps</small>
+          </div>
+          <div class="portal-preview__stats">
+            <span><small>Próximo pago</small><b>$300</b></span
+            ><span><small>Tickets</small><b>2 abiertos</b></span>
+          </div>
+          <nav><i></i><i></i><i></i><i></i></nav>
+        </article>
+        <article class="portal-access-card">
+          <span>ACCESO DE PRUEBA</span>
+          <dl>
+            <div>
+              <dt>Cuenta</dt>
+              <dd>SL-1044</dd>
+            </div>
+            <div>
+              <dt>PIN</dt>
+              <dd>1044</dd>
+            </div>
+          </dl>
+          <p>Estas credenciales son exclusivas del entorno de demostración.</p>
+        </article>
+      </aside>
+    </div>
+  `,
+  styleUrl: './settings-portal-page.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class SettingsPortalPage {
+  readonly store = inject(ClientPortalStore);
+  readonly saved = signal(false);
+  name = this.store.config().name;
+  slug = this.store.config().slug;
+  primaryColor = this.store.config().primaryColor;
+  supportEmail = this.store.config().supportEmail;
+  showInvoices = this.store.config().showInvoices;
+  showPayments = this.store.config().showPayments;
+  showTickets = this.store.config().showTickets;
+  showAttachments = this.store.config().showAttachments;
+  allowProfileEdit = this.store.config().allowProfileEdit;
+  allowTicketCreation = this.store.config().allowTicketCreation;
+
+  previewUrl(): string {
+    return `${window.location.origin}/portal/${this.store.config().slug}`;
+  }
+  togglePortal(enabled: boolean): void {
+    this.store.updateConfig({ enabled });
+  }
+  save(): void {
+    this.slug = this.slug
+      .trim()
+      .toLocaleLowerCase()
+      .replace(/[^a-z0-9-]/g, '-')
+      .replace(/-+/g, '-');
+    this.store.updateConfig({
+      name: this.name.trim() || 'Mi SpeedLink',
+      slug: this.slug || 'speedlink',
+      primaryColor: this.primaryColor,
+      supportEmail: this.supportEmail,
+      showInvoices: this.showInvoices,
+      showPayments: this.showPayments,
+      showTickets: this.showTickets,
+      showAttachments: this.showAttachments,
+      allowProfileEdit: this.allowProfileEdit,
+      allowTicketCreation: this.allowTicketCreation,
+    });
+    this.saved.set(true);
+    window.setTimeout(() => this.saved.set(false), 2500);
+  }
+  resetDraft(): void {
+    const config = this.store.config();
+    Object.assign(this, {
+      name: config.name,
+      slug: config.slug,
+      primaryColor: config.primaryColor,
+      supportEmail: config.supportEmail,
+      showInvoices: config.showInvoices,
+      showPayments: config.showPayments,
+      showTickets: config.showTickets,
+      showAttachments: config.showAttachments,
+      allowProfileEdit: config.allowProfileEdit,
+      allowTicketCreation: config.allowTicketCreation,
+    });
+  }
+}

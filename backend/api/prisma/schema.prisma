@@ -17,6 +17,11 @@ enum UserStatus {
   SUSPENDED
 }
 
+enum Language {
+  ES
+  EN
+}
+
 enum ClientStatus {
   ACTIVE
   SUSPENDED
@@ -179,6 +184,7 @@ model Organization {
   expenses        Expense[]
   calendarEvents  CalendarEvent[]
   tickets         Ticket[]
+  attachments     Attachment[]
   contracts       Contract[]
   notes           Note[]
   emailLogs       EmailLog[]
@@ -239,20 +245,21 @@ model RolePermission {
 }
 
 model User {
-  id               String     @id @default(cuid())
-  organizationId   String
-  roleId           String
-  name             String
-  email            String
-  phone            String?
-  password         String // hashed
-  status           UserStatus @default(ACTIVE)
-  twoFactorEnabled Boolean    @default(false)
-  twoFactorSecret  String?
-  lastLoginAt      DateTime?
-  createdAt        DateTime   @default(now())
-  updatedAt        DateTime   @updatedAt
-  deletedAt        DateTime? // soft delete
+  id                String     @id @default(cuid())
+  organizationId    String
+  roleId            String
+  name              String
+  email             String
+  phone             String?
+  password          String // hashed
+  status            UserStatus @default(ACTIVE)
+  twoFactorEnabled  Boolean    @default(false)
+  twoFactorSecret   String?
+  lastLoginAt       DateTime?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  deletedAt         DateTime? // soft delete
+  preferredLanguage Language   @default(ES)
 
   organization    Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   role            Role            @relation(fields: [roleId], references: [id])
@@ -264,6 +271,8 @@ model User {
   eventsAssigned  CalendarEvent[] @relation("EventAssignedTo")
   ticketsCreated  Ticket[]        @relation("TicketCreatedBy")
   ticketsAssigned Ticket[]        @relation("TicketAssignedTo")
+  ticketComments  TicketComment[] @relation("TicketCommentAuthor")
+  attachments     Attachment[]    @relation("AttachmentUploadedBy")
 
   @@unique([organizationId, email])
   @@map("users")
@@ -319,6 +328,7 @@ model Lead {
   address             String?
   latitude            Float?
   longitude           Float?
+  type                String? // residencial, comercial, etc.
   status              LeadStatus @default(NEW)
   source              String? // referido, redes sociales, llamada, etc.
   notes               String?
@@ -609,20 +619,25 @@ model Ticket {
   assignedTo   User?           @relation("TicketAssignedTo", fields: [assignedToId], references: [id])
   createdBy    User            @relation("TicketCreatedBy", fields: [createdById], references: [id])
   comments     TicketComment[]
+  attachments  Attachment[]    @relation("TicketAttachments")
   relNotes     Note[]          @relation("TicketNotes")
 
   @@map("tickets")
 }
 
 model TicketComment {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   ticketId   String
   message    String
   authorId   String
-  isInternal Boolean  @default(false) // comentario interno vs visible al cliente
-  createdAt  DateTime @default(now())
+  isInternal Boolean   @default(false) // comentario interno vs visible al cliente
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
 
-  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  ticket      Ticket       @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author      User         @relation("TicketCommentAuthor", fields: [authorId], references: [id])
+  attachments Attachment[] @relation("TicketCommentAttachments")
 
   @@map("ticket_comments")
 }
@@ -652,6 +667,7 @@ model Note {
   expenseId    String?
   ticketId     String?
   contractId   String?
+  attachments  Attachment[] @relation("NoteAttachments")
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   createdBy    User         @relation(fields: [createdById], references: [id])
@@ -667,6 +683,37 @@ model Note {
   contract     Contract?    @relation("ContractNotes", fields: [contractId], references: [id])
 
   @@map("notes")
+}
+
+// ============================================================
+// ADJUNTOS GENÉRICOS (notas, tickets y comentarios)
+// ============================================================
+
+model Attachment {
+  id              String    @id @default(cuid())
+  organizationId  String
+  fileName        String
+  mimeType        String
+  size            Int
+  url             String
+  uploadedById    String
+  noteId          String?
+  ticketId        String?
+  ticketCommentId String?
+  createdAt       DateTime  @default(now())
+  deletedAt       DateTime?
+
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  uploadedBy    User           @relation("AttachmentUploadedBy", fields: [uploadedById], references: [id])
+  note          Note?          @relation("NoteAttachments", fields: [noteId], references: [id], onDelete: Cascade)
+  ticket        Ticket?        @relation("TicketAttachments", fields: [ticketId], references: [id], onDelete: Cascade)
+  ticketComment TicketComment? @relation("TicketCommentAttachments", fields: [ticketCommentId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([noteId])
+  @@index([ticketId])
+  @@index([ticketCommentId])
+  @@map("attachments")
 }
 
 // ============================================================
