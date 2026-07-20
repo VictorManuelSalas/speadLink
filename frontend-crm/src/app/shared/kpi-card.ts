@@ -5,20 +5,7 @@ import { CurrencyPipe, DecimalPipe } from '@angular/common';
 @Component({
   selector: 'app-kpi-card',
   imports: [CurrencyPipe, DecimalPipe],
-  template: `<article class="card kpi">
-    <div class="kpi__top">
-      <span class="kpi__icon kpi__icon--{{ tone() }}"><img [src]="icon()" alt="" /></span
-      ><span class="trend">{{ trend() }}</span>
-    </div>
-    <p>{{ label() }}</p>
-    <strong>
-      @if (currency()) {
-        {{ value() | currency: 'MXN' : 'symbol-narrow' : '1.0-0' : i18n.locale() }}
-      } @else {
-        {{ value() | number: '1.0-0' : i18n.locale() }}
-      }</strong
-    ><small>{{ note() }}</small>
-  </article>`,
+  templateUrl: './kpi-card.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class KpiCard {

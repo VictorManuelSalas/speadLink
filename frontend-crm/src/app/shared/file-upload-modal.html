@@ -1,0 +1,70 @@
+<button class="upload-backdrop" type="button" aria-label="Cerrar" (click)="cancel()"></button>
+<section class="upload-modal" role="dialog" aria-modal="true" aria-labelledby="upload-title">
+  <header>
+    <div>
+      <span>ARCHIVOS</span>
+      <h2 id="upload-title">Subir archivos</h2>
+      <p>Agrega documentos o arrástralos a la zona de carga.</p>
+    </div>
+    <button type="button" aria-label="Cerrar" (click)="cancel()">×</button>
+  </header>
+  <div class="upload-content">
+    <input
+      #fileInput
+      hidden
+      type="file"
+      multiple
+      accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.zip"
+      (change)="selectFiles(fileInput.files); fileInput.value = ''"
+    />
+    <button
+      class="drop-zone"
+      type="button"
+      [class.is-dragging]="dragging()"
+      (click)="fileInput.click()"
+      (dragover)="onDragOver($event)"
+      (dragleave)="dragging.set(false)"
+      (drop)="onDrop($event)"
+    >
+      <span>⇧</span><b>Arrastra tus archivos aquí</b>
+      <p>o haz clic para seleccionarlos</p>
+      <small>PDF, imágenes, Office, CSV, TXT o ZIP · máximo 10 MB</small>
+    </button>
+    @if (error()) {
+      <p class="upload-error">{{ error() }}</p>
+    }
+    @if (items().length) {
+      <div class="upload-previews">
+        <header>
+          <b>Archivos seleccionados</b><span>{{ items().length }}/8</span>
+        </header>
+        @for (file of items(); track file.id) {
+          <article>
+            @if (file.mimeType.startsWith('image/')) {
+              <img [src]="file.url" [alt]="file.fileName" />
+            } @else {
+              <span class="document-preview">{{ extension(file.fileName) }}</span>
+            }
+            <span
+              ><b>{{ file.fileName }}</b
+              ><small>{{ formatSize(file.size) }}</small></span
+            ><button type="button" aria-label="Quitar archivo" (click)="remove(file.id)">
+              ×
+            </button>
+          </article>
+        }
+      </div>
+    }
+  </div>
+  <footer>
+    <button class="button" type="button" (click)="cancel()">Cancelar</button
+    ><button
+      class="button button--primary"
+      type="button"
+      [disabled]="!items().length"
+      (click)="upload()"
+    >
+      Subir {{ items().length }} archivo(s)
+    </button>
+  </footer>
+</section>

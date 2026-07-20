@@ -1,0 +1,65 @@
+.card {
+  padding: 18px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--color-surface);
+}
+h2 {
+  font-size: 14px;
+}
+header p {
+  margin-top: 4px;
+  color: var(--color-text-secondary);
+  font-size: 9px;
+}
+.list {
+  margin-top: 14px;
+  display: grid;
+  gap: 13px;
+}
+.item {
+  display: grid;
+  grid-template-columns: 9px 1fr;
+  gap: 9px;
+}
+.item > i {
+  width: 7px;
+  height: 7px;
+  margin-top: 5px;
+  border-radius: 50%;
+  background: #2563eb;
+}
+.item > i.green {
+  background: #16a34a;
+}
+.item > i.amber {
+  background: #d97706;
+}
+.item > i.violet {
+  background: #7c3aed;
+}
+.item span {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.item b {
+  font-size: 10px;
+}
+.item small {
+  margin-top: 3px;
+  overflow: hidden;
+  color: var(--color-text-secondary);
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.item time {
+  margin-top: 3px;
+  color: var(--color-text-secondary);
+  font-size: 8px;
+}
+.empty {
+  color: var(--color-text-secondary);
+  font-size: 10px;
+}

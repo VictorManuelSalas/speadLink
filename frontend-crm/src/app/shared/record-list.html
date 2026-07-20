@@ -1,0 +1,380 @@
+    <header class="heading">
+      <div>
+        <div class="breadcrumbs">
+          <span>CRM</span><b>›</b><span>{{ title() }}</span>
+        </div>
+        <h1>{{ title() }}</h1>
+        <p>{{ description() }}</p>
+      </div>
+      <div class="heading-actions">
+        <input
+          #importInput
+          hidden
+          type="file"
+          accept=".csv,text/csv"
+          (change)="importCsv(importInput.files); importInput.value = ''"
+        /><button class="button" type="button" (click)="importInput.click()">⇧ Importar</button
+        ><button class="button" type="button" (click)="exportRows(filtered(), '')">
+          ⇩ Exportar</button
+        ><button class="button primary" type="button" (click)="newRequested.emit()">
+          ＋ {{ newLabel() }}
+        </button>
+      </div>
+    </header>
+    <section class="widgets" [style.--widget-count]="widgets().length">
+      @for (widget of widgets(); track widget.label) {
+        <article>
+          <span class="widget-icon {{ widget.tone || 'blue' }}">{{
+            widget.icon || widgetIcon(widget.tone || 'blue')
+          }}</span>
+          <div>
+            <small>{{ widget.label }}</small
+            ><b>{{ widget.value }}</b
+            ><em>{{ widget.detail }}</em>
+          </div>
+        </article>
+      }
+    </section>
+    <section class="table-card">
+      <div class="toolbar">
+        <label class="search"
+          ><span>⌕</span
+          ><input
+            #searchInput
+            type="search"
+            [placeholder]="'Buscar en ' + title().toLowerCase()"
+            [value]="query()"
+            (input)="query.set(searchInput.value); page.set(1)" /></label
+        ><button
+          class="button"
+          type="button"
+          [class.active]="filterPanel() || filters().length"
+          (click)="filterPanel.set(!filterPanel())"
+        >
+          ☷ Filtros
+          @if (filters().length) {
+            <span>{{ filters().length }}</span>
+          }</button
+        ><button
+          class="button"
+          type="button"
+          [class.active]="dense()"
+          (click)="dense.set(!dense())"
+        >
+          ≡ Compacta</button
+        ><span class="result-count">{{ filtered().length }} resultados</span>
+      </div>
+      @if (filterPanel()) {
+        <div class="filter-panel">
+          <header>
+            <div>
+              <b>Filtros avanzados</b
+              ><small>Combina varios criterios; todos deben coincidir.</small>
+            </div>
+            <button type="button" (click)="addFilter()">＋ Agregar filtro</button>
+          </header>
+          @for (filter of filters(); track filter.id) {
+            <div class="filter-row">
+              <select
+                #fieldSelect
+                [value]="filter.field"
+                (change)="changeFilterField(filter.id, fieldSelect.value)"
+              >
+                <option value="">Seleccionar campo</option>
+                @for (field of fields(); track field.key) {
+                  <option [value]="field.key">{{ field.label }}</option>
+                }</select
+              ><select
+                #operatorSelect
+                [value]="filter.operator"
+                (change)="updateFilter(filter.id, 'operator', operatorSelect.value)"
+              >
+                @for (operator of operatorsFor(filter.field); track operator.id) {
+                  <option [value]="operator.id">{{ operator.label }}</option>
+                }
+              </select>
+              @if (fieldFor(filter.field); as field) {
+                @if (
+                  field.type === 'select' || field.type === 'status' || field.type === 'boolean'
+                ) {
+                  <select
+                    #filterValue
+                    [value]="filter.value"
+                    (change)="updateFilter(filter.id, 'value', filterValue.value)"
+                  >
+                    <option value="">Seleccionar…</option>
+                    @for (option of filterOptions(field); track option.value) {
+                      <option [value]="option.value">{{ option.label }}</option>
+                    }
+                  </select>
+                } @else if (field.type === 'date') {
+                  <div class="date-filter">
+                    <app-inline-editable-date-field
+                      label="Fecha"
+                      [value]="filter.value"
+                      placeholder="Seleccionar fecha"
+                      [alwaysShowEdit]="true"
+                      [compact]="true"
+                      (valueSaved)="updateFilter(filter.id, 'value', $event)"
+                    />
+                  </div>
+                } @else {
+                  <input
+                    #filterValue
+                    [type]="field.type === 'number' || field.type === 'money' ? 'number' : 'text'"
+                    [value]="filter.value"
+                    (input)="updateFilter(filter.id, 'value', filterValue.value)"
+                    placeholder="Valor"
+                  />
+                }
+                @if (filter.operator === 'between') {
+                  @if (field.type === 'date') {
+                    <div class="date-filter">
+                      <app-inline-editable-date-field
+                        label="Hasta"
+                        [value]="filter.secondValue"
+                        placeholder="Fecha final"
+                        [alwaysShowEdit]="true"
+                        [compact]="true"
+                        (valueSaved)="updateFilter(filter.id, 'secondValue', $event)"
+                      />
+                    </div>
+                  } @else {
+                    <input
+                      #secondValue
+                      type="number"
+                      [value]="filter.secondValue"
+                      (input)="updateFilter(filter.id, 'secondValue', secondValue.value)"
+                      placeholder="Hasta"
+                    />
+                  }
+                }
+              }
+              <button
+                class="remove-filter"
+                type="button"
+                aria-label="Eliminar filtro"
+                (click)="removeFilter(filter.id)"
+              >
+                ×
+              </button>
+            </div>
+          } @empty {
+            <div class="no-filters">Agrega un filtro para comenzar.</div>
+          }
+          <footer>
+            <button type="button" (click)="clearFilters()">Limpiar todos</button
+            ><span>{{ filtered().length }} registros coinciden</span>
+          </footer>
+        </div>
+      }
+      @if (selectedCount()) {
+        <div class="bulk">
+          <span
+            ><b>{{ selectedCount() }}</b> seleccionados</span
+          >
+          @for (action of bulkActions(); track action.id) {
+            <button type="button" [class.danger]="action.danger" (click)="runBulkAction(action.id)">
+              {{ action.icon || actionIcon(action.id) }} {{ action.label }}
+            </button>
+          }
+          <button type="button" class="close" (click)="clearSelection()">×</button>
+        </div>
+      }
+      <div class="table-scroll">
+        <table [class.dense]="dense()">
+          <thead>
+            <tr>
+              <th class="check">
+                <input
+                  type="checkbox"
+                  [checked]="allPageSelected()"
+                  (change)="togglePageSelection()"
+                />
+              </th>
+              @for (column of columns(); track column.key) {
+                <th>{{ column.label }}</th>
+              }
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (record of paginated(); track rowId(record)) {
+              <tr (dblclick)="rowAction.emit({ actionId: 'view', record })">
+                <td class="check">
+                  <input
+                    type="checkbox"
+                    [checked]="isSelected(rowId(record))"
+                    (change)="toggleSelection(rowId(record))"
+                  />
+                </td>
+                @for (column of columns(); track column.key) {
+                  <td>
+                    @switch (column.type) {
+                      @case ('identity') {
+                        <a class="identity" [routerLink]="[baseRoute(), rowId(record)]"
+                          ><span [style.background]="accent() + '18'" [style.color]="accent()">{{
+                            initials(record[column.key])
+                          }}</span
+                          ><span
+                            ><b>{{ display(record[column.key]) }}</b
+                            ><small
+                              >{{ rowId(record) }}
+                              @if (column.secondaryKey) {
+                                · {{ display(record[column.secondaryKey]) }}
+                              }
+                            </small></span
+                          ></a
+                        >
+                      }
+                      @case ('status') {
+                        <em class="status {{ statusTone(record[column.key]) }}"
+                          ><i></i>{{ statusLabel(record[column.key]) }}</em
+                        >
+                      }
+                      @case ('money') {
+                        <b>{{
+                          number(record[column.key])
+                            | currency: 'MXN' : 'symbol-narrow' : '1.0-2' : i18n.locale()
+                        }}</b>
+                      }
+                      @case ('date') {
+                        <time>{{
+                          dateValue(record[column.key]) | date: 'dd MMM y' : '' : i18n.locale()
+                        }}</time>
+                      }
+                      @case ('email') {
+                        <a class="link" [href]="'mailto:' + display(record[column.key])">{{
+                          display(record[column.key])
+                        }}</a>
+                      }
+                      @case ('phone') {
+                        <a class="link" [href]="'tel:' + display(record[column.key])">{{
+                          display(record[column.key])
+                        }}</a>
+                      }
+                      @default {
+                        <span>{{ display(record[column.key]) || '—' }}</span>
+                      }
+                    }
+                  </td>
+                }
+                <td class="menu-cell">
+                  <button type="button" (click)="toggleMenu($event, rowId(record))">•••</button>
+                  @if (menuId() === rowId(record)) {
+                    <div class="row-menu" (click)="$event.stopPropagation()">
+                      @for (action of rowActions(); track action.id) {
+                        @if (action.id === 'view') {
+                          <a [routerLink]="[baseRoute(), rowId(record)]"
+                            ><span>{{ action.icon || '↗' }}</span
+                            >{{ action.label }}</a
+                          >
+                        } @else {
+                          <button
+                            type="button"
+                            [class.danger]="action.danger"
+                            (click)="runRowAction(action.id, record)"
+                          >
+                            <span>{{ action.icon || actionIcon(action.id) }}</span
+                            >{{ action.label }}
+                          </button>
+                        }
+                      }
+                    </div>
+                  }
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td class="empty" [attr.colspan]="columns().length + 2">
+                  <span>⌕</span>
+                  <h3>Sin resultados</h3>
+                  <p>Cambia la búsqueda o los filtros aplicados.</p>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <footer class="pagination">
+        <span>Mostrando {{ pageStart() }}–{{ pageEnd() }} de {{ filtered().length }}</span>
+        <div>
+          <button type="button" [disabled]="page() === 1" (click)="page.set(page() - 1)">‹</button
+          ><b>{{ page() }}</b
+          ><button
+            type="button"
+            [disabled]="pageEnd() === filtered().length"
+            (click)="page.set(page() + 1)"
+          >
+            ›
+          </button>
+        </div>
+      </footer>
+    </section>
+    @if (bulkEditor()) {
+      <button
+        class="modal-backdrop"
+        type="button"
+        aria-label="Cerrar"
+        (click)="bulkEditor.set(false)"
+      ></button>
+      <section class="bulk-modal" role="dialog" aria-modal="true">
+        <header>
+          <div>
+            <span>EDICIÓN MASIVA</span>
+            <h2>Editar {{ selectedCount() }} registros</h2>
+            <p>El valor se aplicará a todos los registros seleccionados.</p>
+          </div>
+          <button type="button" (click)="bulkEditor.set(false)">×</button>
+        </header>
+        <div>
+          <label
+            >Campo<select
+              #bulkFieldSelect
+              [value]="bulkField()"
+              (change)="bulkField.set(bulkFieldSelect.value); bulkValue.set('')"
+            >
+              @for (field of editableFields(); track field.key) {
+                <option [value]="field.key">{{ field.label }}</option>
+              }
+            </select></label
+          >
+          @if (fieldFor(bulkField()); as field) {
+            <label
+              >Nuevo valor
+              @if (field.type === 'select' || field.type === 'status' || field.type === 'boolean') {
+                <select #bulkChoice (change)="bulkValue.set(bulkChoice.value)">
+                  <option value="">Seleccionar…</option>
+                  @for (option of filterOptions(field); track option.value) {
+                    <option [value]="option.value">{{ option.label }}</option>
+                  }
+                </select>
+              } @else {
+                <input
+                  #bulkInput
+                  [type]="
+                    field.type === 'date'
+                      ? 'date'
+                      : field.type === 'number' || field.type === 'money'
+                        ? 'number'
+                        : 'text'
+                  "
+                  (input)="bulkValue.set(bulkInput.value)"
+                />
+              }
+            </label>
+          }
+        </div>
+        <footer>
+          <button type="button" (click)="bulkEditor.set(false)">Cancelar</button>
+          <button
+            class="primary"
+            type="button"
+            [disabled]="!bulkField() || !bulkValue()"
+            (click)="applyBulkEdit()"
+          >
+            Aplicar cambios
+          </button>
+        </footer>
+      </section>
+    }

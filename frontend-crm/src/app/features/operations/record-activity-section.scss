@@ -1,0 +1,123 @@
+      .filters {
+        padding: 3px;
+        border-radius: 10px;
+        background: var(--color-muted);
+        display: flex;
+        align-items: center;
+        gap: 3px;
+      }
+      .filters > button,
+      .filters select {
+        height: 34px;
+        padding: 0 11px;
+        border: 0;
+        border-radius: 7px;
+        background: transparent;
+        color: var(--color-text-secondary);
+        font: inherit;
+        font-size: 10px;
+      }
+      .filters .active {
+        background: var(--color-surface);
+        box-shadow: 0 2px 7px #0f172a18;
+        color: var(--color-text-primary);
+      }
+      .date {
+        min-width: 112px;
+        border-radius: 7px;
+      }
+      .clear {
+        width: 28px !important;
+        padding: 0 !important;
+        font-size: 16px !important;
+      }
+      .timeline {
+        position: relative;
+        padding-left: 58px;
+      }
+      .timeline:before {
+        content: '';
+        position: absolute;
+        left: 20px;
+        inset-block: 0;
+        width: 1px;
+        background: var(--color-border);
+      }
+      .timeline > article {
+        position: relative;
+        margin-bottom: 15px;
+      }
+      .marker {
+        position: absolute;
+        left: -58px;
+        top: 17px;
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: #dbeafe;
+        color: #2563eb;
+        display: grid;
+        place-items: center;
+      }
+      .marker.green {
+        background: #dcfce7;
+        color: #16a34a;
+      }
+      .marker.amber {
+        background: #fef3c7;
+        color: #d97706;
+      }
+      .marker.violet {
+        background: #ede9fe;
+        color: #7c3aed;
+      }
+      .event {
+        padding: 18px 20px;
+        border: 1px solid var(--color-border);
+        border-radius: 14px;
+        background: var(--color-surface);
+      }
+      .event header {
+        display: flex;
+        justify-content: space-between;
+      }
+      .event h3 {
+        font-size: 13px;
+      }
+      .event small,
+      .event time,
+      .event p {
+        color: var(--color-text-secondary);
+        font-size: 10px;
+      }
+      .event p {
+        margin-top: 12px;
+        font-size: 11px;
+      }
+      .badges {
+        display: flex;
+        gap: 6px;
+        margin-top: 9px;
+      }
+      .badges span {
+        padding: 3px 8px;
+        border-radius: 999px;
+        background: var(--color-muted);
+        color: var(--color-text-secondary);
+        font-size: 9px;
+        font-weight: 750;
+      }
+      @media (max-width: 800px) {
+        .filters {
+          width: 100%;
+          overflow-x: auto;
+        }
+        .timeline {
+          padding-left: 48px;
+        }
+        .marker {
+          left: -48px;
+          width: 34px;
+          height: 34px;
+        }
+      }

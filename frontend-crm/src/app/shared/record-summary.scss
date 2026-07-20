@@ -1,0 +1,54 @@
+:host {
+  display: block;
+}
+.summary {
+  width: 100%;
+  margin-bottom: 22px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--color-surface);
+  display: grid;
+  grid-template-columns: repeat(var(--summary-columns, 4), minmax(0, 1fr));
+  overflow: hidden;
+}
+:host ::ng-deep .record-summary-item {
+  min-height: 104px;
+  padding: 18px 22px;
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+:host ::ng-deep .record-summary-item:last-child {
+  border-right: 0;
+}
+:host ::ng-deep .record-summary-item > span:first-child {
+  color: var(--color-text-secondary);
+  font-size: 10px;
+}
+:host ::ng-deep .record-summary-item > b {
+  margin-top: 8px;
+  font-size: 18px;
+}
+:host ::ng-deep .record-summary-item > small {
+  margin-top: 6px;
+  color: var(--color-text-secondary);
+  font-size: 10px;
+}
+@media (max-width: 800px) {
+  .summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  :host ::ng-deep .record-summary-item:nth-child(2) {
+    border-right: 0;
+  }
+}
+@media (max-width: 520px) {
+  .summary {
+    grid-template-columns: 1fr;
+  }
+  :host ::ng-deep .record-summary-item {
+    border-right: 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+}

@@ -1,0 +1,279 @@
+<div class="app-frame" [class.app-frame--dark]="darkMode()">
+  @if (mobileOpen()) {
+    <button
+      class="backdrop"
+      aria-label="Cerrar navegación"
+      (click)="mobileOpen.set(false)"
+    ></button>
+  }
+  <aside
+    class="sidebar"
+    [class.sidebar--collapsed]="collapsed()"
+    [class.sidebar--open]="mobileOpen()"
+  >
+    <div class="brand">
+      <span class="brand__mark" aria-hidden="true"
+        ><img src="/icons/brand/speedlink-logo.svg" alt=""
+      /></span>
+      @if (!collapsed()) {
+        <span
+          >SpeedLink <b>{{ settingsMode() ? 'Configuración' : 'CRM' }}</b></span
+        >
+      }
+      <button
+        class="icon-button sidebar__close"
+        aria-label="Cerrar menú"
+        (click)="mobileOpen.set(false)"
+      >
+        ×
+      </button>
+    </div>
+    <nav class="nav" aria-label="Navegación principal">
+      @if (settingsMode()) {
+        <a class="nav__mode-switch" routerLink="/dashboard" (click)="closeMobile()"
+          ><span class="nav-icon"
+            ><img src="/icons/ui/fi-rr-angle-double-small-left.svg" alt=""
+          /></span>
+          @if (!collapsed()) {
+            <span>Volver al menú principal</span>
+          }
+        </a>
+      }
+      @for (group of settingsMode() ? settingsNavigation : navigation; track group.title) {
+        @if (!collapsed()) {
+          <p class="nav__label">{{ i18n.t(group.title) }}</p>
+        }
+        @for (item of group.items; track item.label) {
+          <a
+            [routerLink]="item.route"
+            routerLinkActive="is-active"
+            [routerLinkActiveOptions]="{ exact: true }"
+            (click)="closeMobile()"
+            [attr.title]="collapsed() ? i18n.t(item.label) : null"
+            ><span class="nav-icon"><img [src]="item.icon" alt="" /></span>
+            @if (!collapsed()) {
+              <span>{{ i18n.t(item.label) }}</span>
+            }
+          </a>
+        }
+      }
+    </nav>
+    <div class="sidebar__footer">
+      <button
+        class="nav-button"
+        (click)="collapsed.set(!collapsed())"
+        [attr.aria-label]="collapsed() ? 'Expandir sidebar' : 'Contraer sidebar'"
+      >
+        <span>{{ collapsed() ? '›' : '‹' }}</span>
+        @if (!collapsed()) {
+          <span>Contraer menú</span>
+        }
+      </button>
+      <div
+        class="user-menu"
+        (mouseenter)="userMenuOpen.set(true)"
+        (mouseleave)="userMenuOpen.set(false)"
+      >
+        <button
+          class="user-chip"
+          type="button"
+          aria-label="Abrir menú de usuario"
+          (click)="userMenuOpen.set(true)"
+        >
+          <span class="avatar avatar--sm">{{ userInitials() }}</span>
+          @if (!collapsed()) {
+            <span
+              ><b>{{ session.user()?.name }}</b
+              ><small>{{ userRole() }}</small></span
+            >
+          }
+        </button>
+        @if (userMenuOpen()) {
+          <section class="user-popover" aria-label="Opciones de usuario">
+            <div class="user-popover__summary">
+              <span class="avatar">{{ userInitials() }}</span
+              ><span
+                ><b>{{ session.user()?.name }}</b
+                ><small>{{ session.user()?.email }}</small></span
+              >
+            </div>
+            <a routerLink="/users/usr-andrea-torres" (click)="userMenuOpen.set(false)"
+              ><img src="/icons/settings/fi-rr-portrait-2.svg" alt="" /><span>{{
+                i18n.t('Ver perfil')
+              }}</span></a
+            >
+            <button type="button" (click)="toggleDarkMode()">
+              <img
+                [src]="darkMode() ? '/icons/ui/fi-sr-rec.svg' : '/icons/ui/fi-sr-moon.svg'"
+                alt=""
+              /><span>{{ i18n.t(darkMode() ? 'Modo claro' : 'Modo oscuro') }}</span>
+            </button>
+            <div class="user-popover__language">
+              <span>{{ i18n.t('Idioma') }}</span>
+              <div>
+                <button
+                  type="button"
+                  [class.is-active]="i18n.language() === 'es'"
+                  (click)="i18n.setLanguage('es')"
+                >
+                  ES</button
+                ><button
+                  type="button"
+                  [class.is-active]="i18n.language() === 'en'"
+                  (click)="i18n.setLanguage('en')"
+                >
+                  EN
+                </button>
+              </div>
+            </div>
+            <button class="user-popover__signout" type="button" (click)="signOut()">
+              <img src="/icons/actions/fi-sr-sign-out-alt.svg" alt="" /><span>{{
+                i18n.t('Cerrar sesión')
+              }}</span>
+            </button>
+          </section>
+        }
+      </div>
+    </div>
+  </aside>
+  <section class="workspace">
+    <header class="topbar">
+      <button
+        class="icon-button mobile-menu"
+        aria-label="Abrir menú"
+        (click)="mobileOpen.set(true)"
+      >
+        ☰
+      </button>
+      <div class="search-shell" (mouseleave)="closeQuickAccess()">
+        <label class="global-search"
+          ><img src="/icons/actions/fi-br-search.svg" alt="" /><input
+            #globalSearch
+            type="search"
+            [placeholder]="i18n.t('Buscar módulos…')"
+            aria-label="Búsqueda global"
+            (focus)="searchOpen.set(true)"
+            (input)="updateSearch($event)"
+            (keydown)="handleSearchKeydown($event)"
+          /><kbd><img src="/icons/ui/command.svg" alt="Command" /> K</kbd></label
+        >
+        @if (searchOpen()) {
+          <section class="search-palette" aria-label="Acceso rápido">
+            <header>
+              <span>{{ i18n.t('Acceso rápido') }}</span
+              ><small>Enter para abrir · Esc para cerrar</small>
+            </header>
+            @for (item of searchResults(); track item.route) {
+              <button
+                (mousedown)="$event.preventDefault()"
+                (click)="openSearchResult(item.route)"
+              >
+                <img [src]="item.icon" alt="" /><span
+                  ><b>{{ item.label }}</b
+                  ><small>{{ item.section }}</small></span
+                ><i>↵</i>
+              </button>
+            } @empty {
+              <p>No se encontraron módulos.</p>
+            }
+          </section>
+        }
+      </div>
+      <div class="topbar__actions">
+        <a
+          class="icon-button settings-button"
+          [routerLink]="settingsMode() ? '/dashboard' : '/settings/organization'"
+          [attr.aria-label]="settingsMode() ? 'Cerrar configuración' : 'Abrir configuración'"
+          ><img src="/icons/ui/settings-sliders.svg" alt=""
+        /></a>
+        <div
+          class="notification-menu"
+          (mouseenter)="notificationsOpen.set(true)"
+          (mouseleave)="notificationsOpen.set(false)"
+        >
+          <button
+            class="icon-button notification-button"
+            [attr.aria-label]="unreadNotificationCount() + ' notificaciones sin leer'"
+            (click)="notificationsOpen.set(true)"
+          >
+            <img src="/icons/ui/bell.svg" alt="" />
+            @if (unreadNotificationCount() > 0) {
+              <span class="notification-badge">{{ unreadNotificationCount() }}</span>
+            }
+          </button>
+          @if (notificationsOpen()) {
+            <section class="notification-panel" aria-label="Notificaciones">
+              <div class="panel-heading">
+                <b>Notificaciones</b><span>{{ unreadNotificationCount() }} nuevas</span>
+              </div>
+              @for (notification of allNotifications.slice(0, 3); track notification.title) {
+                <button class="notification-preview" (click)="openNotification(notification)">
+                  <i class="notification-tone notification-tone--{{ notification.tone }}"></i
+                  ><span
+                    ><b>{{ notification.title }}</b
+                    ><small>{{ notification.detail }} · {{ notification.time }}</small></span
+                  >
+                </button>
+              }
+              <button class="notification-see-all" (click)="openNotificationDrawer()">
+                Ver todas
+              </button>
+            </section>
+          }
+        </div>
+        <a class="button button--primary topbar__new" routerLink="/tickets"
+          >＋ <span>{{ i18n.t('Nuevo ticket') }}</span></a
+        >
+      </div>
+    </header>
+    <main class="page"><router-outlet /></main>
+  </section>
+  @if (notificationDrawerOpen()) {
+    <button
+      class="drawer-backdrop"
+      [class.drawer-backdrop--closing]="notificationDrawerClosing()"
+      aria-label="Cerrar notificaciones"
+      (click)="closeNotificationDrawer()"
+    ></button>
+    <aside
+      class="notification-drawer"
+      [class.notification-drawer--closing]="notificationDrawerClosing()"
+      aria-label="Todas las notificaciones"
+    >
+      <header>
+        <div>
+          <span class="drawer-eyebrow">SpeedLink CRM</span>
+          <h2>Todas las notificaciones</h2>
+        </div>
+        <button class="drawer-close" aria-label="Cerrar" (click)="closeNotificationDrawer()">
+          ×
+        </button>
+      </header>
+      <div class="drawer-summary">
+        <span
+          ><b>{{ unreadNotificationCount() }}</b> sin leer</span
+        ><button (click)="markAllNotificationsRead()">Marcar todas como leídas</button>
+      </div>
+      <div class="notification-list">
+        @for (notification of allNotifications; track notification.title) {
+          <button
+            type="button"
+            class="notification-item"
+            [class.is-unread]="notification.unread"
+            (click)="openNotification(notification)"
+          >
+            <i class="notification-tone notification-tone--{{ notification.tone }}"></i>
+            <div>
+              <b>{{ notification.title }}</b>
+              <p>{{ notification.detail }}</p>
+              <small>{{ notification.time }}</small>
+            </div>
+            @if (notification.unread) {
+              <span class="unread-marker"></span>
+            }
+          </button>
+        }
+      </div>
+    </aside>
+  }
+</div>

@@ -1,0 +1,14 @@
+<nav class="tabs" aria-label="Secciones del registro">
+  @for (tab of tabs(); track tab.label) {
+    <button
+      type="button"
+      [class.active]="active() === tab.label"
+      (click)="activeChange.emit(tab.label)"
+    >
+      {{ tab.label }}
+      @if (tab.count !== undefined && tab.count > 0) {
+        <span>{{ tab.count }}</span>
+      }
+    </button>
+  }
+</nav>

@@ -1,0 +1,43 @@
+<section>
+    <header class="section-head">
+      <div>
+        <h2>Archivos adjuntos</h2>
+        <p>{{ files().length }} archivo(s) relacionados con este registro</p>
+      </div>
+      <button class="button primary" type="button" (click)="upload.set(true)">
+        ⇧ Subir archivos
+      </button>
+    </header>
+    @if (upload()) {
+      <app-file-upload-modal (closed)="upload.set(false)" (filesUploaded)="add($event)" />
+    }
+    <div class="grid">
+      @for (file of files(); track file.id) {
+        <article class="file">
+          @if (file.mimeType.startsWith('image/')) {
+            <img [src]="file.url" [alt]="file.fileName" />
+          } @else {
+            <span>{{ extension(file.fileName) }}</span>
+          }
+          <div>
+            <b>{{ file.fileName }}</b
+            ><small>{{ size(file.size) }} · {{ file.createdAt | date: 'dd MMM y, HH:mm' }}</small>
+          </div>
+          <button type="button" (click)="menuClick($event, file.id)">•••</button>
+          @if (menuId() === file.id) {
+            <div class="menu" (click)="$event.stopPropagation()">
+              <a [href]="file.url" target="_blank" rel="noopener">Ver</a
+              ><a [href]="file.url" [attr.download]="file.fileName">Descargar</a
+              ><button type="button" (click)="remove(file.id)">Eliminar</button>
+            </div>
+          }
+        </article>
+      } @empty {
+        <article class="empty">
+          <span>▤</span>
+          <h3>Aún no hay archivos</h3>
+          <p>Los documentos cargados aparecerán aquí.</p>
+        </article>
+      }
+    </div>
+  </section>

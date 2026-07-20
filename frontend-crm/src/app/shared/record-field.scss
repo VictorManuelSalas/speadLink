@@ -1,0 +1,182 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+.field {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.field > span {
+  color: var(--color-text-secondary);
+  font-size: 11px;
+}
+.field > b,
+.value > b {
+  overflow: hidden;
+  color: var(--color-text-primary);
+  font-size: 12.5px;
+  text-overflow: ellipsis;
+}
+.value {
+  min-height: 30px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.edit,
+.editor button {
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  opacity: 0;
+}
+.field:hover .edit {
+  opacity: 1;
+}
+.edit:hover,
+.editor button:hover {
+  background: var(--color-muted);
+  color: var(--color-primary);
+}
+.editor {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.editor select {
+  width: 100%;
+  height: 32px;
+  padding: 0 9px;
+  border: 1px solid #93c5fd;
+  border-radius: 7px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: 11px;
+}
+.editor button {
+  opacity: 1;
+}
+.editor .save {
+  background: var(--color-primary);
+  color: #fff;
+}
+.status {
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #dbeafe;
+  color: #2563eb;
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 800;
+}
+.status i {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.status.green {
+  background: #dcfce7;
+  color: #15803d;
+}
+.status.amber {
+  background: #fef3c7;
+  color: #b45309;
+}
+.status.red {
+  background: #fee2e2;
+  color: #dc2626;
+}
+.lookup > a,
+.direct {
+  position: relative;
+  width: max-content;
+  max-width: 100%;
+  color: var(--color-primary);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.lookup > a aside,
+.audit a aside {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 8px);
+  z-index: 30;
+  width: 245px;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 11px;
+  background: var(--color-surface);
+  box-shadow: 0 15px 35px #0f172a2c;
+  display: none;
+  align-items: center;
+  gap: 10px;
+}
+.lookup > a:hover aside,
+.audit a:hover aside {
+  display: flex;
+}
+.lookup aside > span,
+.audit a > span,
+.audit aside > span {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border-radius: 50%;
+  background: #dbeafe;
+  color: #2563eb;
+  display: grid;
+  place-items: center;
+  font-size: 9px;
+  font-weight: 800;
+}
+.lookup aside div,
+.audit aside div {
+  display: flex;
+  flex-direction: column;
+}
+.lookup aside small,
+.lookup aside em,
+.audit aside small {
+  color: var(--color-text-secondary);
+  font-size: 9px;
+  font-style: normal;
+}
+.audit {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.audit > i {
+  width: 1px;
+  height: 24px;
+  background: var(--color-border);
+}
+.audit > a {
+  position: relative;
+  color: var(--color-text-primary);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.audit a > span {
+  width: 30px;
+  height: 30px;
+  flex-basis: 30px;
+}
+@media (hover: none) {
+  .edit {
+    opacity: 1;
+  }
+}

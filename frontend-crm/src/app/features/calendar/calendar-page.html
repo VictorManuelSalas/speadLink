@@ -1,0 +1,253 @@
+    <header class="calendar-heading">
+      <div>
+        <span>OPERACIÓN</span>
+        <h1>Calendario</h1>
+        <p>Instalaciones, seguimientos, cobros y mantenimiento en una sola agenda.</p>
+      </div>
+      <button class="primary" type="button" (click)="createOpen.set(true)">＋ Nuevo evento</button>
+    </header>
+
+    <section class="calendar-metrics">
+      <article>
+        <span class="metric-icon metric-icon--blue">▣</span
+        ><span
+          ><small>Eventos del mes</small><b>{{ monthEvents().length }}</b
+          ><em>Julio 2026</em></span
+        >
+      </article>
+      <article>
+        <span class="metric-icon metric-icon--green">✓</span
+        ><span
+          ><small>Completados</small><b>{{ completedCount() }}</b
+          ><em>Operación al día</em></span
+        >
+      </article>
+      <article>
+        <span class="metric-icon metric-icon--amber">⌁</span
+        ><span
+          ><small>Próximas instalaciones</small><b>{{ installationCount() }}</b
+          ><em>Por coordinar</em></span
+        >
+      </article>
+      <article>
+        <span class="metric-icon metric-icon--violet">◎</span
+        ><span
+          ><small>Seguimientos</small><b>{{ followUpCount() }}</b
+          ><em>Equipo comercial</em></span
+        >
+      </article>
+    </section>
+
+    <section class="calendar-layout">
+      <article class="card calendar-card">
+        <header class="calendar-toolbar">
+          <div class="month-navigation">
+            <button type="button" aria-label="Mes anterior">‹</button
+            ><button type="button">Hoy</button
+            ><button type="button" aria-label="Mes siguiente">›</button>
+            <h2>Julio 2026</h2>
+          </div>
+          <div class="filters">
+            @for (filter of filters; track filter.value) {
+              <button
+                type="button"
+                [class.is-active]="activeFilter() === filter.value"
+                (click)="activeFilter.set(filter.value)"
+              >
+                <i class="dot dot--{{ filter.tone }}"></i>{{ filter.label }}
+              </button>
+            }
+          </div>
+        </header>
+        <div class="weekdays">
+          @for (day of weekdays; track day) {
+            <span>{{ day }}</span>
+          }
+        </div>
+        <div class="month-grid">
+          @for (day of days; track day.iso) {
+            <div
+              class="day"
+              [class.outside]="!day.current"
+              [class.today]="day.iso === '2026-07-18'"
+            >
+              <span class="day-number">{{ day.day }}</span>
+              <div class="day-events">
+                @for (event of eventsFor(day.iso); track event.id) {
+                  <button
+                    type="button"
+                    class="event event--{{ toneFor(event.type) }}"
+                    (click)="selectedEvent.set(event)"
+                  >
+                    <time>{{
+                      event.allDay ? 'Todo el día' : (event.startsAt | date: 'HH:mm')
+                    }}</time
+                    ><span>{{ event.title }}</span>
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </article>
+
+      <aside class="card agenda">
+        <header>
+          <div>
+            <span>PRÓXIMOS</span>
+            <h2>Agenda</h2>
+          </div>
+          <b>{{ upcomingEvents().length }}</b>
+        </header>
+        <div class="agenda-list">
+          @for (event of upcomingEvents(); track event.id) {
+            <button type="button" (click)="selectedEvent.set(event)">
+              <span class="agenda-date"
+                ><b>{{ event.startsAt | date: 'dd' }}</b
+                ><small>{{ event.startsAt | date: 'MMM' }}</small></span
+              >
+              <span class="agenda-copy"
+                ><i class="dot dot--{{ toneFor(event.type) }}"></i><b>{{ event.title }}</b
+                ><small>{{ event.startsAt | date: 'HH:mm' }} · {{ event.client }}</small
+                ><em>{{ event.assignedTo }}</em></span
+              >
+            </button>
+          } @empty {
+            <p>No hay eventos con este filtro.</p>
+          }
+        </div>
+      </aside>
+    </section>
+
+    @if (selectedEvent(); as event) {
+      <button
+        class="backdrop"
+        type="button"
+        aria-label="Cerrar"
+        (click)="selectedEvent.set(null)"
+      ></button>
+      <section class="event-modal" role="dialog" aria-modal="true">
+        <header>
+          <span class="event-symbol event-symbol--{{ toneFor(event.type) }}">{{
+            symbolFor(event.type)
+          }}</span>
+          <div>
+            <small>{{ labelFor(event.type) }}</small>
+            <h2>{{ event.title }}</h2>
+            <p>{{ event.id }}</p>
+          </div>
+          <button type="button" (click)="selectedEvent.set(null)">×</button>
+        </header>
+        <div class="event-detail">
+          <p>{{ event.description }}</p>
+          <dl>
+            <div>
+              <dt>Fecha y hora</dt>
+              <dd>
+                {{ event.startsAt | date: 'EEEE, dd MMM y · HH:mm' }}–{{
+                  event.endsAt | date: 'HH:mm'
+                }}
+              </dd>
+            </div>
+            <div>
+              <dt>Cliente</dt>
+              <dd>{{ event.client }}</dd>
+            </div>
+            <div>
+              <dt>Responsable</dt>
+              <dd>
+                <span class="avatar">{{ initials(event.assignedTo) }}</span
+                >{{ event.assignedTo }}
+              </dd>
+            </div>
+            <div>
+              <dt>Estado</dt>
+              <dd>
+                <span class="status status--{{ event.status.toLowerCase() }}">{{
+                  statusLabel(event.status)
+                }}</span>
+              </dd>
+            </div>
+          </dl>
+        </div>
+        <footer>
+          <button type="button" (click)="selectedEvent.set(null)">Cerrar</button
+          ><button class="primary" type="button" (click)="completeEvent(event.id)">
+            Marcar completado
+          </button>
+        </footer>
+      </section>
+    }
+
+    @if (createOpen()) {
+      <button
+        class="backdrop"
+        type="button"
+        aria-label="Cerrar"
+        (click)="createOpen.set(false)"
+      ></button>
+      <section class="event-modal create-modal" role="dialog" aria-modal="true">
+        <header>
+          <span class="event-symbol event-symbol--blue">＋</span>
+          <div>
+            <small>CALENDARIO</small>
+            <h2>Nuevo evento</h2>
+            <p>Programa una actividad para el equipo.</p>
+          </div>
+          <button type="button" (click)="createOpen.set(false)">×</button>
+        </header>
+        <div class="event-form">
+          <label class="full"
+            >Asunto *<input
+              #titleInput
+              type="text"
+              required
+              (input)="setDraft('title', titleInput.value)"
+          /></label>
+          <label
+            >Tipo<app-styled-picklist
+              [options]="eventTypeOptions"
+              [value]="draft()['type'] || 'INSTALLATION'"
+              (valueChange)="setDraft('type', $event)"
+          /></label>
+          <label
+            >Cliente<input #clientInput type="text" (input)="setDraft('client', clientInput.value)"
+          /></label>
+          <div class="form-date">
+            <app-inline-editable-date-field
+              label="Inicio *"
+              [value]="draft()['startsAt'] || ''"
+              [includeTime]="true"
+              [alwaysShowEdit]="true"
+              [compact]="true"
+              placeholder="Seleccionar inicio"
+              (valueSaved)="setDraft('startsAt', $event)"
+            />
+          </div>
+          <div class="form-date">
+            <app-inline-editable-date-field
+              label="Fin *"
+              [value]="draft()['endsAt'] || ''"
+              [includeTime]="true"
+              [alwaysShowEdit]="true"
+              [compact]="true"
+              placeholder="Seleccionar fin"
+              (valueSaved)="setDraft('endsAt', $event)"
+            />
+          </div>
+          <label class="full"
+            >Descripción<textarea
+              #descriptionInput
+              rows="3"
+              (input)="setDraft('description', descriptionInput.value)"
+            ></textarea>
+          </label>
+        </div>
+        <footer>
+          <button type="button" (click)="createOpen.set(false)">Cancelar</button
+          ><button class="primary" type="button" [disabled]="!canCreate()" (click)="createEvent()">
+            Crear evento
+          </button>
+        </footer>
+      </section>
+    }

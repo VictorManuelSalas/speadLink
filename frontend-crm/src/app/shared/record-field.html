@@ -1,0 +1,145 @@
+@switch (config().kind) {
+  @case ('gps') {
+    <app-gps-location-picker [value]="value()" (locationSaved)="valueSaved.emit($event)" />
+  }
+  @case ('date') {
+    @if (config().editable) {
+      <app-inline-editable-date-field
+        [label]="config().label"
+        [value]="value()"
+        (valueSaved)="valueSaved.emit($event)"
+      />
+    } @else {
+      <div class="field">
+        <span>{{ config().label }}</span
+        ><b>{{ value() | date: 'dd MMM y, HH:mm' }}</b>
+      </div>
+    }
+  }
+  @case ('select') {
+    @if (editing()) {
+      <div class="field">
+        <span>{{ config().label }}</span>
+        <div class="editor">
+          <select #choice [value]="value()">
+            @for (option of config().options ?? []; track option) {
+              <option [value]="option">{{ option }}</option>
+            }</select
+          ><button class="save" type="button" (click)="save(choice.value)">✓</button
+          ><button type="button" (click)="editing.set(false)">×</button>
+        </div>
+      </div>
+    } @else {
+      <div class="field">
+        <span>{{ config().label }}</span>
+        <div class="value">
+          <b>{{ config().displayValue || value() || '—' }}</b>
+          @if (config().editable) {
+            <button class="edit" type="button" (click)="editing.set(true)">
+              {{ editIcon }}
+            </button>
+          }
+        </div>
+      </div>
+    }
+  }
+  @case ('status') {
+    @if (editing()) {
+      <div class="field">
+        <span>{{ config().label }}</span>
+        <div class="editor">
+          <select #status [value]="value()">
+            @for (option of config().options ?? []; track option) {
+              <option [value]="option">{{ option }}</option>
+            }</select
+          ><button class="save" type="button" (click)="save(status.value)">✓</button
+          ><button type="button" (click)="editing.set(false)">×</button>
+        </div>
+      </div>
+    } @else {
+      <div class="field">
+        <span>{{ config().label }}</span>
+        <div class="value">
+          <em class="status {{ config().statusTone }}"
+            ><i></i>{{ config().statusLabel || value() }}</em
+          >
+          @if (config().editable) {
+            <button class="edit" type="button" (click)="editing.set(true)">
+              {{ editIcon }}
+            </button>
+          }
+        </div>
+      </div>
+    }
+  }
+  @case ('lookup') {
+    <div class="field lookup">
+      <span>{{ config().label }}</span
+      ><a [routerLink]="config().route"
+        ><b>{{ config().displayValue || value() || '—' }}</b
+        ><i>↗</i>
+        @if (config().preview; as preview) {
+          <aside>
+            <span>{{ preview.initials }}</span>
+            <div>
+              <small>{{ preview.type }}</small
+              ><b>{{ preview.title }}</b
+              ><em>{{ preview.detail }}</em>
+            </div>
+          </aside>
+        }
+      </a>
+    </div>
+  }
+  @case ('audit') {
+    <div class="field">
+      <span>{{ config().label }}</span>
+      <div class="audit">
+        <b>{{ value() | date: 'dd MMM y, HH:mm' }}</b
+        ><i></i>
+        @if (config().auditUser; as user) {
+          <a [routerLink]="user.id ? ['/users', user.id] : null"
+            ><span>{{ user.initials }}</span
+            ><b>{{ user.fullName }}</b>
+            <aside>
+              <span>{{ user.initials }}</span>
+              <div>
+                <b>{{ user.fullName }}</b
+                ><small>{{ user.email }}</small>
+              </div>
+            </aside></a
+          >
+        }
+      </div>
+    </div>
+  }
+  @case ('money') {
+    <div class="field">
+      <span>{{ config().label }}</span
+      ><b>{{ numberValue() | currency: 'MXN' : 'symbol-narrow' : '1.0-2' : i18n.locale() }}</b>
+    </div>
+  }
+  @default {
+    @if (config().editable) {
+      <app-inline-editable-field
+        [label]="config().label"
+        [type]="inputType()"
+        [value]="value()"
+        [displayValue]="config().displayValue || ''"
+        [href]="config().href || automaticHref()"
+        (valueSaved)="valueSaved.emit($event)"
+      />
+    } @else {
+      <div class="field">
+        <span>{{ config().label }}</span>
+        @if (config().href || automaticHref()) {
+          <a class="direct" [href]="config().href || automaticHref()"
+            ><b>{{ config().displayValue || value() || '—' }}</b></a
+          >
+        } @else {
+          <b>{{ config().displayValue || value() || '—' }}</b>
+        }
+      </div>
+    }
+  }
+}

@@ -1,0 +1,18 @@
+<header class="record-header">
+  <div class="identity">
+    <a class="back" [routerLink]="rootRoute()" aria-label="Volver">←</a>
+    <span class="avatar" [style.background]="accent() + '18'" [style.color]="accent()">{{
+      initials()
+    }}</span>
+    <div>
+      <div class="title">
+        <h1>{{ title() }}</h1>
+        @if (statusLabel()) {
+          <span class="status status--{{ statusTone() }}"><i></i>{{ statusLabel() }}</span>
+        }
+      </div>
+      <p>{{ subtitle() }}</p>
+    </div>
+  </div>
+  <div class="actions"><ng-content select="[record-actions]" /></div>
+</header>

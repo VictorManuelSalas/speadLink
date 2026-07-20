@@ -1,0 +1,265 @@
+    <section class="events-section">
+      <header>
+        <div>
+          <h2>Eventos</h2>
+          <p>{{ events().length }} evento(s) conectados con este registro</p>
+        </div>
+        <div>
+          <a class="button" routerLink="/calendar">Ver calendario</a
+          ><button class="button button--primary" type="button" (click)="openCreate()">
+            ＋ Nuevo evento
+          </button>
+        </div>
+      </header>
+      <div class="event-list">
+        @for (event of events(); track event.id) {
+          <article
+            class="card event-card"
+            tabindex="0"
+            (click)="viewEvent(event)"
+            (keydown.enter)="viewEvent(event)"
+          >
+            <span class="event-date"
+              ><b>{{ event.startsAt | date: 'dd' }}</b
+              ><small>{{ event.startsAt | date: 'MMM' }}</small></span
+            ><span class="event-copy"
+              ><span><i class="dot dot--{{ tone(event.type) }}"></i>{{ label(event.type) }}</span
+              ><b>{{ event.title }}</b
+              ><small
+                >{{
+                  event.allDay
+                    ? 'Todo el día'
+                    : (event.startsAt | date: 'HH:mm') + '–' + (event.endsAt | date: 'HH:mm')
+                }}
+                · {{ event.assignedTo }}</small
+              ></span
+            ><span class="event-status event-status--{{ event.status.toLowerCase() }}">{{
+              statusLabel(event.status)
+            }}</span
+            ><button
+              class="event-menu-trigger"
+              type="button"
+              aria-label="Opciones del evento"
+              (click)="toggleMenu($event, event.id)"
+            >
+              •••
+            </button>
+            @if (menuId() === event.id) {
+              <div class="event-action-menu" (click)="$event.stopPropagation()">
+                <button type="button" (click)="viewEvent(event)"><span>↗</span>Ver</button>
+                <button type="button" (click)="openEdit(event)"><span>✎</span>Editar</button>
+                <button class="danger" type="button" (click)="deleteEvent(event.id)">
+                  <span>⊘</span>Eliminar
+                </button>
+              </div>
+            }
+          </article>
+        } @empty {
+          <article class="card section-empty">
+            <span>◇</span>
+            <h3>Sin eventos todavía</h3>
+            <p>Los eventos creados para este registro aparecerán aquí y en el calendario.</p>
+            <button class="button button--primary" type="button" (click)="openCreate()">
+              ＋ Crear evento
+            </button>
+          </article>
+        }
+      </div>
+    </section>
+
+    @if (createOpen()) {
+      <button
+        class="backdrop"
+        type="button"
+        aria-label="Cerrar"
+        (click)="createOpen.set(false)"
+      ></button>
+      <section class="event-modal" role="dialog" aria-modal="true">
+        <header>
+          <div>
+            <span>CALENDARIO</span>
+            <h2>{{ editingId() ? 'Editar evento' : 'Nuevo evento' }}</h2>
+            <p>Se relacionará automáticamente con {{ recordName() }}.</p>
+          </div>
+          <button type="button" (click)="createOpen.set(false)">×</button>
+        </header>
+        <div class="event-form">
+          <label class="full"
+            ><span>Asunto <i class="required">*</i></span
+            ><input
+              #title
+              required
+              [value]="draft()['title'] || ''"
+              (input)="setDraft('title', title.value)" /></label
+          ><label
+            ><span>Tipo</span>
+            <app-styled-picklist
+              [options]="eventTypeOptions"
+              [value]="draft()['type'] || 'FOLLOW_UP'"
+              (valueChange)="setDraft('type', $event)" /></label
+          ><label
+            ><span>Responsable</span>
+            <app-styled-picklist
+              [options]="userOptions"
+              [value]="draft()['assignedTo'] || 'Andrea Torres'"
+              (valueChange)="setDraft('assignedTo', $event)" /></label
+          ><label
+            ><span>Estado</span>
+            <app-styled-picklist
+              [options]="statusOptions"
+              [value]="draft()['status'] || 'SCHEDULED'"
+              (valueChange)="setDraft('status', $event)"
+          /></label>
+          <div class="field-group">
+            <span>Registro relacionado</span>
+            <div class="related-record">
+              <span class="related-record__icon">{{ recordType() === 'lead' ? 'LD' : 'CL' }}</span>
+              <span class="related-record__copy"
+                ><b>{{ recordName() }}</b
+                ><small
+                  >{{ recordType() === 'lead' ? 'Lead' : 'Cliente' }} · {{ recordId() }}</small
+                ></span
+              ><span class="related-record__check">✓</span>
+            </div>
+          </div>
+          <div class="date-control">
+            <app-inline-editable-date-field
+              label="Inicio *"
+              [includeTime]="!isAllDay()"
+              [alwaysShowEdit]="true"
+              placeholder="Seleccionar inicio"
+              [value]="draft()['startsAt'] || ''"
+              (valueSaved)="setEventDate('startsAt', $event)"
+            />
+          </div>
+          <div class="date-control">
+            <app-inline-editable-date-field
+              label="Fin *"
+              [includeTime]="!isAllDay()"
+              [alwaysShowEdit]="true"
+              placeholder="Seleccionar fin"
+              [value]="draft()['endsAt'] || ''"
+              (valueSaved)="setEventDate('endsAt', $event)"
+            />
+          </div>
+          <label class="all-day full"
+            ><input
+              #allDay
+              type="checkbox"
+              [checked]="isAllDay()"
+              (change)="setDraft('allDay', allDay.checked ? 'true' : 'false')"
+            /><span
+              ><b>Todo el día</b><small>Oculta la hora y reserva el día completo.</small></span
+            ></label
+          >
+          @if (dateRangeError()) {
+            <p class="form-error full">
+              La fecha de fin no puede ser menor que la fecha de inicio.
+            </p>
+          }
+          <p class="required-help full"><i>*</i> Asunto, inicio y fin son obligatorios.</p>
+          <label class="full"
+            >Descripción<textarea
+              #description
+              rows="3"
+              [value]="draft()['description'] || ''"
+              (input)="setDraft('description', description.value)"
+            ></textarea>
+          </label>
+        </div>
+        <footer>
+          <button class="button" type="button" (click)="createOpen.set(false)">Cancelar</button
+          ><button
+            class="button button--primary"
+            type="button"
+            [disabled]="!canCreate()"
+            (click)="createEvent()"
+          >
+            {{ editingId() ? 'Guardar cambios' : 'Crear evento' }}
+          </button>
+        </footer>
+      </section>
+    }
+    @if (selected(); as event) {
+      <button
+        class="backdrop"
+        type="button"
+        aria-label="Cerrar"
+        (click)="selected.set(null)"
+      ></button>
+      <section class="event-modal event-preview" role="dialog" aria-modal="true">
+        <header class="event-preview__header">
+          <span class="preview-symbol preview-symbol--{{ tone(event.type) }}">{{
+            eventSymbol(event.type)
+          }}</span>
+          <div class="preview-title">
+            <span>{{ label(event.type) }}</span>
+            <h2>{{ event.title }}</h2>
+            <p>{{ event.id }} · {{ event.client }}</p>
+          </div>
+          <span class="preview-status preview-status--{{ event.status.toLowerCase() }}">{{
+            statusLabel(event.status)
+          }}</span>
+          <button type="button" (click)="selected.set(null)">×</button>
+        </header>
+        <article class="event-preview__content">
+          <section class="preview-description">
+            <span>DESCRIPCIÓN</span>
+            <p>{{ event.description }}</p>
+          </section>
+          <div class="preview-details">
+            <section class="preview-detail preview-detail--wide">
+              <span class="preview-detail__icon">▣</span>
+              <div>
+                <small>Fecha y hora</small><b>{{ event.startsAt | date: 'EEEE, dd MMM y' }}</b>
+                <p>
+                  {{
+                    event.allDay
+                      ? 'Todo el día'
+                      : (event.startsAt | date: 'HH:mm') + ' – ' + (event.endsAt | date: 'HH:mm')
+                  }}
+                </p>
+              </div>
+            </section>
+            <section class="preview-detail">
+              <span class="preview-detail__icon">◷</span>
+              <div>
+                <small>Duración</small><b>{{ eventDuration(event) }}</b>
+                <p>{{ event.allDay ? 'Evento de día completo' : 'Tiempo programado' }}</p>
+              </div>
+            </section>
+            <section class="preview-detail">
+              <span class="avatar preview-avatar">{{ userInitials(event.assignedTo) }}</span>
+              <div>
+                <small>Responsable</small><b>{{ event.assignedTo }}</b>
+                <p>Usuario asignado</p>
+              </div>
+            </section>
+            <section class="preview-detail preview-detail--wide">
+              <span class="preview-detail__icon">↗</span>
+              <div>
+                <small>Registro relacionado</small><b>{{ event.client }}</b>
+                <p>
+                  {{
+                    event.leadId
+                      ? 'Lead · ' + event.leadId
+                      : event.clientId
+                        ? 'Cliente · ' + event.clientId
+                        : 'Sin relación'
+                  }}
+                </p>
+              </div>
+            </section>
+          </div>
+        </article>
+        <footer>
+          <button class="button" type="button" (click)="selected.set(null)">Cerrar</button>
+          <button class="button" type="button" (click)="openEdit(event)">✎ Editar</button>
+          @if (event.status === 'SCHEDULED') {
+            <button class="button button--primary" type="button" (click)="complete(event.id)">
+              Marcar completado
+            </button>
+          }
+        </footer>
+      </section>
+    }

@@ -1,0 +1,64 @@
+<div class="breadcrumbs">
+  <a routerLink="/dashboard">CRM</a><b>›</b><span>Usuarios</span><b>›</b
+  ><span>{{ user.name }}</span>
+</div>
+<header class="profile-hero">
+  <a class="icon-button" routerLink="/dashboard">←</a><span class="profile-avatar">AT</span>
+  <div>
+    <div>
+      <h1>{{ user.name }}</h1>
+      <span>● Activa</span>
+    </div>
+    <p>{{ user.id }} · Administradora</p>
+  </div>
+</header>
+<section class="profile-grid">
+  <article class="card section-card">
+    <div class="card-heading">
+      <div>
+        <h2>Información del usuario</h2>
+        <p>Identidad y datos de contacto</p>
+      </div>
+    </div>
+    <dl>
+      <div>
+        <dt>Nombre completo</dt>
+        <dd>{{ user.name }}</dd>
+      </div>
+      <div>
+        <dt>Correo electrónico</dt>
+        <dd>
+          <a [href]="'mailto:' + user.email">{{ user.email }}</a>
+        </dd>
+      </div>
+      <div>
+        <dt>Rol</dt>
+        <dd>Administradora</dd>
+      </div>
+      <div>
+        <dt>Idioma</dt>
+        <dd>Español</dd>
+      </div>
+      <div>
+        <dt>Creada</dt>
+        <dd>{{ user.createdAt | date: 'dd MMM y, HH:mm' : '' : i18n.locale() }}</dd>
+      </div>
+      <div>
+        <dt>Último acceso</dt>
+        <dd>{{ user.lastLoginAt | date: 'dd MMM y, HH:mm' : '' : i18n.locale() }}</dd>
+      </div>
+    </dl>
+  </article>
+  <aside class="card section-card">
+    <div class="card-heading">
+      <div>
+        <h2>Acceso</h2>
+        <p>Estado de la cuenta</p>
+      </div>
+    </div>
+    <div class="access">
+      <span>Estado</span><b class="success">● Activa</b><span>Organización</span
+      ><b>SpeedLink México</b><span>Autenticación</span><b>Contraseña</b>
+    </div>
+  </aside>
+</section>

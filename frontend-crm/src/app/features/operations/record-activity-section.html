@@ -1,0 +1,65 @@
+<section>
+    <header class="section-head">
+      <div>
+        <h2>Historial de actividad</h2>
+        <p>{{ filtered().length }} de {{ events().length }} eventos</p>
+      </div>
+      <div class="filters">
+        <button type="button" [class.active]="!module() && !type() && !date()" (click)="clear()">
+          Todos</button
+        ><select #moduleSelect [value]="module()" (change)="module.set(moduleSelect.value)">
+          <option value="">Módulo</option>
+          @for (item of modules; track item) {
+            <option [value]="item">{{ item }}</option>
+          }</select
+        ><select #typeSelect [value]="type()" (change)="setType(typeSelect.value)">
+          <option value="">Tipo</option>
+          <option value="CREATE">Creación</option>
+          <option value="EDIT">Edición</option>
+          <option value="DELETE">Eliminación</option>
+        </select>
+        <div class="date" [class.active]="date()">
+          <app-inline-editable-date-field
+            label="Fecha"
+            [value]="date()"
+            placeholder="Fecha"
+            [alwaysShowEdit]="true"
+            [compact]="true"
+            (valueSaved)="date.set($event)"
+          />
+        </div>
+        @if (date()) {
+          <button class="clear" type="button" (click)="date.set('')">×</button>
+        }
+      </div>
+    </header>
+    <div class="timeline">
+      @for (event of filtered(); track event.id) {
+        <article>
+          <span class="marker {{ event.tone }}">{{ icon(event.tone) }}</span>
+          <div class="event">
+            <header>
+              <div>
+                <h3>{{ event.title }}</h3>
+                <small
+                  >por <b>{{ event.actor }}</b></small
+                >
+              </div>
+              <time>{{ event.createdAt | date: 'dd MMM y, HH:mm' }}</time>
+            </header>
+            <div class="badges">
+              <span>{{ event.module }}</span
+              ><span>{{ typeLabel(event.actionType) }}</span>
+            </div>
+            <p>{{ event.detail }}</p>
+          </div>
+        </article>
+      } @empty {
+        <article class="empty">
+          <span>⌕</span>
+          <h3>Sin resultados</h3>
+          <p>No hay actividad que coincida con los filtros.</p>
+        </article>
+      }
+    </div>
+  </section>

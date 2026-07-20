@@ -1,0 +1,20 @@
+<article class="card">
+  <header>
+    <h2>Actividad reciente</h2>
+    <p>Últimos movimientos del registro</p>
+  </header>
+  <div class="list">
+    @for (event of events(); track event.id) {
+      <div class="item">
+        <i class="{{ event.tone }}"></i
+        ><span
+          ><b>{{ event.title }}</b
+          ><small>{{ event.detail }}</small
+          ><time>{{ event.createdAt | date: 'dd MMM y, HH:mm' }}</time></span
+        >
+      </div>
+    } @empty {
+      <p class="empty">Sin actividad registrada.</p>
+    }
+  </div>
+</article>

@@ -1,0 +1,46 @@
+:host {
+  display: block;
+}
+.tabs {
+  margin-bottom: 28px;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  gap: 27px;
+  overflow-x: auto;
+}
+.tabs button {
+  position: relative;
+  min-height: 48px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+.tabs button.active {
+  color: var(--color-primary);
+}
+.tabs button.active:after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--color-primary);
+}
+.tabs span {
+  min-width: 20px;
+  height: 20px;
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--color-muted);
+  display: inline-grid;
+  place-items: center;
+  font-size: 9px;
+}

@@ -1,0 +1,24 @@
+:host {
+  display: block;
+}
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 290px;
+  align-items: start;
+  gap: 18px;
+}
+.layout main,
+.layout aside {
+  min-width: 0;
+  display: grid;
+  gap: 16px;
+}
+:host ::ng-deep [record-main],
+:host ::ng-deep [record-aside] {
+  display: contents;
+}
+@media (max-width: 980px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}

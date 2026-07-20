@@ -1,0 +1,82 @@
+:host {
+  display: block;
+}
+.profile-hero {
+  margin: 15px 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+.profile-avatar {
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  display: grid;
+  place-items: center;
+  font-size: 17px;
+  font-weight: 800;
+}
+.profile-hero > div > div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.profile-hero > div > div > span {
+  padding: 5px 8px;
+  border-radius: 99px;
+  background: #dcfce7;
+  color: #15803d;
+  font-size: 10px;
+  font-weight: 700;
+}
+.profile-hero p {
+  margin-top: 5px;
+  color: var(--color-text-secondary);
+}
+.profile-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 16px;
+}
+.profile-grid dl {
+  margin: 18px 0 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 24px;
+}
+.profile-grid dl > div {
+  min-height: 70px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.profile-grid dt,
+.access span {
+  color: var(--color-text-secondary);
+  font-size: 10px;
+}
+.profile-grid dd {
+  margin: 0;
+  font-weight: 650;
+}
+.profile-grid dd a {
+  color: var(--color-primary);
+}
+.access {
+  margin-top: 18px;
+  display: grid;
+  gap: 7px;
+}
+.access b {
+  margin-bottom: 12px;
+}
+@media (max-width: 760px) {
+  .profile-grid,
+  .profile-grid dl {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,301 @@
+    <section class="tickets-section">
+      <header class="tickets-heading">
+        <div>
+          <h2>Tickets de soporte</h2>
+          <p>Solicitudes, incidencias y seguimiento técnico de {{ customerName() }}.</p>
+        </div>
+        <button class="primary-button" type="button" (click)="openComposer()">
+          ＋ Nuevo ticket
+        </button>
+      </header>
+
+      <div class="ticket-metrics">
+        <article>
+          <span class="metric-icon metric-icon--blue">◫</span
+          ><span
+            ><b>{{ activeCount() }}</b
+            ><small>Activos</small></span
+          >
+        </article>
+        <article>
+          <span class="metric-icon metric-icon--red">!</span
+          ><span
+            ><b>{{ urgentCount() }}</b
+            ><small>Alta prioridad</small></span
+          >
+        </article>
+        <article>
+          <span class="metric-icon metric-icon--amber">◷</span
+          ><span
+            ><b>{{ waitingCount() }}</b
+            ><small>En espera</small></span
+          >
+        </article>
+        <article>
+          <span class="metric-icon metric-icon--green">✓</span
+          ><span
+            ><b>{{ resolvedCount() }}</b
+            ><small>Resueltos</small></span
+          >
+        </article>
+      </div>
+
+      <article class="card tickets-card">
+        <div class="tickets-toolbar">
+          <label class="ticket-search">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" />
+              <path d="m20 20-4-4" />
+            </svg>
+            <input
+              #searchInput
+              type="search"
+              placeholder="Buscar por folio, asunto o responsable…"
+              [value]="search()"
+              (input)="search.set(searchInput.value)"
+            />
+          </label>
+          <div class="ticket-filters" role="group" aria-label="Filtrar tickets">
+            @for (filter of filters; track filter.value) {
+              <button
+                type="button"
+                [class.is-active]="selectedFilter() === filter.value"
+                (click)="selectedFilter.set(filter.value)"
+              >
+                {{ filter.label }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="ticket-list">
+          @for (ticket of filteredTickets(); track ticket.id) {
+            <article class="ticket-row" [class.is-expanded]="expandedTicketId() === ticket.id">
+              <button class="ticket-main" type="button" (click)="openPreview(ticket)">
+                <span
+                  class="priority-dot priority-dot--{{ ticket.priority }}"
+                  [title]="priorityLabel(ticket.priority)"
+                ></span>
+                <span class="ticket-copy">
+                  <span
+                    ><b>{{ ticket.subject }}</b
+                    ><code>{{ ticket.id }}</code></span
+                  >
+                  <small
+                    >{{ ticket.category }} · Actualizado
+                    {{ ticket.updatedAt | date: 'dd MMM, HH:mm' : '' : i18n.locale() }}</small
+                  >
+                </span>
+                <span class="ticket-assignee"
+                  ><span>{{ initials(ticket.assignedTo) }}</span
+                  ><small>{{ ticket.assignedTo }}</small></span
+                >
+                <span class="ticket-sla" [class.is-overdue]="isSlaOverdue(ticket)"
+                  ><small>SLA</small><b>{{ slaLabel(ticket) }}</b></span
+                >
+                <span class="ticket-status ticket-status--{{ ticket.status }}">{{
+                  statusLabel(ticket.status)
+                }}</span>
+                <span class="chevron">›</span>
+              </button>
+              @if (expandedTicketId() === ticket.id) {
+                <div class="ticket-details">
+                  <div class="ticket-description">
+                    <span>Descripción</span>
+                    <p>{{ ticket.description }}</p>
+                  </div>
+                  <dl>
+                    <div>
+                      <dt>Creado</dt>
+                      <dd>{{ ticket.createdAt | date: 'dd MMM y, HH:mm' : '' : i18n.locale() }}</dd>
+                    </div>
+                    <div>
+                      <dt>Canal</dt>
+                      <dd>{{ ticket.channel }}</dd>
+                    </div>
+                    <div>
+                      <dt>Solicitante</dt>
+                      <dd>{{ ticket.requester }}</dd>
+                    </div>
+                    <div>
+                      <dt>Prioridad</dt>
+                      <dd>{{ priorityLabel(ticket.priority) }}</dd>
+                    </div>
+                  </dl>
+                  <div class="ticket-actions">
+                    <label
+                      >Actualizar estado
+                      <select
+                        #statusSelect
+                        [value]="ticket.status"
+                        (change)="changeStatus(ticket, statusSelect.value)"
+                      >
+                        <option value="open">Abierto</option>
+                        <option value="in_progress">En progreso</option>
+                        <option value="waiting">En espera</option>
+                        <option value="resolved">Resuelto</option>
+                        <option value="closed">Cerrado</option>
+                      </select>
+                    </label>
+                    <button type="button" (click)="copyTicketId(ticket.id)">
+                      {{ copiedTicketId() === ticket.id ? '✓ Folio copiado' : 'Copiar folio' }}
+                    </button>
+                    <button type="button">Enviar mensaje</button>
+                  </div>
+                </div>
+              }
+            </article>
+          } @empty {
+            <div class="ticket-empty">
+              <span>⌕</span>
+              <h3>No encontramos tickets</h3>
+              <p>Prueba con otro filtro o crea una nueva solicitud.</p>
+            </div>
+          }
+        </div>
+      </article>
+    </section>
+
+    @if (previewTicket(); as ticket) {
+      <button
+        class="composer-backdrop"
+        type="button"
+        aria-label="Cerrar"
+        (click)="closePreview()"
+      ></button>
+      <section class="ticket-preview" role="dialog" aria-modal="true">
+        <header>
+          <div>
+            <span>{{ ticket.id }} · {{ ticket.category }}</span>
+            <h2>{{ ticket.subject }}</h2>
+            <p>{{ ticket.description }}</p>
+          </div>
+          <button type="button" aria-label="Cerrar" (click)="closePreview()">×</button>
+        </header>
+        <div class="preview-summary">
+          <div>
+            <small>Estado</small
+            ><span class="ticket-status ticket-status--{{ ticket.status }}">{{
+              statusLabel(ticket.status)
+            }}</span>
+          </div>
+          <div>
+            <small>Prioridad</small><b>{{ priorityLabel(ticket.priority) }}</b>
+          </div>
+          <div>
+            <small>Responsable</small
+            ><span class="ticket-assignee"
+              ><span>{{ initials(ticket.assignedTo) }}</span
+              ><b>{{ ticket.assignedTo }}</b></span
+            >
+          </div>
+          <div>
+            <small>Última actualización</small
+            ><b>{{ ticket.updatedAt | date: 'dd MMM y, HH:mm' : '' : i18n.locale() }}</b>
+          </div>
+        </div>
+        <footer>
+          <label
+            >Actualizar estado
+            <select
+              #previewStatus
+              [value]="ticket.status"
+              (change)="changeStatus(ticket, previewStatus.value)"
+            >
+              <option value="open">Abierto</option>
+              <option value="in_progress">En progreso</option>
+              <option value="waiting">En espera</option>
+              <option value="resolved">Resuelto</option>
+              <option value="closed">Cerrado</option>
+            </select>
+          </label>
+          <button type="button" (click)="closePreview()">Cerrar</button>
+          <a class="primary-button" [routerLink]="['/tickets', ticket.id]">Ver ticket →</a>
+        </footer>
+      </section>
+    }
+
+    @if (composerOpen()) {
+      <button
+        class="composer-backdrop"
+        type="button"
+        aria-label="Cerrar"
+        (click)="closeComposer()"
+      ></button>
+      <section
+        class="ticket-composer"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="new-ticket-title"
+      >
+        <header>
+          <div>
+            <span>NUEVA SOLICITUD</span>
+            <h2 id="new-ticket-title">Crear ticket de soporte</h2>
+            <p>Registra la información necesaria para iniciar el seguimiento.</p>
+          </div>
+          <button type="button" aria-label="Cerrar" (click)="closeComposer()">×</button>
+        </header>
+        <div class="composer-form">
+          <label class="full"
+            >Asunto <b class="required-mark">*</b
+            ><input
+              #subjectInput
+              type="text"
+              required
+              maxlength="100"
+              placeholder="Ej. Servicio intermitente"
+              [value]="subjectDraft()"
+              (input)="subjectDraft.set(subjectInput.value)"
+          /></label>
+          <label
+            >Categoría<app-styled-picklist
+              [options]="categoryOptions"
+              [value]="categoryDraft()"
+              (valueChange)="categoryDraft.set($event)"
+          /></label>
+          <label
+            >Prioridad<app-styled-picklist
+              [options]="priorityOptions"
+              [value]="priorityDraft()"
+              (valueChange)="priorityDraft.set($event)"
+          /></label>
+          <label
+            >Canal<app-styled-picklist
+              [options]="channelOptions"
+              [value]="channelDraft()"
+              (valueChange)="channelDraft.set($event)"
+          /></label>
+          <label
+            >Asignar a<app-styled-picklist
+              [options]="assigneeOptions"
+              [value]="assigneeDraft()"
+              (valueChange)="assigneeDraft.set($event)"
+          /></label>
+          <label class="full"
+            >Descripción <b class="required-mark">*</b
+            ><textarea
+              #descriptionInput
+              rows="5"
+              required
+              placeholder="Describe el problema, síntomas y pruebas realizadas…"
+              [value]="descriptionDraft()"
+              (input)="descriptionDraft.set(descriptionInput.value)"
+            ></textarea>
+          </label>
+        </div>
+        <footer>
+          <button type="button" (click)="closeComposer()">Cancelar</button
+          ><button
+            class="primary-button"
+            type="button"
+            [disabled]="!canCreate()"
+            (click)="
+              createTicket(categoryDraft(), priorityDraft(), channelDraft(), assigneeDraft())
+            "
+          >
+            Crear ticket
+          </button>
+        </footer>
+      </section>
+    }

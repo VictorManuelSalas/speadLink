@@ -1,0 +1,40 @@
+<div class="editable-field" [class.is-editing]="editing()">
+  <span class="editable-field__label">{{ label() }}</span>
+  @if (editing()) {
+    <div class="editable-field__editor">
+      <input
+        #editor
+        [type]="type()"
+        [value]="draft()"
+        (input)="draft.set(editor.value)"
+        (keydown.enter)="save()"
+        (keydown.escape)="cancel()"
+      />
+      <button
+        type="button"
+        class="save"
+        aria-label="Guardar"
+        [disabled]="!draft().trim()"
+        (click)="save()"
+      >
+        ✓
+      </button>
+      <button type="button" aria-label="Cancelar" (click)="cancel()">×</button>
+    </div>
+  } @else {
+    <div class="editable-field__value">
+      @if (href()) {
+        <a [href]="href()"
+          ><b>{{ displayValue() || value() }}</b></a
+        >
+      } @else {
+        <b>{{ displayValue() || value() }}</b>
+      }
+      <button type="button" aria-label="Editar {{ label() }}" (click)="startEditing()">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="m4 20 4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20ZM14 7l3 3" />
+        </svg>
+      </button>
+    </div>
+  }
+</div>

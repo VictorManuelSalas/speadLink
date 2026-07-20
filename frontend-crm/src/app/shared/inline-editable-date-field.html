@@ -1,0 +1,63 @@
+<div class="date-field" [class.date-field--compact]="compact()">
+  <span class="date-field__label">{{ label() }}</span>
+  <div class="date-field__value">
+    <b [class.is-placeholder]="!formattedValue()">{{ formattedValue() || placeholder() }}</b>
+    <button
+      type="button"
+      class="edit"
+      [class.is-visible]="alwaysShowEdit()"
+      aria-label="Editar {{ label() }}"
+      (click)="openCalendar()"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="m4 20 4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20ZM14 7l3 3" />
+      </svg>
+    </button>
+  </div>
+
+  @if (editing()) {
+    <div class="calendar" role="dialog" aria-label="Seleccionar fecha">
+      <header>
+        <button type="button" aria-label="Mes anterior" (click)="changeMonth(-1)">‹</button>
+        <strong>{{ monthTitle() }}</strong>
+        <button type="button" aria-label="Mes siguiente" (click)="changeMonth(1)">›</button>
+      </header>
+      <div class="weekdays" aria-hidden="true">
+        @for (weekday of weekdays(); track weekday) {
+          <span>{{ weekday }}</span>
+        }
+      </div>
+      <div class="days">
+        @for (item of calendarDays(); track item.key) {
+          <button
+            type="button"
+            [class.outside]="!item.inCurrentMonth"
+            [class.selected]="item.selected"
+            [class.today]="item.today"
+            [attr.aria-label]="item.key"
+            (click)="selectDate(item.key)"
+          >
+            {{ item.day }}
+          </button>
+        }
+      </div>
+      @if (includeTime()) {
+        <label class="time-field"
+          ><span>Hora</span
+          ><input
+            #timeInput
+            type="time"
+            [value]="selectedTime()"
+            (input)="selectedTime.set(timeInput.value)"
+        /></label>
+      }
+      <footer>
+        <button type="button" class="today-button" (click)="selectToday()">Hoy</button>
+        <div>
+          <button type="button" class="cancel" (click)="cancel()">Cancelar</button>
+          <button type="button" class="save" (click)="save()">Guardar</button>
+        </div>
+      </footer>
+    </div>
+  }
+</div>

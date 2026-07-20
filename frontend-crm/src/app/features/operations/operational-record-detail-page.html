@@ -1,0 +1,883 @@
+    @if (record(); as item) {
+      <div class="breadcrumbs">
+        <a [routerLink]="['/', moduleKey]">{{ definition.title }}</a
+        ><b>›</b><span>{{ item.id }}</span>
+      </div>
+      @if (isConvertedLead(item)) {
+        <section class="card converted-lead">
+          <span class="converted-icon">✓</span>
+          <div>
+            <span>LEAD CONVERTIDO</span>
+            <h1>{{ primaryValue(item) }} ya es cliente</h1>
+            <p>
+              Este lead fue convertido el
+              {{ asString(item['convertedAt']) | date: 'dd MMM y, HH:mm' : '' : i18n.locale() }}. Su
+              historial comercial permanece disponible como trazabilidad, pero la gestión continúa
+              desde el cliente.
+            </p>
+          </div>
+          <article>
+            <span
+              class="detail-avatar"
+              [style.background]="definition.accent + '18'"
+              [style.color]="definition.accent"
+              >{{ initials(primaryValue(item)) }}</span
+            ><span
+              ><small>Cliente generado</small><b>{{ primaryValue(item) }}</b
+              ><em>{{ item['convertedToClientId'] }}</em></span
+            ><a
+              class="button button--primary"
+              [routerLink]="['/customers', item['convertedToClientId']]"
+              >Ver cliente →</a
+            >
+          </article>
+          <a class="button" routerLink="/leads">← Volver a leads</a>
+        </section>
+      } @else {
+        <app-record-header
+          [rootLabel]="definition.title"
+          [rootRoute]="['/', moduleKey]"
+          [recordId]="item.id"
+          [title]="primaryValue(item)"
+          [initials]="initials(primaryValue(item))"
+          [accent]="definition.accent"
+          [statusLabel]="item['status'] ? statusLabel(item['status']) : ''"
+          [statusTone]="statusTone(item['status'])"
+          [subtitle]="item.id + ' · Actualizado ' + formattedUpdatedAt(item)"
+        >
+          <div record-actions>
+            <button class="button" type="button">✉ Compartir</button>
+            @if (moduleKey === 'leads') {
+              <button
+                class="button button--primary convert-button"
+                type="button"
+                (click)="convertLead(item)"
+              >
+                ✓ Convertir a cliente
+              </button>
+            } @else {
+              <button class="button button--primary" type="button" (click)="activeTab.set('Notas')">
+                ＋ Agregar nota
+              </button>
+            }
+          </div>
+        </app-record-header>
+
+        <app-record-summary>
+          @for (column of summaryColumns(); track column.key) {
+            <div class="record-summary-item">
+              <span>{{ column.label }}</span>
+              @if (column.type === 'status') {
+                <span class="record-status record-status--{{ statusTone(item[column.key]) }}"
+                  ><i></i>{{ statusLabel(item[column.key]) }}</span
+                >
+              } @else if (column.type === 'money') {
+                <b>{{
+                  asNumber(item[column.key])
+                    | currency: 'MXN' : 'symbol-narrow' : '1.0-2' : i18n.locale()
+                }}</b>
+              } @else if (column.type === 'date') {
+                <b>{{ asString(item[column.key]) | date: 'dd MMM y' : '' : i18n.locale() }}</b>
+              } @else if (moduleKey === 'leads' && column.key === 'phone') {
+                <a
+                  class="whatsapp-value"
+                  [href]="whatsappUrl(item[column.key])"
+                  target="_blank"
+                  rel="noopener"
+                  aria-label="Abrir conversación en WhatsApp"
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M20 11.6a8 8 0 0 1-11.8 7l-4.2 1 1.1-4A8 8 0 1 1 20 11.6Z" />
+                    <path
+                      d="M8.5 7.8c.3-.4.6-.3.9-.1l1.1 2c.1.3 0 .5-.2.7l-.6.6c.7 1.5 1.8 2.6 3.3 3.2l.6-.7c.2-.2.5-.3.7-.2l2 1c.3.2.4.5.3.8-.3 1-1.2 1.7-2.3 1.7-3.5-.3-7.4-4.2-7.7-7.7 0-.5.3-1 .6-1.3Z"
+                    />
+                  </svg>
+                  <b>{{ item[column.key] || '—' }}</b>
+                </a>
+              } @else {
+                <b>{{ item[column.key] || '—' }}</b>
+              }
+              <small>{{ statHelper(column.key) }}</small>
+            </div>
+          }
+        </app-record-summary>
+
+        <app-record-tabs
+          [tabs]="recordTabs(item.id)"
+          [active]="activeTab()"
+          (activeChange)="setActiveTab($event)"
+        />
+
+        @if (activeTab() === 'Notas') {
+          <app-record-notes-section [recordId]="item.id" />
+        } @else if (activeTab() === 'Correos') {
+          <app-record-emails-section
+            [recordId]="item.id"
+            [recipientEmail]="asString(item['email'] || '')"
+          />
+        } @else if (activeTab() === 'Actividad') {
+          <app-record-activity-section [recordId]="item.id" />
+        } @else if (activeTab() === 'Archivos') {
+          <app-record-attachments-section [recordId]="item.id" />
+        } @else if (activeTab() === 'Eventos') {
+          <app-record-events-section
+            recordType="lead"
+            [recordId]="item.id"
+            [recordName]="primaryValue(item)"
+          />
+        } @else {
+          @switch (activeTab()) {
+            @case ('Resumen') {
+              <app-record-detail-layout>
+                <div record-main>
+                  <app-record-information-card [title]="'Información de ' + definition.singular">
+                    <div class="record-info-grid">
+                      @if (moduleKey === 'leads') {
+                        <app-record-field
+                          [config]="leadGpsField"
+                          [value]="leadCoordinates(item)"
+                          (valueSaved)="updateLeadCoordinates(item.id, $event)"
+                        />
+                      }
+                      @for (field of displayFields(item); track field.key) {
+                        <app-record-field
+                          [config]="operationalFieldConfig(field, item)"
+                          [value]="asString(item[field.key] || '')"
+                          (valueSaved)="saveOperationalField(item, field.key, $event)"
+                        />
+                      }
+                      @if (item && false) {
+                        @for (field of displayFields(item); track field.key) {
+                          @if (field.type === 'status' && moduleKey === 'leads') {
+                            <div
+                              class="record-field editable-status-field"
+                              [class.is-editing]="editingStatus()"
+                            >
+                              <span>{{ field.label }}</span>
+                              @if (editingStatus()) {
+                                <div class="status-editor">
+                                  <select #leadStatus [value]="item[field.key]">
+                                    @for (option of statusOptions(); track option) {
+                                      <option [value]="option">{{ statusLabel(option) }}</option>
+                                    }
+                                  </select>
+                                  <button
+                                    class="save"
+                                    type="button"
+                                    aria-label="Guardar estado"
+                                    (click)="saveLeadStatus(item.id, field.key, leadStatus.value)"
+                                  >
+                                    ✓
+                                  </button>
+                                  <button
+                                    type="button"
+                                    aria-label="Cancelar"
+                                    (click)="editingStatus.set(false)"
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                              } @else {
+                                <div class="status-value">
+                                  <span
+                                    class="record-status record-status--{{
+                                      statusTone(item[field.key])
+                                    }}"
+                                    ><i></i>{{ statusLabel(item[field.key]) }}</span
+                                  >
+                                  <button
+                                    type="button"
+                                    aria-label="Editar estado"
+                                    (click)="editingStatus.set(true)"
+                                  >
+                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                      <path
+                                        d="m4 20 4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20ZM14 7l3 3"
+                                      />
+                                    </svg>
+                                  </button>
+                                </div>
+                              }
+                            </div>
+                          } @else if (field.type === 'status') {
+                            <div class="record-field">
+                              <span>{{ field.label }}</span>
+                              <div>
+                                <span
+                                  class="record-status record-status--{{
+                                    statusTone(item[field.key])
+                                  }}"
+                                  ><i></i>{{ statusLabel(item[field.key]) }}</span
+                                >
+                              </div>
+                            </div>
+                          } @else if (field.inputType === 'select') {
+                            <div
+                              class="record-field editable-status-field"
+                              [class.is-editing]="editingPicklistKey() === field.key"
+                            >
+                              <span>{{ field.label }}</span>
+                              @if (editingPicklistKey() === field.key) {
+                                <div class="status-editor">
+                                  <select #picklist [value]="item[field.key]">
+                                    @for (option of field.options; track option) {
+                                      <option [value]="option">{{ option }}</option>
+                                    }
+                                  </select>
+                                  <button
+                                    class="save"
+                                    type="button"
+                                    aria-label="Guardar selección"
+                                    (click)="savePicklist(item.id, field.key, picklist.value)"
+                                  >
+                                    ✓
+                                  </button>
+                                  <button
+                                    type="button"
+                                    aria-label="Cancelar"
+                                    (click)="editingPicklistKey.set(null)"
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                              } @else {
+                                <div class="status-value picklist-value">
+                                  <b>{{ item[field.key] || '—' }}</b>
+                                  <button
+                                    type="button"
+                                    [attr.aria-label]="'Editar ' + field.label"
+                                    (click)="editingPicklistKey.set(field.key)"
+                                  >
+                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                      <path
+                                        d="m4 20 4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20ZM14 7l3 3"
+                                      />
+                                    </svg>
+                                  </button>
+                                </div>
+                              }
+                            </div>
+                          } @else if (field.editable && field.type === 'date') {
+                            <app-inline-editable-date-field
+                              [label]="field.label"
+                              [value]="asString(item[field.key] || '')"
+                              (valueSaved)="updateField(item.id, field.key, $event)"
+                            />
+                          } @else if (relatedRoute(field.key, item[field.key]); as route) {
+                            <div class="record-field lookup-field">
+                              <span>{{ field.label }}</span
+                              ><a class="lookup-link" [routerLink]="route"
+                                ><b>{{ item[field.key] || '—' }}</b
+                                ><span>↗</span>
+                                @if (lookupPreview(field.key, item[field.key]); as preview) {
+                                  <aside class="lookup-card" role="tooltip">
+                                    <span class="lookup-card__avatar">{{ preview.initials }}</span>
+                                    <span
+                                      ><small>{{ preview.type }}</small
+                                      ><b>{{ preview.title }}</b
+                                      ><em>{{ preview.detail }}</em></span
+                                    >
+                                  </aside>
+                                }
+                              </a>
+                            </div>
+                          } @else if (field.editable) {
+                            <app-inline-editable-field
+                              [label]="field.label"
+                              [type]="editableInputType(field.key)"
+                              [value]="asString(item[field.key] || '')"
+                              [displayValue]="fieldDisplayValue(field, item[field.key])"
+                              [href]="fieldActionHref(field.key, item[field.key])"
+                              (valueSaved)="updateField(item.id, field.key, $event)"
+                            />
+                          } @else {
+                            <div class="record-field">
+                              <span>{{ field.label }}</span>
+                              <div>
+                                @if (field.type === 'money') {
+                                  <b>{{
+                                    asNumber(item[field.key])
+                                      | currency: 'MXN' : 'symbol-narrow' : '1.0-2' : i18n.locale()
+                                  }}</b>
+                                } @else if (field.type === 'date') {
+                                  <b>{{
+                                    asString(item[field.key])
+                                      | date: 'dd MMM y, HH:mm' : '' : i18n.locale()
+                                  }}</b>
+                                } @else {
+                                  <b>{{ item[field.key] || '—' }}</b>
+                                }
+                              </div>
+                            </div>
+                          }
+                        }
+                      }
+                      <app-record-field
+                        [config]="operationalAuditField('createdAt', 'Creado')"
+                        [value]="createdAt(item)"
+                      />
+                      <app-record-field
+                        [config]="operationalAuditField('updatedAt', 'Última actualización')"
+                        [value]="updatedAt(item)"
+                      />
+                      @if (item && false) {
+                        <div class="record-field">
+                          <span>Creado</span>
+                          <div class="audit-line">
+                            <b>{{
+                              createdAt(item) | date: 'dd MMM y, HH:mm' : '' : i18n.locale()
+                            }}</b>
+                            <i class="audit-separator"></i>
+                            <a class="audit-user" routerLink="/users/usr-andrea-torres">
+                              <span class="avatar audit-avatar">AT</span><b>Andrea Torres</b>
+                              <aside class="audit-user-card" role="tooltip">
+                                <span class="avatar">AT</span
+                                ><span
+                                  ><b>Andrea Torres</b
+                                  ><small>andrea.torres@speedlink.mx</small></span
+                                >
+                              </aside>
+                            </a>
+                          </div>
+                        </div>
+                        <div class="record-field">
+                          <span>Última actualización</span>
+                          <div class="audit-line">
+                            <b>{{
+                              updatedAt(item) | date: 'dd MMM y, HH:mm' : '' : i18n.locale()
+                            }}</b>
+                            <i class="audit-separator"></i>
+                            <a class="audit-user" routerLink="/users/usr-andrea-torres">
+                              <span class="avatar audit-avatar">AT</span><b>Andrea Torres</b>
+                              <aside class="audit-user-card" role="tooltip">
+                                <span class="avatar">AT</span
+                                ><span
+                                  ><b>Andrea Torres</b
+                                  ><small>andrea.torres@speedlink.mx</small></span
+                                >
+                              </aside>
+                            </a>
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  </app-record-information-card>
+
+                  @if (moduleKey !== 'leads') {
+                    <article class="card section-card related-card">
+                      <div class="card-heading">
+                        <div>
+                          <h2>{{ relatedTitle() }}</h2>
+                          <p>{{ relatedSubtitle() }}</p>
+                        </div>
+                        <button class="link-button" type="button">Ver todos</button>
+                      </div>
+                      @for (related of relatedItems(item); track related.title) {
+                        @if (related.route) {
+                          <a class="related-row related-row--link" [routerLink]="related.route">
+                            <span class="related-icon related-icon--{{ related.tone }}">{{
+                              related.icon
+                            }}</span
+                            ><span
+                              ><b>{{ related.title }}</b
+                              ><small>{{ related.detail }}</small></span
+                            ><em>{{ related.meta }} <i>↗</i></em>
+                          </a>
+                        } @else {
+                          <div class="related-row">
+                            <span class="related-icon related-icon--{{ related.tone }}">{{
+                              related.icon
+                            }}</span
+                            ><span
+                              ><b>{{ related.title }}</b
+                              ><small>{{ related.detail }}</small></span
+                            ><em>{{ related.meta }}</em>
+                          </div>
+                        }
+                      }
+                    </article>
+                  }
+                  @if (pinnedNotes(item.id).length) {
+                    <article class="card section-card overview-pinned-notes">
+                      <div class="card-heading">
+                        <div>
+                          <h2>Notas fijadas</h2>
+                          <p>{{ pinnedNotes(item.id).length }} de 5 notas en el resumen</p>
+                        </div>
+                        <button class="link-button" type="button" (click)="activeTab.set('Notas')">
+                          Ver todas
+                        </button>
+                      </div>
+                      @for (note of pinnedNotes(item.id); track note.id) {
+                        <button
+                          class="overview-pinned-note"
+                          type="button"
+                          (click)="openPinnedNote(note.id)"
+                        >
+                          <div>
+                            <span class="avatar avatar--sm">{{ note.initials }}</span
+                            ><span
+                              ><b>{{ note.author }}</b
+                              ><small>{{
+                                note.createdAt | date: 'dd MMM y, HH:mm' : '' : i18n.locale()
+                              }}</small></span
+                            >
+                          </div>
+                          <p>{{ note.message }}</p>
+                        </button>
+                      }
+                    </article>
+                  }
+                </div>
+                <div record-aside>
+                  <app-record-quick-actions>
+                    @if (moduleKey === 'leads') {
+                      <button type="button" (click)="activeTab.set('Correos')">
+                        ✉ Enviar email
+                      </button>
+                    }
+                    <button type="button" (click)="activeTab.set('Notas')">＋ Agregar nota</button>
+                    @if (moduleKey !== 'leads') {
+                      <button type="button">▤ Generar reporte</button>
+                    }
+                    <button class="danger-action" type="button" (click)="archive(item.id)">
+                      ⊘ Archivar registro
+                    </button>
+                  </app-record-quick-actions>
+                  <app-record-recent-activity [recordId]="item.id" />
+                </div>
+              </app-record-detail-layout>
+            }
+            @case ('Notas') {
+              <section class="notes-section">
+                <header class="notes-heading">
+                  <div>
+                    <h2>Notas</h2>
+                    <p>
+                      {{ notes(item.id).length }}
+                      {{ notes(item.id).length === 1 ? 'nota' : 'notas' }}
+                    </p>
+                  </div>
+                  <button
+                    class="button button--primary"
+                    type="button"
+                    (click)="noteComposerOpen.set(true)"
+                  >
+                    ＋ Nueva nota
+                  </button>
+                </header>
+                @if (noteComposerOpen() || editingNoteId()) {
+                  <article class="card note-composer">
+                    <textarea
+                      #note
+                      placeholder="Agrega una nota sobre este registro…"
+                      aria-label="Nueva nota"
+                      [value]="noteDraft()"
+                      (input)="noteDraft.set(note.value)"
+                    ></textarea>
+                    <div class="note-attachment-picker">
+                      <app-attachment-picker
+                        [resetKey]="attachmentReset()"
+                        (attachmentsChange)="attachments.set($event)"
+                      />
+                    </div>
+                    <footer>
+                      <button
+                        class="note-pin-button"
+                        type="button"
+                        [class.is-active]="pinNewNote()"
+                        [disabled]="!pinNewNote() && !canPinNote(item.id)"
+                        [attr.aria-pressed]="pinNewNote()"
+                        (click)="toggleDraftPin(item.id)"
+                      >
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                          <path d="M6 3h12v18l-6-4-6 4V3Z" /></svg
+                        >{{ pinNewNote() ? 'Se fijará al guardar' : 'Fijar en el resumen' }} ({{
+                          pinnedNotes(item.id).length
+                        }}/5)
+                      </button>
+                      <div class="note-form-actions">
+                        <button class="button" type="button" (click)="cancelNoteEdit()">
+                          Cancelar
+                        </button>
+                        <button
+                          class="button button--primary"
+                          type="button"
+                          [disabled]="!noteDraft().trim()"
+                          (click)="saveNote(item.id)"
+                        >
+                          {{ editingNoteId() ? 'Actualizar nota' : 'Guardar nota' }}
+                        </button>
+                      </div>
+                    </footer>
+                  </article>
+                }
+                <div class="notes-list">
+                  @for (noteItem of sortedNotes(item.id); track noteItem.id) {
+                    <article
+                      [id]="'operational-note-' + noteItem.id"
+                      class="card note-card"
+                      [class.note-card--pinned]="noteItem.pinned"
+                      [class.note-card--selected]="selectedNoteId() === noteItem.id"
+                      [class.note-card--menu-open]="noteMenuId() === noteItem.id"
+                    >
+                      <header>
+                        <div class="note-author">
+                          <span class="avatar">{{ noteItem.initials }}</span
+                          ><b>{{ noteItem.author }}</b>
+                          @if (noteItem.pinned) {
+                            <span class="pinned-badge"
+                              ><svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M6 3h12v18l-6-4-6 4V3Z" /></svg
+                              >Fijada</span
+                            >
+                          }
+                        </div>
+                        <div class="note-meta">
+                          <time>{{
+                            noteItem.createdAt | date: 'dd MMM y, HH:mm' : '' : i18n.locale()
+                          }}</time
+                          ><button
+                            class="icon-button note-menu-trigger"
+                            [class.is-active]="noteMenuId() === noteItem.id"
+                            aria-label="Acciones de la nota"
+                            (click)="toggleNoteMenu($event, noteItem.id)"
+                          >
+                            •••
+                          </button>
+                        </div>
+                        @if (noteMenuId() === noteItem.id) {
+                          <div class="note-action-menu" (click)="$event.stopPropagation()">
+                            <button
+                              type="button"
+                              [disabled]="!canTogglePinned(item.id, noteItem.pinned)"
+                              (click)="togglePinnedNote(item.id, noteItem.id)"
+                            >
+                              <span>{{ noteItem.pinned ? '◇' : '◆' }}</span
+                              >{{ noteItem.pinned ? 'Desfijar' : 'Fijar en resumen' }}</button
+                            ><button
+                              type="button"
+                              (click)="
+                                startEditingNote(noteItem.id, noteItem.message, noteItem.pinned)
+                              "
+                            >
+                              <span>✎</span>Actualizar</button
+                            ><button
+                              class="danger"
+                              type="button"
+                              (click)="deleteNote(item.id, noteItem.id)"
+                            >
+                              <span>⊘</span>Eliminar
+                            </button>
+                          </div>
+                        }
+                      </header>
+                      <p>{{ noteItem.message }}</p>
+                      @if (noteItem.attachments.length) {
+                        <div class="note-attachments">
+                          @for (file of noteItem.attachments; track file.id) {
+                            <a [href]="file.url" target="_blank" rel="noopener"
+                              ><span>{{ file.mimeType.startsWith('image/') ? '▧' : '▤' }}</span
+                              ><span
+                                ><b>{{ file.fileName }}</b
+                                ><small>{{ formatSize(file.size) }}</small></span
+                              ></a
+                            >
+                          }
+                        </div>
+                      }
+                    </article>
+                  } @empty {
+                    <article class="card section-empty-state">
+                      <span>▤</span>
+                      <h3>Sin notas todavía</h3>
+                      <p>La primera nota que agregues aparecerá aquí.</p>
+                    </article>
+                  }
+                </div>
+              </section>
+            }
+            @case ('Correos') {
+              <section class="email-section">
+                <header class="email-heading">
+                  <div>
+                    <h2>Correos</h2>
+                    <p>Conversaciones y mensajes enviados a este lead</p>
+                  </div>
+                  <div class="email-heading__actions">
+                    <span>{{ emails(item.id).length }} correo(s)</span>
+                    <button
+                      class="button button--primary"
+                      type="button"
+                      (click)="openEmailComposer()"
+                    >
+                      ＋ Nuevo correo
+                    </button>
+                  </div>
+                </header>
+                <div class="email-list">
+                  @for (email of emails(item.id); track email.id) {
+                    <article
+                      class="card email-card"
+                      tabindex="0"
+                      (click)="openEmail(email)"
+                      (keydown.enter)="openEmail(email)"
+                    >
+                      <span class="email-icon">✉</span>
+                      <div>
+                        <header>
+                          <h3>{{ email.subject }}</h3>
+                          <span [class.is-draft]="email.status === 'DRAFT'">{{
+                            email.status === 'DRAFT' ? 'Borrador' : 'Enviado'
+                          }}</span>
+                        </header>
+                        <p>{{ email.body }}</p>
+                        <small
+                          >Para {{ email.to }} · por {{ email.sentBy }} ·
+                          {{ email.sentAt | date: 'dd MMM y, HH:mm' : '' : i18n.locale() }}</small
+                        >
+                      </div>
+                      <button
+                        class="icon-button email-menu-trigger"
+                        type="button"
+                        aria-label="Opciones del correo"
+                        (click)="toggleEmailMenu($event, email.id)"
+                      >
+                        •••
+                      </button>
+                      @if (emailMenuId() === email.id) {
+                        <div class="email-action-menu" (click)="$event.stopPropagation()">
+                          @if (email.status === 'DRAFT') {
+                            <button type="button" (click)="editDraft(email)">
+                              <span>✎</span>Editar borrador
+                            </button>
+                          }
+                          <button type="button" (click)="openEmailPreview(email)">
+                            <span>↗</span>Ver
+                          </button>
+                          @if (email.status === 'SENT') {
+                            <button type="button" (click)="composeFromEmail(email, 'resend')">
+                              <span>↻</span>Reenviar
+                            </button>
+                          }
+                          <button type="button" (click)="composeFromEmail(email, 'forward')">
+                            <span>→</span>Reenviar a…
+                          </button>
+                        </div>
+                      }
+                    </article>
+                  } @empty {
+                    <article class="card section-empty-state">
+                      <span>✉</span>
+                      <h3>No hay correos enviados</h3>
+                      <p>El primer mensaje aparecerá aquí y también en la actividad.</p>
+                    </article>
+                  }
+                </div>
+              </section>
+            }
+            @case ('Actividad') {
+              <section class="activity-section">
+                <header>
+                  <div>
+                    <h2>Historial de actividad</h2>
+                    <p>
+                      {{ filteredActivity(item.id).length }} de
+                      {{ activity(item.id).length }} eventos
+                    </p>
+                  </div>
+                  <div class="activity-filters">
+                    <button
+                      type="button"
+                      [class.is-active]="!activityModule() && !activityType() && !activityDate()"
+                      (click)="clearActivityFilters()"
+                    >
+                      Todos
+                    </button>
+                    <label [class.has-value]="activityModule()">
+                      <span class="sr-only">Filtrar por módulo</span>
+                      <select [value]="activityModule()" (change)="setActivityModule($event)">
+                        <option value="">Módulo</option>
+                        @for (module of activityModuleOptions; track module) {
+                          <option [value]="module">{{ module }}</option>
+                        }
+                      </select>
+                    </label>
+                    <label [class.has-value]="activityType()">
+                      <span class="sr-only">Filtrar por tipo</span>
+                      <select [value]="activityType()" (change)="setActivityType($event)">
+                        <option value="">Tipo</option>
+                        <option value="CREATE">Creación</option>
+                        <option value="EDIT">Edición</option>
+                        <option value="DELETE">Eliminación</option>
+                      </select>
+                    </label>
+                    <div class="activity-date-filter" [class.has-value]="activityDate()">
+                      <app-inline-editable-date-field
+                        label="Fecha"
+                        [value]="activityDate()"
+                        placeholder="Fecha"
+                        [alwaysShowEdit]="true"
+                        [compact]="true"
+                        (valueSaved)="activityDate.set($event)"
+                      />
+                    </div>
+                    @if (activityDate()) {
+                      <button
+                        class="activity-date-clear"
+                        type="button"
+                        aria-label="Quitar filtro de fecha"
+                        (click)="activityDate.set('')"
+                      >
+                        ×
+                      </button>
+                    }
+                  </div>
+                </header>
+                <div class="activity-timeline">
+                  @for (event of filteredActivity(item.id); track event.id) {
+                    <article>
+                      <span class="timeline-marker timeline-marker--{{ event.tone }}">{{
+                        activityIcon(event.tone)
+                      }}</span>
+                      <div class="card timeline-card">
+                        <header>
+                          <div>
+                            <h3>{{ event.title }}</h3>
+                            <p>
+                              por <b>{{ event.actor }}</b>
+                            </p>
+                          </div>
+                          <time>{{
+                            event.createdAt | date: 'dd MMM y, HH:mm' : '' : i18n.locale()
+                          }}</time>
+                        </header>
+                        <div class="activity-meta">
+                          <span>{{ event.module }}</span
+                          ><span>{{ actionTypeLabel(event.actionType) }}</span>
+                        </div>
+                        <p>{{ event.detail }}</p>
+                      </div>
+                    </article>
+                  } @empty {
+                    <article class="card section-empty-state activity-empty">
+                      <span>⌕</span>
+                      <h3>Sin resultados</h3>
+                      <p>No hay actividad que coincida con estos filtros.</p>
+                      <button type="button" (click)="clearActivityFilters()">
+                        Limpiar filtros
+                      </button>
+                    </article>
+                  }
+                </div>
+              </section>
+            }
+            @case ('Eventos') {
+              <app-record-events-section
+                recordType="lead"
+                [recordId]="item.id"
+                [recordName]="primaryValue(item)"
+              />
+            }
+            @case ('Archivos') {
+              <section class="files-section">
+                <header class="files-heading">
+                  <div>
+                    <h2>Archivos adjuntos</h2>
+                    <p>
+                      {{ recordFiles(item.id).length }}
+                      {{ recordFiles(item.id).length === 1 ? 'archivo' : 'archivos' }} relacionados
+                      con este lead
+                    </p>
+                  </div>
+                  <button
+                    class="button button--primary"
+                    type="button"
+                    (click)="uploadModalOpen.set(true)"
+                  >
+                    ⇧ Subir archivos
+                  </button>
+                </header>
+                @if (uploadModalOpen()) {
+                  <app-file-upload-modal
+                    (closed)="uploadModalOpen.set(false)"
+                    (filesUploaded)="handleRecordFilesUploaded(item.id, $event)"
+                  />
+                }
+                <div class="files-grid">
+                  @for (file of recordFiles(item.id); track file.id) {
+                    <article class="card file-card">
+                      @if (file.mimeType.startsWith('image/')) {
+                        <img class="file-preview" [src]="file.url" [alt]="file.fileName" />
+                      } @else {
+                        <span class="file-type">{{ fileExtension(file.fileName) }}</span>
+                      }
+                      <span class="file-copy"
+                        ><b>{{ file.fileName }}</b
+                        ><small
+                          >{{ formatSize(file.size) }} ·
+                          {{ file.createdAt | date: 'dd MMM y, HH:mm' : '' : i18n.locale() }}</small
+                        ></span
+                      ><button
+                        class="icon-button"
+                        type="button"
+                        aria-label="Opciones del archivo"
+                        (click)="toggleFileMenu($event, file.id)"
+                      >
+                        •••
+                      </button>
+                      @if (fileMenuId() === file.id) {
+                        <div class="file-action-menu" (click)="$event.stopPropagation()">
+                          <a [href]="file.url" target="_blank" rel="noopener"><span>↗</span>Ver</a
+                          ><a [href]="file.url" [attr.download]="file.fileName"
+                            ><span>⇩</span>Descargar</a
+                          ><button
+                            class="danger"
+                            type="button"
+                            (click)="deleteRecordFile(item.id, file.id)"
+                          >
+                            <span>⊘</span>Eliminar
+                          </button>
+                        </div>
+                      }
+                    </article>
+                  } @empty {
+                    <article class="card section-empty-state">
+                      <span>▤</span>
+                      <h3>Aún no hay archivos</h3>
+                      <p>Los archivos cargados para este lead aparecerán aquí.</p>
+                    </article>
+                  }
+                </div>
+              </section>
+            }
+          }
+        }
+        @if (emailComposerOpen()) {
+          <app-lead-email-modal
+            [seed]="emailComposeSeed()"
+            [composeKey]="emailComposeKey()"
+            (closed)="closeEmailComposer()"
+            (submitted)="saveLeadEmail(item.id, $event.value, $event.draft)"
+          />
+        }
+        @if (emailPreview(); as selectedEmail) {
+          <app-lead-email-modal
+            [preview]="selectedEmail"
+            (closed)="emailPreview.set(null)"
+            (edit)="editDraft($event)"
+            (resend)="composeFromEmail($event, 'resend')"
+            (forward)="composeFromEmail($event, 'forward')"
+          />
+        }
+      }
+    } @else {
+      <section class="card state-card">
+        <span>404</span>
+        <h1>Registro no encontrado</h1>
+        <p>Este registro no existe o fue archivado.</p>
+        <a class="button button--primary" [routerLink]="['/', moduleKey]"
+          >Volver a {{ definition.title.toLowerCase() }}</a
+        >
+      </section>
+    }

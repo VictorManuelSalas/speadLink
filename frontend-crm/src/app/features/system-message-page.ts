@@ -4,12 +4,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 @Component({
   selector: 'app-system-message',
   imports: [RouterLink],
-  template: `<section class="not-found">
-    <span>◈</span>
-    <h1>{{ title }}</h1>
-    <p>{{ message }}</p>
-    <a class="button button--primary" routerLink="/dashboard">Ir al dashboard</a>
-  </section>`,
+  templateUrl: './system-message-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SystemMessagePage {

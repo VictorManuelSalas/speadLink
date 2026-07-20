@@ -1,0 +1,142 @@
+    @if (preview(); as email) {
+      <button
+        class="preview-backdrop"
+        type="button"
+        aria-label="Cerrar"
+        (click)="closed.emit()"
+      ></button>
+      <section
+        class="preview-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="preview-title"
+      >
+        <header>
+          <div>
+            <span>CORREO</span>
+            <h2 id="preview-title">{{ email.subject }}</h2>
+          </div>
+          <button type="button" aria-label="Cerrar" (click)="closed.emit()">×</button>
+        </header>
+        <div class="preview-meta">
+          <span class="sender-avatar">AT</span>
+          <div>
+            <b>{{ email.sentBy }}</b
+            ><small>De: {{ email.from }}</small
+            ><small
+              >Para: {{ email.to }}
+              @if (email.cc) {
+                · CC: {{ email.cc }}
+              }
+            </small>
+          </div>
+          <time>{{ email.sentAt | date: 'dd MMM y, HH:mm' }}</time>
+        </div>
+        <article class="message-preview">{{ email.body }}</article>
+        @if (email.attachments.length) {
+          <div class="preview-attachments">
+            <b>{{ email.attachments.length }} adjunto(s)</b>
+            @for (file of email.attachments; track file.id) {
+              <a [href]="file.url" target="_blank" rel="noopener"
+                ><span>{{ extension(file.fileName) }}</span
+                ><span
+                  ><b>{{ file.fileName }}</b
+                  ><small>{{ formatSize(file.size) }}</small></span
+                ></a
+              >
+            }
+          </div>
+        }
+        <footer>
+          @if (email.status === 'DRAFT') {
+            <button class="button" type="button" (click)="edit.emit(email)">
+              ✎ Editar borrador
+            </button>
+          } @else {
+            <button class="button" type="button" (click)="resend.emit(email)">↻ Reenviar</button>
+          }
+          <button class="button button--primary" type="button" (click)="forward.emit(email)">
+            → Reenviar a…
+          </button>
+        </footer>
+      </section>
+    } @else {
+      <section class="composer" role="dialog" aria-label="Redactar correo">
+        <header>
+          <div>
+            <span>NUEVO CORREO</span>
+            <h2>{{ composerTitle() }}</h2>
+          </div>
+          <button type="button" aria-label="Cerrar" (click)="closed.emit()">×</button>
+        </header>
+        <div class="composer-fields">
+          <label
+            ><span>Para</span
+            ><input
+              #toInput
+              type="email"
+              [value]="to()"
+              (input)="to.set(toInput.value)"
+              placeholder="destinatario@empresa.com"
+          /></label>
+          <label
+            ><span>CC</span
+            ><input
+              #ccInput
+              type="email"
+              [value]="cc()"
+              (input)="cc.set(ccInput.value)"
+              placeholder="Opcional"
+          /></label>
+          <label
+            ><span>De</span
+            ><input #fromInput type="email" [value]="from()" (input)="from.set(fromInput.value)"
+          /></label>
+          <label
+            ><span>Plantilla</span
+            ><select #template (change)="applyTemplate(template.value)">
+              <option value="">Sin plantilla</option>
+              @for (item of templates; track item.id) {
+                <option [value]="item.id">{{ item.name }}</option>
+              }
+            </select></label
+          >
+          <label
+            ><span>Asunto</span
+            ><input
+              #subjectInput
+              [value]="subject()"
+              (input)="subject.set(subjectInput.value)"
+              placeholder="Asunto del mensaje"
+          /></label>
+          <textarea
+            #bodyInput
+            [value]="body()"
+            (input)="body.set(bodyInput.value)"
+            placeholder="Escribe tu mensaje…"
+          ></textarea>
+          <app-attachment-picker
+            label="Adjuntar archivos"
+            [resetKey]="attachmentReset()"
+            (attachmentsChange)="attachments.set($event)"
+          />
+        </div>
+        <footer>
+          <button
+            class="draft-button"
+            type="button"
+            [disabled]="!hasContent()"
+            (click)="submit(true)"
+          >
+            Guardar borrador</button
+          ><button
+            class="button button--primary"
+            type="button"
+            [disabled]="!canSend()"
+            (click)="submit(false)"
+          >
+            ✉ Enviar email
+          </button>
+        </footer>
+      </section>
+    }

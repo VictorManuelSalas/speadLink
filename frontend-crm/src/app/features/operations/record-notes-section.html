@@ -1,0 +1,96 @@
+    <section>
+      <header class="section-head">
+        <div>
+          <h2>Notas</h2>
+          <p>{{ notes().length }} nota(s) en este registro</p>
+        </div>
+        <button class="button primary" type="button" (click)="openComposer()">＋ Nueva nota</button>
+      </header>
+      @if (composing()) {
+        <article class="composer">
+          <textarea
+            #message
+            [value]="draft()"
+            (input)="draft.set(message.value)"
+            placeholder="Agrega una nota sobre este registro…"
+          ></textarea>
+          <app-attachment-picker
+            [resetKey]="attachmentReset()"
+            (attachmentsChange)="attachments.set($event)"
+          />
+          <footer>
+            <button
+              class="pin"
+              type="button"
+              [class.active]="pinned()"
+              [disabled]="!pinned() && pinnedCount() >= 5"
+              (click)="pinned.set(!pinned())"
+            >
+              ◇ {{ pinned() ? 'Se fijará al guardar' : 'Fijar en el resumen' }} ({{
+                pinnedCount()
+              }}/5)
+            </button>
+            <div>
+              <button class="button" type="button" (click)="cancel()">Cancelar</button
+              ><button
+                class="button primary"
+                type="button"
+                [disabled]="!draft().trim()"
+                (click)="save()"
+              >
+                {{ editingId() ? 'Actualizar nota' : 'Guardar nota' }}
+              </button>
+            </div>
+          </footer>
+        </article>
+      }
+      <div class="note-list">
+        @for (note of notes(); track note.id) {
+          <article class="note" [class.pinned]="note.pinned">
+            <header>
+              <div class="author">
+                <span>{{ note.initials }}</span
+                ><b>{{ note.author }}</b>
+                @if (note.pinned) {
+                  <em>◇ Fijada</em>
+                }
+              </div>
+              <div class="meta">
+                <time>{{ note.createdAt | date: 'dd MMM y, HH:mm' }}</time
+                ><button type="button" (click)="toggleMenu($event, note.id)">•••</button>
+              </div>
+              @if (menuId() === note.id) {
+                <div class="menu" (click)="$event.stopPropagation()">
+                  <button
+                    type="button"
+                    [disabled]="!note.pinned && pinnedCount() >= 5"
+                    (click)="togglePin(note.id)"
+                  >
+                    {{ note.pinned ? 'Desfijar' : 'Fijar en resumen' }}</button
+                  ><button type="button" (click)="edit(note.id, note.message, note.pinned)">
+                    Editar</button
+                  ><button class="danger" type="button" (click)="remove(note.id)">Eliminar</button>
+                </div>
+              }
+            </header>
+            <p>{{ note.message }}</p>
+            @if (note.attachments.length) {
+              <div class="attachments">
+                @for (file of note.attachments; track file.id) {
+                  <a [href]="file.url" target="_blank" rel="noopener"
+                    ><b>{{ file.fileName }}</b
+                    ><small>{{ size(file.size) }}</small></a
+                  >
+                }
+              </div>
+            }
+          </article>
+        } @empty {
+          <article class="empty">
+            <span>▤</span>
+            <h3>Sin notas todavía</h3>
+            <p>La primera nota que agregues aparecerá aquí.</p>
+          </article>
+        }
+      </div>
+    </section>

@@ -1,0 +1,62 @@
+<section>
+      <header class="section-head">
+        <div>
+          <h2>Correos</h2>
+          <p>Conversaciones y mensajes de este registro</p>
+        </div>
+        <button class="button primary" type="button" (click)="compose()">＋ Nuevo correo</button>
+      </header>
+      <div class="list">
+        @for (email of emails(); track email.id) {
+          <article class="email" tabindex="0" (click)="open(email)" (keydown.enter)="open(email)">
+            <span class="icon">✉</span>
+            <div>
+              <header>
+                <h3>{{ email.subject }}</h3>
+                <em [class.draft]="email.status === 'DRAFT'">{{
+                  email.status === 'DRAFT' ? 'Borrador' : 'Enviado'
+                }}</em>
+              </header>
+              <p>{{ email.body }}</p>
+              <small>Para {{ email.to }} · {{ email.sentAt | date: 'dd MMM y, HH:mm' }}</small>
+            </div>
+            <button type="button" (click)="menuClick($event, email.id)">•••</button>
+            @if (menuId() === email.id) {
+              <div class="menu" (click)="$event.stopPropagation()">
+                @if (email.status === 'DRAFT') {
+                  <button type="button" (click)="edit(email)">Editar borrador</button>
+                }
+                <button type="button" (click)="preview.set(email)">Ver</button>
+                @if (email.status === 'SENT') {
+                  <button type="button" (click)="from(email, false)">Reenviar</button>
+                }
+                <button type="button" (click)="from(email, true)">Reenviar a…</button>
+              </div>
+            }
+          </article>
+        } @empty {
+          <article class="empty">
+            <span>✉</span>
+            <h3>No hay correos</h3>
+            <p>El primer mensaje aparecerá aquí y en la actividad.</p>
+          </article>
+        }
+      </div>
+    </section>
+    @if (composer()) {
+      <app-lead-email-modal
+        [seed]="seed()"
+        [composeKey]="composeKey()"
+        (closed)="close()"
+        (submitted)="save($event.value, $event.draft)"
+      />
+    }
+    @if (preview(); as email) {
+      <app-lead-email-modal
+        [preview]="email"
+        (closed)="preview.set(null)"
+        (edit)="edit($event)"
+        (resend)="from($event, false)"
+        (forward)="from($event, true)"
+      />
+    }

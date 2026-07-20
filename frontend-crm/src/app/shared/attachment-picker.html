@@ -1,0 +1,39 @@
+<div class="attachment-picker">
+  <input
+    #fileInput
+    hidden
+    type="file"
+    multiple
+    accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.zip"
+    (change)="selectFiles(fileInput.files); fileInput.value = ''"
+  />
+  <button type="button" class="attach-button" (click)="fileInput.click()">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="m12 17 5-5a3 3 0 0 0-4-4l-6 6a5 5 0 0 0 7 7l6-6" />
+    </svg>
+    {{ label() }}
+  </button>
+  @if (error()) {
+    <small class="error">{{ error() }}</small>
+  }
+  @if (items().length) {
+    <div class="attachment-list">
+      @for (item of items(); track item.id) {
+        <div class="attachment-item">
+          @if (item.mimeType.startsWith('image/')) {
+            <img [src]="item.url" [alt]="item.fileName" />
+          } @else {
+            <span class="file-icon">{{ extension(item.fileName) }}</span>
+          }
+          <span
+            ><b>{{ item.fileName }}</b
+            ><small>{{ formatSize(item.size) }}</small></span
+          >
+          <button type="button" aria-label="Eliminar archivo" (click)="remove(item.id)">
+            ×
+          </button>
+        </div>
+      }
+    </div>
+  }
+</div>

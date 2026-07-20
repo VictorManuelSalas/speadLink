@@ -1,0 +1,754 @@
+      .info-grid .audit-line {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 9px;
+        min-height: 29px;
+      }
+      .info-grid .audit-line > b {
+        flex: 0 0 auto;
+      }
+      .audit-separator {
+        width: 1px;
+        height: 18px;
+        background: var(--color-border);
+      }
+      .info-grid .audit-user {
+        position: relative;
+        display: inline-flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 7px;
+        width: fit-content;
+        cursor: default;
+        outline: none;
+      }
+      .info-grid .audit-user > b {
+        color: var(--color-text-primary);
+        font-size: 12px;
+      }
+      .info-grid .audit-avatar {
+        width: 25px;
+        height: 25px;
+        color: #1d4ed8;
+        font-size: 9px;
+      }
+      .info-grid .audit-user-card {
+        position: absolute;
+        left: 0;
+        bottom: calc(100% + 10px);
+        z-index: 40;
+        width: 250px;
+        padding: 14px;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 11px;
+        border: 1px solid var(--color-border);
+        border-radius: 11px;
+        background: #fff;
+        box-shadow: 0 16px 40px rgba(15, 23, 42, 0.18);
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transform: translateY(5px);
+      }
+      .info-grid .audit-user:hover .audit-user-card,
+      .info-grid .audit-user:focus .audit-user-card,
+      .info-grid .audit-user:focus-within .audit-user-card {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+      }
+      .info-grid .audit-user-card > .avatar {
+        width: 38px;
+        height: 38px;
+        color: #1d4ed8;
+        font-size: 11px;
+      }
+      .info-grid .audit-user-card > span:last-child {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+      .info-grid .audit-user-card b {
+        color: var(--color-text-primary);
+        font-size: 13px;
+      }
+      .info-grid .audit-user-card small {
+        overflow: hidden;
+        color: var(--color-text-secondary);
+        font-size: 11px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .tabs button {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .tab-count {
+        min-width: 20px;
+        height: 20px;
+        padding: 0 6px;
+        display: inline-grid;
+        place-items: center;
+        border-radius: 10px;
+        background: var(--color-muted);
+        color: var(--color-text-secondary);
+        font-size: 10px;
+      }
+      .tabs button.is-active .tab-count {
+        background: #dbeafe;
+        color: var(--color-primary);
+      }
+      .customer-contracts {
+        padding: 24px 0;
+      }
+      .customer-contracts > header {
+        margin-bottom: 16px;
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 16px;
+      }
+      .customer-contracts h2 {
+        font-size: 20px;
+      }
+      .customer-contracts header p {
+        margin-top: 4px;
+        color: var(--color-text-secondary);
+        font-size: 10px;
+      }
+      .contract-list {
+        overflow: hidden;
+        border: 1px solid var(--color-border);
+        border-radius: 14px;
+        background: var(--color-surface);
+      }
+      .contract-row {
+        min-height: 74px;
+        padding: 14px 17px;
+        border-top: 1px solid var(--color-border);
+        color: var(--color-text-primary);
+        display: grid;
+        grid-template-columns: 40px minmax(180px, 1.4fr) 1fr 1fr 24px;
+        align-items: center;
+        gap: 13px;
+        text-decoration: none;
+      }
+      .contract-row:first-child {
+        border-top: 0;
+      }
+      .contract-row:hover {
+        background: color-mix(in srgb, var(--color-primary) 5%, var(--color-surface));
+      }
+      .contract-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: #e0e7ff;
+        color: #4f46e5;
+        display: grid;
+        place-items: center;
+      }
+      .contract-row > span:not(.contract-icon) {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .contract-row small {
+        color: var(--color-text-secondary);
+        font-size: 9px;
+      }
+      .contract-row b {
+        font-size: 11px;
+      }
+      .contract-row i {
+        color: var(--color-primary);
+        font-style: normal;
+      }
+      .contracts-empty {
+        min-height: 230px;
+        display: grid;
+        place-content: center;
+        justify-items: center;
+        color: var(--color-text-secondary);
+        text-align: center;
+      }
+      .contracts-empty > span {
+        font-size: 27px;
+      }
+      .contracts-empty h3 {
+        margin-top: 9px;
+        color: var(--color-text-primary);
+      }
+      .contracts-empty p {
+        margin-top: 5px;
+        font-size: 10px;
+      }
+      .contract-service-reference {
+        margin-top: 14px;
+        padding: 9px 11px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-radius: 8px;
+        background: var(--color-muted);
+        color: var(--color-text-secondary);
+        font-size: 10px;
+      }
+      .contract-service-reference a {
+        color: var(--color-primary);
+        font-weight: 700;
+      }
+      .contract-service-row + .contract-service-row {
+        padding-top: 14px;
+        border-top: 1px solid var(--color-border);
+      }
+      .service-empty {
+        min-height: 100px;
+        display: grid;
+        place-content: center;
+        justify-items: center;
+        color: var(--color-text-secondary);
+        text-align: center;
+      }
+      .service-empty > span {
+        font-size: 25px;
+      }
+      .service-empty p {
+        margin-top: 8px;
+        font-size: 11px;
+      }
+      .plan-change-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        width: 100%;
+        height: 100%;
+        border: 0;
+        background: rgba(15, 23, 42, 0.48);
+        backdrop-filter: blur(3px);
+      }
+      .plan-change-dialog {
+        position: fixed;
+        left: 50%;
+        top: 50%;
+        z-index: 1001;
+        width: min(570px, calc(100vw - 30px));
+        padding: 24px;
+        display: grid;
+        grid-template-columns: 48px 1fr;
+        gap: 15px;
+        border: 1px solid var(--color-border);
+        border-radius: 16px;
+        background: var(--color-surface);
+        box-shadow: 0 30px 80px rgba(15, 23, 42, 0.3);
+        transform: translate(-50%, -50%);
+      }
+      .plan-change-dialog__icon {
+        width: 48px;
+        height: 48px;
+        display: grid;
+        place-items: center;
+        border-radius: 13px;
+        background: #eff6ff;
+        color: var(--color-primary);
+        font-size: 21px;
+      }
+      .plan-change-dialog__eyebrow {
+        color: var(--color-primary);
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+      }
+      .plan-change-dialog h2 {
+        margin: 6px 0 8px;
+        font-size: 19px;
+      }
+      .plan-change-dialog > div > p {
+        color: var(--color-text-secondary);
+        font-size: 11.5px;
+        line-height: 1.6;
+      }
+      .plan-change-warning {
+        margin-top: 16px;
+        padding: 11px;
+        display: flex;
+        gap: 9px;
+        border: 1px solid #fde68a;
+        border-radius: 9px;
+        background: #fffbeb;
+        color: #92400e;
+      }
+      .plan-change-warning > span {
+        width: 20px;
+        height: 20px;
+        display: grid;
+        place-items: center;
+        flex: 0 0 auto;
+        border-radius: 50%;
+        background: #fef3c7;
+        font-weight: 800;
+      }
+      .plan-change-warning p {
+        font-size: 10px;
+        line-height: 1.5;
+      }
+      .plan-change-dialog footer {
+        grid-column: 1/-1;
+        margin: 5px -24px -24px;
+        padding: 15px 24px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        border-top: 1px solid var(--color-border);
+      }
+      :host-context(.app-frame--dark) .plan-change-warning {
+        border-color: #854d0e;
+        background: #422006;
+        color: #fde68a;
+      }
+      @media (max-width: 760px) {
+        .customer-contracts > header {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+        .contract-row {
+          grid-template-columns: 40px 1fr 20px;
+        }
+        .contract-row > span:nth-child(3),
+        .contract-row > span:nth-child(4) {
+          display: none;
+        }
+      }
+      .overview-pinned-notes {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .overview-pinned-note {
+        width: 100%;
+        padding: 14px 16px;
+        border: 1px solid #fde68a;
+        border-radius: 10px;
+        background: #fffbeb;
+        text-align: left;
+      }
+      .overview-pinned-note:hover,
+      .overview-pinned-note:focus-visible {
+        border-color: #f59e0b;
+        box-shadow: 0 6px 18px rgba(180, 83, 9, 0.12);
+      }
+      .overview-pinned-note > div {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+      }
+      .overview-pinned-note > div > span:last-child {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .overview-pinned-note b,
+      .overview-pinned-note p {
+        color: #111827 !important;
+      }
+      .overview-pinned-note small {
+        color: #64748b;
+      }
+      .overview-pinned-note p {
+        margin-top: 10px;
+        font-size: 12px;
+        line-height: 1.55;
+      }
+      .notes-section {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+      .notes-heading {
+        padding: 12px 0 4px;
+      }
+      .notes-heading h2 {
+        font-size: 21px;
+      }
+      .notes-heading p {
+        margin-top: 6px;
+        color: var(--color-text-secondary);
+      }
+      .note-composer {
+        overflow: hidden;
+      }
+      .note-composer textarea {
+        width: 100%;
+        min-height: 145px;
+        padding: 24px 28px;
+        border: 0;
+        outline: 0;
+        resize: vertical;
+        background: transparent;
+        color: var(--color-text-primary);
+        font: inherit;
+        font-size: 15px;
+        line-height: 1.55;
+      }
+      .note-composer textarea::placeholder {
+        color: #94a3b8;
+      }
+      .note-composer footer {
+        min-height: 66px;
+        padding: 10px 18px 10px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        border-top: 1px solid var(--color-border);
+      }
+      .note-attachment-picker {
+        padding: 0 24px 12px;
+      }
+      .note-attachments {
+        padding: 0 30px 22px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+      }
+      .note-attachments a {
+        padding: 7px 9px;
+        border: 1px solid var(--color-border);
+        border-radius: 7px;
+        color: var(--color-text-primary);
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        text-decoration: none;
+      }
+      .note-attachments a > span:last-child {
+        display: flex;
+        flex-direction: column;
+      }
+      .note-attachments b {
+        max-width: 180px;
+        overflow: hidden;
+        font-size: 9px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .note-attachments small {
+        color: var(--color-text-secondary);
+        font-size: 8px;
+      }
+      .note-pin-button {
+        min-height: 36px;
+        padding: 0 10px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: 0;
+        background: transparent;
+        color: var(--color-text-secondary);
+        font-weight: 600;
+        border-radius: 8px;
+      }
+      .note-pin-button:hover,
+      .note-pin-button.is-active {
+        color: var(--color-primary);
+      }
+      .note-pin-button.is-active {
+        background: #eff6ff;
+      }
+      .note-pin-button.is-active svg {
+        fill: currentColor;
+      }
+      .note-pin-button:disabled {
+        cursor: not-allowed;
+        color: #94a3b8;
+        opacity: 0.6;
+      }
+      .note-pin-button svg,
+      .pinned-badge svg {
+        width: 17px;
+        height: 17px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        stroke-linejoin: round;
+      }
+      .notes-list {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      .note-card {
+        position: relative;
+        overflow: visible;
+      }
+      .note-card--pinned {
+        border-color: #fde68a;
+        background: #fffbeb;
+      }
+      .note-card--pinned > p,
+      .note-card--pinned .note-author > b,
+      .note-card--pinned .note-meta time {
+        color: #111827 !important;
+      }
+      .note-card--selected {
+        outline: 3px solid rgba(37, 99, 235, 0.28);
+        outline-offset: 3px;
+      }
+      .note-card > header {
+        min-height: 66px;
+        padding: 12px 22px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        border-bottom: 1px solid var(--color-border);
+      }
+      .note-card--pinned > header {
+        border-color: #fde68a;
+      }
+      .note-author,
+      .note-meta {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .note-author > b {
+        font-size: 13px;
+      }
+      .note-meta time {
+        color: var(--color-text-secondary);
+        font-size: 11px;
+      }
+      .pinned-badge {
+        padding: 5px 8px;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        border-radius: 99px;
+        background: #fef3c7;
+        color: #b45309;
+        font-size: 10px;
+        font-weight: 700;
+      }
+      .pinned-badge svg {
+        width: 12px;
+        height: 12px;
+      }
+      .note-card > p {
+        padding: 22px 30px 26px;
+        color: #1e293b;
+        font-size: 14px;
+        line-height: 1.7;
+      }
+      .note-form-actions {
+        display: flex;
+        gap: 8px;
+      }
+      .note-menu-trigger.is-active {
+        background: var(--color-muted);
+        color: var(--color-primary);
+      }
+      .note-action-menu {
+        position: absolute;
+        right: 18px;
+        top: 58px;
+        z-index: 30;
+        width: 160px;
+        padding: 7px;
+        border: 1px solid var(--color-border);
+        border-radius: 10px;
+        background: #fff;
+        box-shadow: 0 14px 35px rgba(15, 23, 42, 0.18);
+      }
+      .note-action-menu button {
+        width: 100%;
+        min-height: 39px;
+        padding: 0 10px;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        border: 0;
+        border-radius: 7px;
+        background: transparent;
+        color: var(--color-text-primary);
+        text-align: left;
+        font-weight: 600;
+      }
+      .note-action-menu button:hover {
+        background: var(--color-muted);
+      }
+      .note-action-menu button:disabled {
+        cursor: not-allowed;
+        opacity: 0.45;
+      }
+      .note-action-menu button.danger {
+        color: var(--color-danger);
+      }
+      .note-action-menu button.danger:hover {
+        background: #fef2f2;
+      }
+      .activity-section {
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+      }
+      .activity-heading {
+        padding: 12px 0 4px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+      }
+      .activity-heading h2 {
+        font-size: 21px;
+      }
+      .activity-heading p {
+        margin-top: 6px;
+        color: var(--color-text-secondary);
+      }
+      .activity-filters {
+        padding: 4px;
+        display: flex;
+        gap: 3px;
+        border-radius: 10px;
+        background: var(--color-muted);
+      }
+      .activity-filters button {
+        min-height: 34px;
+        padding: 0 14px;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: var(--color-text-secondary);
+        font-weight: 650;
+      }
+      .activity-filters button.is-active {
+        background: #fff;
+        color: var(--color-text-primary);
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12);
+      }
+      .activity-timeline {
+        position: relative;
+        padding-left: 86px;
+      }
+      .activity-timeline::before {
+        content: '';
+        position: absolute;
+        left: 38px;
+        top: 8px;
+        bottom: 20px;
+        width: 1px;
+        background: var(--color-border);
+      }
+      .activity-event {
+        position: relative;
+        margin-bottom: 28px;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .activity-marker {
+        position: absolute;
+        left: -86px;
+        top: 38px;
+        z-index: 2;
+        width: 52px;
+        height: 52px;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        background: #e0f2fe;
+        color: #0284c7;
+        font-size: 16px;
+        font-weight: 750;
+      }
+      .activity-event--payment .activity-marker {
+        background: #d1fae5;
+        color: #059669;
+      }
+      .activity-event--ticket .activity-marker {
+        background: #ede9fe;
+        color: #7c3aed;
+      }
+      .activity-event--call .activity-marker {
+        background: #ffedd5;
+        color: #ea580c;
+      }
+      .activity-event--note .activity-marker {
+        background: #fef3c7;
+        color: #b45309;
+      }
+      .activity-date {
+        color: var(--color-text-secondary);
+        font-size: 11px;
+        font-weight: 750;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      .activity-event-card {
+        padding: 20px 24px;
+      }
+      .activity-event-card header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+      .activity-event-card h3 {
+        font-size: 15px;
+      }
+      .activity-event-card header time {
+        color: var(--color-text-secondary);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 11px;
+      }
+      .activity-event-card p {
+        margin: 10px 0 14px;
+        color: var(--color-text-secondary);
+        line-height: 1.55;
+      }
+      .activity-event-card small {
+        color: var(--color-text-secondary);
+      }
+      .activity-event-card small b {
+        color: var(--color-text-primary);
+      }
+      @media (max-width: 620px) {
+        .note-composer footer,
+        .note-card > header,
+        .activity-heading {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+        .note-form-actions,
+        .note-composer footer .button {
+          width: 100%;
+        }
+        .note-form-actions .button {
+          flex: 1;
+        }
+        .note-meta {
+          width: 100%;
+          justify-content: space-between;
+        }
+        .activity-filters {
+          width: 100%;
+          overflow-x: auto;
+        }
+        .activity-timeline {
+          padding-left: 58px;
+        }
+        .activity-timeline::before {
+          left: 23px;
+        }
+        .activity-marker {
+          left: -58px;
+          width: 40px;
+          height: 40px;
+        }
+      }

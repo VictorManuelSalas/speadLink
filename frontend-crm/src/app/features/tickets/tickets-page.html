@@ -1,0 +1,249 @@
+    <app-record-list
+      title="Gestión de tickets"
+      description="Solicitudes de soporte, incidencias y seguimiento a clientes."
+      newLabel="Nuevo ticket"
+      baseRoute="/tickets"
+      accent="#7c3aed"
+      [records]="ticketRows()"
+      [columns]="listColumns"
+      [fields]="listFields"
+      [widgets]="listWidgets()"
+      [rowActions]="listRowActions"
+      [bulkActions]="listBulkActions"
+      (newRequested)="composerOpen.set(true)"
+      (rowAction)="handleListRowAction($event.actionId, $event.record)"
+      (bulkAction)="
+        handleListBulkAction($event.actionId, $event.records, $event.field, $event.value)
+      "
+      (recordsImported)="importTickets($event)"
+    />
+    <header class="page-heading">
+      <div>
+        <span>{{ i18n.t('Centro de soporte') }}</span>
+        <h1>{{ i18n.t('Gestión de tickets') }}</h1>
+        <p>{{ i18n.t('Solicitudes de soporte, incidencias y seguimiento a clientes.') }}</p>
+      </div>
+      <button class="primary-button" type="button" (click)="composerOpen.set(true)">
+        ＋ {{ i18n.t('Nuevo ticket') }}
+      </button>
+    </header>
+
+    <section class="ticket-stats">
+      <article>
+        <span class="stat-icon stat-icon--blue">◫</span>
+        <div>
+          <small>{{ i18n.t('Abiertos') }}</small
+          ><b>{{ statusCount('open') }}</b
+          ><em>Requieren atención</em>
+        </div>
+      </article>
+      <article>
+        <span class="stat-icon stat-icon--violet">↻</span>
+        <div>
+          <small>{{ i18n.t('En progreso') }}</small
+          ><b>{{ statusCount('in_progress') }}</b
+          ><em>En seguimiento</em>
+        </div>
+      </article>
+      <article>
+        <span class="stat-icon stat-icon--amber">◷</span>
+        <div>
+          <small>{{ i18n.t('En espera') }}</small
+          ><b>{{ statusCount('waiting') }}</b
+          ><em>Respuesta del cliente</em>
+        </div>
+      </article>
+      <article>
+        <span class="stat-icon stat-icon--green">✓</span>
+        <div>
+          <small>{{ i18n.t('Resueltos') }}</small
+          ><b>{{ resolvedCount() }}</b
+          ><em>Este periodo</em>
+        </div>
+      </article>
+    </section>
+
+    <section class="card table-card">
+      <header class="table-toolbar">
+        <label class="search-box"
+          ><svg viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="7" />
+            <path d="m20 20-4-4" /></svg
+          ><input
+            #searchInput
+            type="search"
+            [placeholder]="i18n.t('Buscar tickets…')"
+            (input)="search.set(searchInput.value)"
+        /></label>
+        <div class="toolbar-filters">
+          <select #statusSelect (change)="statusFilter.set(statusSelect.value)">
+            <option value="all">{{ i18n.t('Todos') }} · {{ i18n.t('Estado') }}</option>
+            <option value="open">{{ i18n.t('Abiertos') }}</option>
+            <option value="in_progress">{{ i18n.t('En progreso') }}</option>
+            <option value="waiting">{{ i18n.t('En espera') }}</option>
+            <option value="resolved">{{ i18n.t('Resueltos') }}</option>
+            <option value="closed">{{ i18n.t('Cerrados') }}</option>
+          </select>
+          <select #prioritySelect (change)="priorityFilter.set(prioritySelect.value)">
+            <option value="all">{{ i18n.t('Todos') }} · {{ i18n.t('Prioridad') }}</option>
+            <option value="urgent">{{ i18n.t('Urgente') }}</option>
+            <option value="high">{{ i18n.t('Alta') }}</option>
+            <option value="medium">{{ i18n.t('Media') }}</option>
+            <option value="low">{{ i18n.t('Baja') }}</option>
+          </select>
+        </div>
+      </header>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Ticket</th>
+              <th>{{ i18n.t('Cliente') }}</th>
+              <th>{{ i18n.t('Estado') }}</th>
+              <th>{{ i18n.t('Prioridad') }}</th>
+              <th>{{ i18n.t('Responsable') }}</th>
+              <th>{{ i18n.t('Última actualización') }}</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (ticket of filteredTickets(); track ticket.id) {
+              <tr (click)="openTicket(ticket.id)">
+                <td>
+                  <span class="ticket-subject"
+                    ><b>{{ ticket.subject }}</b
+                    ><small>{{ ticket.id }} · {{ ticket.category }}</small></span
+                  >
+                </td>
+                <td>
+                  <span class="client-cell"
+                    ><span>{{ ticket.clientInitials }}</span
+                    ><span
+                      ><b>{{ ticket.clientName }}</b
+                      ><small>{{ ticket.clientEmail }}</small></span
+                    ></span
+                  >
+                </td>
+                <td>
+                  <span class="status status--{{ ticket.status }}">{{
+                    statusLabel(ticket.status)
+                  }}</span>
+                </td>
+                <td>
+                  <span class="priority priority--{{ ticket.priority }}"
+                    ><i></i>{{ priorityLabel(ticket.priority) }}</span
+                  >
+                </td>
+                <td>
+                  <span class="assignee"
+                    ><span>{{ initials(ticket.assignedTo) }}</span
+                    >{{ ticket.assignedTo }}</span
+                  >
+                </td>
+                <td>
+                  <time>{{ ticket.updatedAt | date: 'dd MMM y, HH:mm' : '' : i18n.locale() }}</time>
+                </td>
+                <td>
+                  <a
+                    [routerLink]="['/tickets', ticket.id]"
+                    aria-label="Abrir ticket"
+                    (click)="$event.stopPropagation()"
+                    >›</a
+                  >
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="7" class="empty">No hay tickets para estos filtros.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <footer>
+        <span>{{ filteredTickets().length }} de {{ store.tickets().length }} tickets</span
+        ><span>Actualizado ahora</span>
+      </footer>
+    </section>
+
+    @if (composerOpen()) {
+      <button
+        class="modal-backdrop"
+        type="button"
+        aria-label="Cerrar"
+        (click)="closeComposer()"
+      ></button>
+      <section class="ticket-modal" role="dialog" aria-modal="true">
+        <header>
+          <div>
+            <span>{{ i18n.t('Centro de soporte') }}</span>
+            <h2>{{ i18n.t('Nuevo ticket') }}</h2>
+            <p>Relaciona la solicitud con un cliente y define su prioridad.</p>
+          </div>
+          <button type="button" (click)="closeComposer()">×</button>
+        </header>
+        <div class="ticket-form">
+          <label
+            >{{ i18n.t('Cliente') }} <b class="required-mark">*</b
+            ><app-styled-picklist
+              [options]="clientOptions"
+              [value]="newClientId()"
+              placeholder="Seleccionar cliente…"
+              (valueChange)="newClientId.set($event)"
+          /></label>
+          <label
+            >{{ i18n.t('Prioridad')
+            }}<app-styled-picklist
+              [options]="priorityOptions"
+              [value]="newPriority()"
+              (valueChange)="newPriority.set($event)"
+          /></label>
+          <label class="full"
+            >Asunto <b class="required-mark">*</b
+            ><input
+              #subjectInput
+              type="text"
+              placeholder="Describe brevemente la solicitud"
+              (input)="subject.set(subjectInput.value)"
+          /></label>
+          <label class="full"
+            >Descripción <b class="required-mark">*</b
+            ><textarea
+              #descriptionInput
+              rows="5"
+              placeholder="Incluye síntomas, contexto y pruebas realizadas"
+              (input)="description.set(descriptionInput.value)"
+            ></textarea>
+          </label>
+          <label
+            >Asignar a<app-styled-picklist
+              [options]="assigneeOptions"
+              [value]="newAssignee()"
+              (valueChange)="newAssignee.set($event)"
+          /></label>
+          <label
+            >Categoría<app-styled-picklist
+              [options]="categoryOptions"
+              [value]="newCategory()"
+              (valueChange)="newCategory.set($event)"
+          /></label>
+          <div class="full">
+            <app-attachment-picker
+              [resetKey]="attachmentReset()"
+              (attachmentsChange)="newAttachments.set($event)"
+            />
+          </div>
+        </div>
+        <footer>
+          <button type="button" (click)="closeComposer()">{{ i18n.t('Cancelar') }}</button
+          ><button
+            class="primary-button"
+            type="button"
+            [disabled]="!newClientId() || !subject().trim() || !description().trim()"
+            (click)="createTicket(newClientId(), newPriority(), newAssignee(), newCategory())"
+          >
+            {{ i18n.t('Nuevo ticket') }}
+          </button>
+        </footer>
+      </section>
+    }

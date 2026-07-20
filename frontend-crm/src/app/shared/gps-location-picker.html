@@ -1,0 +1,117 @@
+<div class="gps-field">
+  <span class="gps-field__label">Ubicación GPS</span>
+  <div class="gps-field__value">
+    <a
+      [href]="googleMapsUrl()"
+      target="_blank"
+      rel="noopener noreferrer"
+      title="Abrir ubicación en Google Maps"
+    >
+      {{ value() }}
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M14 5h5v5M19 5l-8 8M17 13v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1h5" />
+      </svg>
+    </a>
+    <button
+      class="edit-button"
+      type="button"
+      aria-label="Editar ubicación GPS"
+      (click)="openPicker()"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="m4 20 4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20ZM14 7l3 3" />
+      </svg>
+    </button>
+  </div>
+</div>
+
+@if (opened()) {
+  <button
+    class="map-backdrop"
+    type="button"
+    aria-label="Cerrar mapa"
+    (click)="close()"
+  ></button>
+  <section class="map-dialog" role="dialog" aria-modal="true" aria-labelledby="map-title">
+    <header>
+      <div>
+        <span>UBICACIÓN DEL CLIENTE</span>
+        <h2 id="map-title">Seleccionar coordenadas</h2>
+        <p>Haz clic en el mapa o arrastra el marcador hasta la instalación.</p>
+      </div>
+      <button type="button" class="map-close" aria-label="Cerrar" (click)="close()">×</button>
+    </header>
+
+    <div class="map-frame">
+      @if (interactiveMapReady()) {
+        <div
+          #mapContainer
+          class="map-canvas"
+          aria-label="Mapa de Google para seleccionar ubicación"
+        ></div>
+      } @else {
+        <iframe
+          class="map-canvas"
+          [src]="googleMapsEmbedUrl()"
+          title="Ubicación del cliente en Google Maps"
+          loading="eager"
+          referrerpolicy="no-referrer-when-downgrade"
+          allowfullscreen
+        ></iframe>
+        @if (mapLoading()) {
+          <div class="map-loading"><span></span> Cargando Google Maps…</div>
+        }
+      }
+    </div>
+
+    <div class="map-controls">
+      <label>
+        <span>Latitud</span>
+        <input
+          #latInput
+          type="number"
+          step="0.000001"
+          [value]="latitude()"
+          (change)="setManualCoordinates(latInput.value, lngInput.value)"
+        />
+      </label>
+      <label>
+        <span>Longitud</span>
+        <input
+          #lngInput
+          type="number"
+          step="0.000001"
+          [value]="longitude()"
+          (change)="setManualCoordinates(latInput.value, lngInput.value)"
+        />
+      </label>
+      <button
+        type="button"
+        class="location-button"
+        [disabled]="locating()"
+        (click)="useDeviceLocation()"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="3" />
+          <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+        </svg>
+        {{ locating() ? 'Buscando…' : 'Usar mi ubicación' }}
+      </button>
+    </div>
+
+    @if (message()) {
+      <p class="map-message">{{ message() }}</p>
+    }
+    <footer>
+      <button type="button" class="button" (click)="close()">Cancelar</button>
+      <button
+        type="button"
+        class="button button--primary"
+        [disabled]="!validCoordinates()"
+        (click)="save()"
+      >
+        Guardar coordenadas
+      </button>
+    </footer>
+  </section>
+}

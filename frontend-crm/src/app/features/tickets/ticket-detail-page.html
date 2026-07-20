@@ -1,0 +1,252 @@
+    @if (ticket(); as item) {
+      <app-record-header
+        [rootLabel]="i18n.t('Tickets')"
+        rootRoute="/tickets"
+        [recordId]="item.id"
+        [title]="item.subject"
+        initials="TK"
+        accent="#7c3aed"
+        [statusLabel]="statusLabel(item.status)"
+        [statusTone]="ticketStatusTone(item.status)"
+        [subtitle]="item.id + ' · ' + item.clientName + ' · ' + item.category"
+      >
+        <div record-actions>
+          <select
+            #statusSelect
+            [value]="item.status"
+            (change)="changeStatus(item, statusSelect.value)"
+          >
+            <option value="open">{{ i18n.t('Abierto') }}</option>
+            <option value="in_progress">{{ i18n.t('En progreso') }}</option>
+            <option value="waiting">{{ i18n.t('En espera') }}</option>
+            <option value="resolved">{{ i18n.t('Resuelto') }}</option>
+            <option value="closed">{{ i18n.t('Cerrados') }}</option></select
+          ><button type="button">✉ Enviar mensaje</button>
+        </div>
+      </app-record-header>
+
+      <app-record-summary [columns]="5">
+        <div class="record-summary-item">
+          <small>{{ i18n.t('Estado') }}</small
+          ><span class="status status--{{ item.status }}">{{ statusLabel(item.status) }}</span>
+        </div>
+        <div class="record-summary-item">
+          <small>{{ i18n.t('Prioridad') }}</small
+          ><b class="priority priority--{{ item.priority }}"
+            ><i></i>{{ priorityLabel(item.priority) }}</b
+          >
+        </div>
+        <div class="record-summary-item">
+          <small>{{ i18n.t('Responsable') }}</small
+          ><span class="person"
+            ><span>{{ initials(item.assignedTo) }}</span
+            ><b>{{ item.assignedTo }}</b></span
+          >
+        </div>
+        <div class="record-summary-item">
+          <small>SLA</small><b [class.danger]="isSlaOverdue(item)">{{ slaLabel(item) }}</b>
+        </div>
+        <div class="record-summary-item">
+          <small>{{ i18n.t('Creado') }}</small
+          ><b>{{ item.createdAt | date: 'dd MMM y, HH:mm' : '' : i18n.locale() }}</b>
+        </div>
+      </app-record-summary>
+
+      <app-record-detail-layout>
+        <div record-main>
+          <app-record-information-card
+            [title]="i18n.t('Detalles del ticket')"
+            description="Información proporcionada al abrir la solicitud."
+          >
+            <p class="record-info-full ticket-description">{{ item.description }}</p>
+            @if (item.customFields) {
+              <div class="custom-fields record-info-full">
+                @for (field of customFields(item); track field[0]) {
+                  <span
+                    ><small>{{ field[0] }}</small
+                    ><b>{{ field[1] }}</b></span
+                  >
+                }
+              </div>
+            }
+          </app-record-information-card>
+
+          <article class="card conversation-card">
+            <header>
+              <div>
+                <h2>{{ i18n.t('Comentarios') }}</h2>
+                <p>{{ item.comments.length }} registros en la conversación.</p>
+              </div>
+              <div class="comment-tabs">
+                <button
+                  type="button"
+                  [class.is-active]="commentFilter() === 'all'"
+                  (click)="commentFilter.set('all')"
+                >
+                  {{ i18n.t('Todos') }}</button
+                ><button
+                  type="button"
+                  [class.is-active]="commentFilter() === 'internal'"
+                  (click)="commentFilter.set('internal')"
+                >
+                  {{ i18n.t('Notas internas') }}
+                </button>
+              </div>
+            </header>
+            <div class="comment-list">
+              @for (comment of filteredComments(item); track comment.id) {
+                <article class="comment" [class.comment--internal]="comment.isInternal">
+                  <span class="avatar">{{ comment.author.initials }}</span>
+                  <div>
+                    <header>
+                      <span
+                        ><b>{{ comment.author.fullName }}</b>
+                        @if (comment.isInternal) {
+                          <em>{{ i18n.t('Notas internas') }}</em>
+                        }</span
+                      ><time>{{
+                        comment.createdAt | date: 'dd MMM y, HH:mm' : '' : i18n.locale()
+                      }}</time>
+                    </header>
+                    <p>{{ comment.message }}</p>
+                    @if (comment.attachments.length) {
+                      <div class="comment-attachments">
+                        @for (file of comment.attachments; track file.id) {
+                          <a [href]="file.url" target="_blank" rel="noopener"
+                            ><span>{{ file.mimeType.startsWith('image/') ? '▧' : '▤' }}</span
+                            ><span
+                              ><b>{{ file.fileName }}</b
+                              ><small>{{ formatSize(file.size) }}</small></span
+                            ></a
+                          >
+                        }
+                      </div>
+                    }
+                  </div>
+                </article>
+              } @empty {
+                <div class="empty-comments">Todavía no hay comentarios para este filtro.</div>
+              }
+            </div>
+            <div class="comment-composer">
+              <textarea
+                #commentInput
+                rows="4"
+                [placeholder]="i18n.t('Agregar comentario') + '…'"
+                [value]="commentDraft()"
+                (input)="commentDraft.set(commentInput.value)"
+              ></textarea>
+              <div class="composer-tools">
+                <app-attachment-picker
+                  [label]="i18n.t('Adjuntar fotos o archivos')"
+                  [resetKey]="commentReset()"
+                  (attachmentsChange)="commentAttachments.set($event)"
+                /><label
+                  ><input
+                    type="checkbox"
+                    [checked]="internalComment()"
+                    (change)="internalComment.set(!internalComment())"
+                  />{{ i18n.t('Notas internas') }}</label
+                ><button
+                  class="primary-button"
+                  type="button"
+                  [disabled]="!commentDraft().trim()"
+                  (click)="addComment(item)"
+                >
+                  {{ i18n.t('Enviar comentario') }}
+                </button>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <div record-aside>
+          <article class="card client-card">
+            <header>
+              <h2>{{ i18n.t('Información del cliente') }}</h2>
+              <a [routerLink]="['/customers', item.clientId]">{{ i18n.t('Ver cliente') }}</a>
+            </header>
+            <div class="client-identity">
+              <span>{{ item.clientInitials }}</span>
+              <div>
+                <b>{{ item.clientName }}</b
+                ><small>{{ item.clientId }}</small>
+              </div>
+            </div>
+            <dl>
+              <div>
+                <dt>Correo</dt>
+                <dd>{{ item.clientEmail }}</dd>
+              </div>
+              <div>
+                <dt>Teléfono</dt>
+                <dd>{{ item.clientPhone }}</dd>
+              </div>
+              <div>
+                <dt>Solicitante</dt>
+                <dd>{{ item.requester }}</dd>
+              </div>
+            </dl>
+          </article>
+          <article class="card metadata-card">
+            <h2>Información</h2>
+            <dl>
+              <div>
+                <dt>Ticket ID</dt>
+                <dd>{{ item.id }}</dd>
+              </div>
+              <div>
+                <dt>{{ i18n.t('Creado por') }}</dt>
+                <dd>Andrea Torres</dd>
+              </div>
+              <div>
+                <dt>Canal</dt>
+                <dd>{{ item.channel }}</dd>
+              </div>
+              <div>
+                <dt>{{ i18n.t('Última actualización') }}</dt>
+                <dd>{{ item.updatedAt | date: 'dd MMM y, HH:mm' : '' : i18n.locale() }}</dd>
+              </div>
+              @if (item.resolvedAt) {
+                <div>
+                  <dt>{{ i18n.t('Resuelto') }}</dt>
+                  <dd>{{ item.resolvedAt | date: 'dd MMM y, HH:mm' : '' : i18n.locale() }}</dd>
+                </div>
+              }
+            </dl>
+          </article>
+          <article class="card files-card">
+            <header>
+              <div>
+                <h2>Archivos</h2>
+                <p>{{ item.attachments.length }} adjuntos</p>
+              </div>
+            </header>
+            @for (file of item.attachments; track file.id) {
+              <a [href]="file.url" target="_blank" rel="noopener"
+                ><span>{{ file.mimeType.startsWith('image/') ? '▧' : '▤' }}</span
+                ><span
+                  ><b>{{ file.fileName }}</b
+                  ><small>{{ formatSize(file.size) }}</small></span
+                ></a
+              >
+            }
+            <app-attachment-picker
+              label="Agregar archivos"
+              [resetKey]="fileReset()"
+              (attachmentsChange)="ticketFiles.set($event)"
+            />
+            @if (ticketFiles().length) {
+              <button class="save-files" type="button" (click)="saveTicketFiles(item.id)">
+                {{ i18n.t('Guardar') }} {{ ticketFiles().length }}
+              </button>
+            }
+          </article>
+        </div>
+      </app-record-detail-layout>
+    } @else {
+      <section class="not-found">
+        <h1>Ticket no encontrado</h1>
+        <a class="primary-button" routerLink="/tickets">{{ i18n.t('Volver a tickets') }}</a>
+      </section>
+    }

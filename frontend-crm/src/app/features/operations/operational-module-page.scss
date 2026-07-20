@@ -1,0 +1,567 @@
+      :host {
+        min-height: calc(100vh - 134px);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .page-header,
+      .module-stats,
+      .customer-table-card {
+        display: none;
+      }
+      .customer-table-card {
+        min-height: 360px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .customer-table-card > .filterbar,
+      .customer-table-card > .pagination {
+        flex: 0 0 auto;
+      }
+      .customer-table-card > .table-scroll {
+        min-height: 0;
+        flex: 1;
+        overflow: auto;
+      }
+      .customer-table-card thead {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+      }
+      .customer-table-card tbody tr:last-child td {
+        border-bottom: 1px solid var(--color-border);
+      }
+      .module-stats {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+        margin-bottom: 16px;
+      }
+      .module-stats article {
+        padding: 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .stat-icon {
+        width: 38px;
+        height: 38px;
+        flex: 0 0 38px;
+        border-radius: 9px;
+        display: grid;
+        place-items: center;
+        background: #dbeafe;
+        color: #2563eb;
+        font-weight: 800;
+      }
+      .stat-icon--green {
+        background: #dcfce7;
+        color: #16a34a;
+      }
+      .stat-icon--amber {
+        background: #fef3c7;
+        color: #d97706;
+      }
+      .stat-icon--red {
+        background: #fee2e2;
+        color: #dc2626;
+      }
+      .stat-icon--violet {
+        background: #ede9fe;
+        color: #7c3aed;
+      }
+      .module-stats article > div {
+        min-width: 0;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        flex: 1;
+      }
+      .module-stats small,
+      .module-stats em {
+        color: var(--color-text-secondary);
+        font-size: 10px;
+        font-style: normal;
+      }
+      .module-stats b {
+        grid-column: 2;
+        grid-row: 1/3;
+        font-size: 20px;
+      }
+      .record-identity {
+        min-width: 190px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .record-avatar {
+        width: 34px;
+        height: 34px;
+        flex: 0 0 34px;
+        border-radius: 9px;
+        display: grid;
+        place-items: center;
+        font-size: 9px;
+        font-weight: 800;
+      }
+      .record-identity > span:last-child {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+      .record-identity b {
+        color: var(--color-text-primary);
+      }
+      .record-identity:hover b {
+        color: var(--color-primary);
+      }
+      .record-status {
+        width: fit-content;
+        padding: 5px 9px;
+        border-radius: 99px;
+        background: #e2e8f0;
+        color: #475569;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 10px;
+        font-weight: 700;
+      }
+      .record-status i {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+      }
+      .record-status--green {
+        background: #dcfce7;
+        color: #15803d;
+      }
+      .record-status--blue {
+        background: #dbeafe;
+        color: #1d4ed8;
+      }
+      .record-status--amber {
+        background: #fef3c7;
+        color: #b45309;
+      }
+      .record-status--red {
+        background: #fee2e2;
+        color: #b91c1c;
+      }
+      .record-status--violet {
+        background: #ede9fe;
+        color: #6d28d9;
+      }
+      .cell-value {
+        display: block;
+        max-width: 210px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .row-action {
+        width: 31px;
+        height: 31px;
+        border-radius: 7px;
+        display: grid;
+        place-items: center;
+        color: var(--color-text-secondary);
+        font-weight: 800;
+        letter-spacing: 1px;
+        border: 0;
+        background: transparent;
+      }
+      .row-action:hover {
+        background: var(--color-muted);
+        color: var(--color-primary);
+      }
+      .selection-cell {
+        width: 46px;
+        padding-inline: 14px !important;
+        text-align: center;
+      }
+      .selection-cell input {
+        width: 16px;
+        height: 16px;
+        accent-color: var(--color-primary);
+      }
+      .row-menu-cell {
+        position: relative;
+        width: 52px;
+      }
+      .row-action-menu {
+        position: absolute;
+        right: 14px;
+        top: 47px;
+        z-index: 20;
+        width: 175px;
+        padding: 6px;
+        border: 1px solid var(--color-border);
+        border-radius: 10px;
+        background: var(--color-surface);
+        box-shadow: 0 14px 35px rgba(15, 23, 42, 0.2);
+      }
+      .row-action-menu a,
+      .row-action-menu button {
+        width: 100%;
+        height: 36px;
+        padding: 0 9px;
+        border: 0;
+        border-radius: 7px;
+        background: transparent;
+        color: var(--color-text-primary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font: inherit;
+        font-size: 10px;
+        font-weight: 650;
+      }
+      .row-action-menu a:hover,
+      .row-action-menu button:hover {
+        background: var(--color-muted);
+      }
+      .row-action-menu .danger {
+        color: var(--color-danger);
+      }
+      .wa-mark {
+        color: #16a34a;
+      }
+      .bulk-toolbar {
+        min-height: 52px;
+        padding: 8px 14px;
+        border-top: 1px solid #bfdbfe;
+        border-bottom: 1px solid #bfdbfe;
+        background: #eff6ff;
+        color: #1e3a8a;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+      :host-context(.app-frame--dark) .bulk-toolbar {
+        background: #172554;
+        color: #dbeafe;
+      }
+      .bulk-toolbar > span {
+        margin-right: auto;
+        font-size: 10px;
+      }
+      .bulk-toolbar button {
+        min-height: 34px;
+        padding: 0 10px;
+        border: 1px solid #bfdbfe;
+        border-radius: 8px;
+        background: var(--color-surface);
+        color: var(--color-text-primary);
+        font: inherit;
+        font-size: 9.5px;
+        font-weight: 700;
+      }
+      .bulk-toolbar button:hover {
+        border-color: #60a5fa;
+        color: var(--color-primary);
+      }
+      .bulk-toolbar .danger {
+        color: var(--color-danger);
+      }
+      .bulk-toolbar .bulk-close {
+        width: 32px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        font-size: 18px;
+      }
+      table.is-dense td {
+        padding-block: 8px;
+      }
+      .empty-state {
+        height: 210px;
+        text-align: center;
+        color: var(--color-text-secondary);
+      }
+      .empty-state > span {
+        font-size: 28px;
+      }
+      .empty-state h2 {
+        margin: 8px 0;
+      }
+      .module-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        border: 0;
+        background: rgba(15, 23, 42, 0.5);
+        backdrop-filter: blur(3px);
+      }
+      .create-dialog,
+      .bulk-dialog {
+        position: fixed;
+        left: 50%;
+        top: 50%;
+        z-index: 1001;
+        width: min(650px, calc(100vw - 28px));
+        max-height: calc(100vh - 28px);
+        overflow-y: auto;
+        border: 1px solid var(--color-border);
+        border-radius: 15px;
+        background: var(--color-surface);
+        box-shadow: 0 30px 80px rgba(15, 23, 42, 0.3);
+        transform: translate(-50%, -50%);
+      }
+      .create-dialog--wide {
+        width: min(900px, calc(100vw - 28px));
+      }
+      .create-dialog > header,
+      .bulk-dialog > header {
+        padding: 20px 22px 16px;
+        border-bottom: 1px solid var(--color-border);
+        display: flex;
+        justify-content: space-between;
+      }
+      .create-dialog > header span,
+      .bulk-dialog > header span {
+        color: var(--color-primary);
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+      }
+      .create-dialog h2,
+      .bulk-dialog h2 {
+        margin-top: 4px;
+        font-size: 19px;
+      }
+      .create-dialog header p,
+      .bulk-dialog header p {
+        margin-top: 4px;
+        color: var(--color-text-secondary);
+        font-size: 11px;
+      }
+      .create-dialog header > button,
+      .bulk-dialog header > button {
+        width: 32px;
+        height: 32px;
+        border: 0;
+        border-radius: 50%;
+        background: var(--color-muted);
+        color: var(--color-text-primary);
+        font-size: 20px;
+      }
+      .record-form {
+        padding: 20px 22px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+      .record-form label {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        color: var(--color-text-secondary);
+        font-size: 11px;
+        font-weight: 650;
+      }
+      .field-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+      }
+      .field-label b,
+      .create-dialog > footer small b {
+        color: #dc2626;
+      }
+      .record-form label.full {
+        grid-column: 1/-1;
+      }
+      .contract-items-builder {
+        grid-column: 1/-1;
+        margin-top: 5px;
+        border: 1px solid var(--color-border);
+        border-radius: 11px;
+        overflow: hidden;
+      }
+      .contract-items-builder > header {
+        padding: 14px 15px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        background: var(--color-muted);
+      }
+      .contract-items-builder > header span {
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: 0.07em;
+      }
+      .contract-items-builder > header span b {
+        color: var(--color-danger);
+      }
+      .contract-items-builder > header p {
+        margin-top: 3px;
+        color: var(--color-text-secondary);
+        font-size: 10px;
+      }
+      .contract-items-head,
+      .contract-item-row {
+        padding: 9px 13px;
+        display: grid;
+        grid-template-columns: minmax(210px, 1.5fr) 90px 130px 120px 32px;
+        align-items: center;
+        gap: 9px;
+      }
+      .contract-items-head {
+        color: var(--color-text-secondary);
+        background: var(--color-background);
+        font-size: 8px;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      .contract-item-row {
+        border-top: 1px solid var(--color-border);
+      }
+      .contract-item-row input {
+        width: 100%;
+        height: 38px;
+        padding: 0 9px;
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+        background: var(--color-background);
+        color: var(--color-text-primary);
+      }
+      .contract-item-row strong {
+        font-size: 11px;
+        text-align: right;
+      }
+      .remove-contract-item {
+        width: 30px;
+        height: 30px;
+        border: 0;
+        border-radius: 7px;
+        background: transparent;
+        color: var(--color-danger);
+        font-size: 18px;
+      }
+      .remove-contract-item:hover:not(:disabled) {
+        background: #fef2f2;
+      }
+      .contract-items-builder > footer {
+        min-height: 59px;
+        padding: 10px 15px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-top: 1px solid var(--color-border);
+        background: var(--color-background);
+      }
+      .contract-items-builder > footer > span {
+        color: var(--color-text-secondary);
+        font-size: 9px;
+      }
+      .contract-items-builder > footer > div {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .contract-items-builder > footer small {
+        font-size: 9px;
+      }
+      .contract-items-builder > footer b {
+        font-size: 17px;
+      }
+      .record-form input,
+      .record-form select,
+      .record-form textarea {
+        height: 40px;
+        padding: 0 11px;
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+        outline: 0;
+        background: var(--color-background);
+        color: var(--color-text-primary);
+        font: inherit;
+      }
+      .record-form textarea {
+        min-height: 88px;
+        padding-block: 10px;
+        resize: vertical;
+      }
+      .form-date {
+        min-height: 40px;
+        padding: 4px;
+        border: 1px solid var(--color-border);
+        border-radius: 9px;
+        background: var(--color-background);
+      }
+      .record-form input:focus,
+      .record-form select:focus,
+      .record-form textarea:focus {
+        border-color: #93c5fd;
+        box-shadow: 0 0 0 3px #dbeafe;
+      }
+      .create-dialog > footer,
+      .bulk-dialog > footer {
+        padding: 14px 22px 19px;
+        border-top: 1px solid var(--color-border);
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+      .create-dialog > footer small {
+        margin-right: auto;
+        align-self: center;
+        color: var(--color-text-secondary);
+        font-size: 9px;
+      }
+      .bulk-dialog > div {
+        padding: 20px 22px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+      .bulk-dialog label {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        color: var(--color-text-secondary);
+        font-size: 10px;
+        font-weight: 650;
+      }
+      .bulk-dialog select {
+        height: 42px;
+        padding: 0 10px;
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+        background: var(--color-background);
+        color: var(--color-text-primary);
+      }
+      @media (max-width: 1000px) {
+        .module-stats {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      @media (max-width: 600px) {
+        :host {
+          min-height: auto;
+          overflow: visible;
+        }
+        .customer-table-card {
+          min-height: 520px;
+        }
+        .module-stats,
+        .record-form {
+          grid-template-columns: 1fr;
+        }
+        .record-form label.full {
+          grid-column: auto;
+        }
+        .contract-items-builder {
+          grid-column: auto;
+          overflow-x: auto;
+        }
+        .contract-items-head,
+        .contract-item-row {
+          min-width: 700px;
+        }
+      }

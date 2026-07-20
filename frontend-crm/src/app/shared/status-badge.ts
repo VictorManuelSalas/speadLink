@@ -3,7 +3,7 @@ import { CustomerStatus } from '../core/models/customer';
 
 @Component({
   selector: 'app-status-badge',
-  template: `<span class="status status--{{ status() }}"><i></i>{{ labels[status()] }}</span>`,
+  templateUrl: './status-badge.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StatusBadge {
