@@ -2,9 +2,9 @@ import { CurrencyPipe, DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, HostListener, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { switchMap } from 'rxjs';
-import { CRM_DATA } from '../../core/data-access/crm-data';
-import { LanguageService } from '../../core/i18n/language.service';
-import { TicketStore } from '../../core/data-access/ticket-store';
+import { CRM_DATA } from '../../../core/data-access/crm-data';
+import { LanguageService } from '../../../core/i18n/language.service';
+import { TicketStore } from '../../../core/data-access/ticket-store';
 import {
   CrmAttachment,
   Customer,
@@ -12,8 +12,8 @@ import {
   CustomerTicket,
   EntityUser,
   TimelineItem,
-} from '../../core/models/customer';
-import { AttachmentPicker } from '../../shared/attachment-picker';
+} from '../../../core/models/customer';
+import { AttachmentPicker } from '../../../shared/attachment-picker';
 import {
   RecordDetailLayout,
   RecordHeader,
@@ -23,17 +23,17 @@ import {
   RecordSummary,
   RecordTabItem,
   RecordTabs,
-} from '../../shared/record-detail-shell';
-import { CustomerTicketsSection, NewCustomerTicket } from './customer-tickets-section';
-import { RecordEventsSection } from '../operations/lead-events-section';
-import { RecordField, RecordFieldConfig } from '../../shared/record-field';
-import { OperationalStore } from '../operations/operational-store';
+} from '../../../shared/record-detail-shell';
+import { CustomerTicketsSection, NewCustomerTicket } from '../customer-tickets-section/customer-tickets-section';
+import { RecordEventsSection } from '../../operations/lead-events-section/lead-events-section';
+import { RecordField, RecordFieldConfig } from '../../../shared/record-field';
+import { OperationalStore } from '../../operations/operational-store';
 import {
   RecordActivitySection,
   RecordAttachmentsSection,
   RecordEmailsSection,
   RecordNotesSection,
-} from '../operations/record-sections';
+} from '../../operations/record-sections/record-sections';
 
 type ActivityFilter = 'all' | 'payment' | 'ticket' | 'call';
 type EditableCustomerField =

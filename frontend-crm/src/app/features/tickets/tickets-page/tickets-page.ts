@@ -1,19 +1,19 @@
 import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { TicketStore } from '../../core/data-access/ticket-store';
-import { CUSTOMERS } from '../../core/data-access/mock-crm-data';
-import { LanguageService } from '../../core/i18n/language.service';
-import { CrmAttachment, CustomerTicket } from '../../core/models/customer';
-import { AttachmentPicker } from '../../shared/attachment-picker';
-import { PicklistOption, StyledPicklist } from '../../shared/styled-picklist';
+import { TicketStore } from '../../../core/data-access/ticket-store';
+import { CUSTOMERS } from '../../../core/data-access/mock-crm-data';
+import { LanguageService } from '../../../core/i18n/language.service';
+import { CrmAttachment, CustomerTicket } from '../../../core/models/customer';
+import { AttachmentPicker } from '../../../shared/attachment-picker';
+import { PicklistOption, StyledPicklist } from '../../../shared/styled-picklist';
 import {
   RecordList,
   RecordListAction,
   RecordListField,
   RecordListRow,
   RecordListWidget,
-} from '../../shared/record-list';
+} from '../../../shared/record-list';
 
 @Component({
   selector: 'app-tickets-page',

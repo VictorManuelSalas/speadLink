@@ -9,9 +9,9 @@ import {
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { CustomerTicket } from '../../core/models/customer';
-import { LanguageService } from '../../core/i18n/language.service';
-import { PicklistOption, StyledPicklist } from '../../shared/styled-picklist';
+import { CustomerTicket } from '../../../core/models/customer';
+import { LanguageService } from '../../../core/i18n/language.service';
+import { PicklistOption, StyledPicklist } from '../../../shared/styled-picklist';
 
 type TicketFilter = 'all' | 'active' | 'waiting' | 'resolved';
 

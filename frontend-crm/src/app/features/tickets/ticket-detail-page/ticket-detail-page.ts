@@ -1,16 +1,16 @@
 import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { TicketStore } from '../../core/data-access/ticket-store';
-import { LanguageService } from '../../core/i18n/language.service';
-import { CrmAttachment, CustomerTicket, TicketComment } from '../../core/models/customer';
-import { AttachmentPicker } from '../../shared/attachment-picker';
+import { TicketStore } from '../../../core/data-access/ticket-store';
+import { LanguageService } from '../../../core/i18n/language.service';
+import { CrmAttachment, CustomerTicket, TicketComment } from '../../../core/models/customer';
+import { AttachmentPicker } from '../../../shared/attachment-picker';
 import {
   RecordDetailLayout,
   RecordHeader,
   RecordInformationCard,
   RecordSummary,
-} from '../../shared/record-detail-shell';
+} from '../../../shared/record-detail-shell';
 
 @Component({
   selector: 'app-ticket-detail-page',

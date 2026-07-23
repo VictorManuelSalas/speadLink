@@ -9,9 +9,9 @@ import {
   signal,
   untracked,
 } from '@angular/core';
-import { CrmAttachment } from '../../core/models/customer';
-import { AttachmentPicker } from '../../shared/attachment-picker';
-import { OperationalEmail } from './operational-store';
+import { CrmAttachment } from '../../../core/models/customer';
+import { AttachmentPicker } from '../../../shared/attachment-picker';
+import { OperationalEmail } from '../operational-store';
 
 export interface LeadEmailFormValue {
   to: string;

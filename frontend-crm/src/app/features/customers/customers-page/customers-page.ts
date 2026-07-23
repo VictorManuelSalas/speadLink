@@ -8,19 +8,19 @@ import {
   signal,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { CRM_DATA } from '../../core/data-access/crm-data';
-import { LanguageService } from '../../core/i18n/language.service';
-import { Customer, CustomerStatus } from '../../core/models/customer';
-import { StatusBadge } from '../../shared/status-badge';
+import { CRM_DATA } from '../../../core/data-access/crm-data';
+import { LanguageService } from '../../../core/i18n/language.service';
+import { Customer, CustomerStatus } from '../../../core/models/customer';
+import { StatusBadge } from '../../../shared/status-badge';
 import {
   RecordList,
   RecordListAction,
   RecordListField,
   RecordListRow,
   RecordListWidget,
-} from '../../shared/record-list';
-import { InlineEditableDateField } from '../../shared/inline-editable-date-field';
-import { PicklistOption, StyledPicklist } from '../../shared/styled-picklist';
+} from '../../../shared/record-list';
+import { InlineEditableDateField } from '../../../shared/inline-editable-date-field';
+import { PicklistOption, StyledPicklist } from '../../../shared/styled-picklist';
 
 @Component({
   selector: 'app-customers-page',

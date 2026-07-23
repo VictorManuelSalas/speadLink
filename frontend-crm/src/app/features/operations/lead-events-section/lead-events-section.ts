@@ -9,9 +9,9 @@ import {
   signal,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { InlineEditableDateField } from '../../shared/inline-editable-date-field';
-import { PicklistOption, StyledPicklist } from '../../shared/styled-picklist';
-import { CalendarEvent, CalendarEventType, CalendarStore } from '../calendar/calendar-store';
+import { InlineEditableDateField } from '../../../shared/inline-editable-date-field';
+import { PicklistOption, StyledPicklist } from '../../../shared/styled-picklist';
+import { CalendarEvent, CalendarEventType, CalendarStore } from '../../calendar/calendar-store';
 
 @Component({
   selector: 'app-record-events-section',

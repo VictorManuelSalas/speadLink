@@ -7,12 +7,12 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { CrmAttachment } from '../../core/models/customer';
-import { AttachmentPicker } from '../../shared/attachment-picker';
-import { FileUploadModal } from '../../shared/file-upload-modal';
-import { InlineEditableDateField } from '../../shared/inline-editable-date-field';
-import { LeadEmailFormValue, LeadEmailModal, LeadEmailSeed } from './lead-email-modal';
-import { OperationalEmail, OperationalStore } from './operational-store';
+import { CrmAttachment } from '../../../core/models/customer';
+import { AttachmentPicker } from '../../../shared/attachment-picker';
+import { FileUploadModal } from '../../../shared/file-upload-modal';
+import { InlineEditableDateField } from '../../../shared/inline-editable-date-field';
+import { LeadEmailFormValue, LeadEmailModal, LeadEmailSeed } from '../lead-email-modal/lead-email-modal';
+import { OperationalEmail, OperationalStore } from '../operational-store';
 
 const SECTION_STYLES = `
   :host{display:block}.section-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:22px}

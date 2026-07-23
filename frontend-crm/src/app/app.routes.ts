@@ -38,27 +38,34 @@ export const routes: Routes = [
         canActivate: [permissionGuard('customers.read')],
         title: 'Clientes | SpeedLink CRM',
         loadComponent: () =>
-          import('./features/customers/customers-page').then((m) => m.CustomersPage),
+          import('./features/customers/customers-page/customers-page').then(
+            (m) => m.CustomersPage,
+          ),
       },
       {
         path: 'customers/:id',
         canActivate: [permissionGuard('customers.read')],
         title: 'Detalle de cliente | SpeedLink CRM',
         loadComponent: () =>
-          import('./features/customers/customer-detail-page').then((m) => m.CustomerDetailPage),
+          import('./features/customers/customer-detail-page/customer-detail-page').then(
+            (m) => m.CustomerDetailPage,
+          ),
       },
       {
         path: 'tickets',
         canActivate: [permissionGuard('tickets.read')],
         title: 'Tickets | SpeedLink CRM',
-        loadComponent: () => import('./features/tickets/tickets-page').then((m) => m.TicketsPage),
+        loadComponent: () =>
+          import('./features/tickets/tickets-page/tickets-page').then((m) => m.TicketsPage),
       },
       {
         path: 'tickets/:id',
         canActivate: [permissionGuard('tickets.read')],
         title: 'Detalle de ticket | SpeedLink CRM',
         loadComponent: () =>
-          import('./features/tickets/ticket-detail-page').then((m) => m.TicketDetailPage),
+          import('./features/tickets/ticket-detail-page/ticket-detail-page').then(
+            (m) => m.TicketDetailPage,
+          ),
       },
       ...(
         [
@@ -77,7 +84,7 @@ export const routes: Routes = [
           canActivate: [permissionGuard(permission)],
           title: `${title} | SpeedLink CRM`,
           loadComponent: () =>
-            import('./features/operations/operational-module-page').then(
+            import('./features/operations/operational-module-page/operational-module-page').then(
               (m) => m.OperationalModulePage,
             ),
           data: { moduleKey },
@@ -87,9 +94,9 @@ export const routes: Routes = [
           canActivate: [permissionGuard(permission)],
           title: `Detalle de ${title.toLowerCase()} | SpeedLink CRM`,
           loadComponent: () =>
-            import('./features/operations/operational-record-detail-page').then(
-              (m) => m.OperationalRecordDetailPage,
-            ),
+            import(
+              './features/operations/operational-record-detail-page/operational-record-detail-page'
+            ).then((m) => m.OperationalRecordDetailPage),
           data: { moduleKey },
         },
       ]),
@@ -110,13 +117,17 @@ export const routes: Routes = [
         path: 'settings',
         title: 'Centro de configuración | SpeedLink CRM',
         loadComponent: () =>
-          import('./features/settings/settings-overview-page').then((m) => m.SettingsOverviewPage),
+          import('./features/settings/settings-overview-page/settings-overview-page').then(
+            (m) => m.SettingsOverviewPage,
+          ),
       },
       {
         path: 'settings/portal',
         title: 'Portal de clientes | SpeedLink CRM',
         loadComponent: () =>
-          import('./features/settings/settings-portal-page').then((m) => m.SettingsPortalPage),
+          import('./features/settings/settings-portal-page/settings-portal-page').then(
+            (m) => m.SettingsPortalPage,
+          ),
       },
       ...(
         [
@@ -142,7 +153,9 @@ export const routes: Routes = [
         path: `settings/${path}`,
         title: `${title} | SpeedLink CRM`,
         loadComponent: () =>
-          import('./features/settings/settings-section-page').then((m) => m.SettingsSectionPage),
+          import('./features/settings/settings-section-page/settings-section-page').then(
+            (m) => m.SettingsSectionPage,
+          ),
         data: { section },
       })),
       {

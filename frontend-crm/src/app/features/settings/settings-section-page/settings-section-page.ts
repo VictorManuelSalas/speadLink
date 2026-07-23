@@ -1,13 +1,13 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { SETTINGS_SECTIONS, SettingsRow, SettingsSectionKey } from './settings.data';
+import { SETTINGS_SECTIONS, SettingsRow, SettingsSectionKey } from '../settings.data';
 
 @Component({
   selector: 'app-settings-section-page',
   imports: [FormsModule, RouterLink],
   templateUrl: './settings-section-page.html',
-  styleUrl: './settings-pages.scss',
+  styleUrl: '../settings-pages.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SettingsSectionPage {

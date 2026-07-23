@@ -8,14 +8,14 @@ import {
   signal,
 } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { LanguageService } from '../../core/i18n/language.service';
-import { CRM_DATA } from '../../core/data-access/crm-data';
-import { CrmAttachment, Customer } from '../../core/models/customer';
-import { AttachmentPicker } from '../../shared/attachment-picker';
-import { FileUploadModal } from '../../shared/file-upload-modal';
-import { InlineEditableDateField } from '../../shared/inline-editable-date-field';
-import { InlineEditableField } from '../../shared/inline-editable-field';
-import { RecordField, RecordFieldConfig } from '../../shared/record-field';
+import { LanguageService } from '../../../core/i18n/language.service';
+import { CRM_DATA } from '../../../core/data-access/crm-data';
+import { CrmAttachment, Customer } from '../../../core/models/customer';
+import { AttachmentPicker } from '../../../shared/attachment-picker';
+import { FileUploadModal } from '../../../shared/file-upload-modal';
+import { InlineEditableDateField } from '../../../shared/inline-editable-date-field';
+import { InlineEditableField } from '../../../shared/inline-editable-field';
+import { RecordField, RecordFieldConfig } from '../../../shared/record-field';
 import {
   RecordDetailLayout,
   RecordHeader,
@@ -25,21 +25,21 @@ import {
   RecordSummary,
   RecordTabItem,
   RecordTabs,
-} from '../../shared/record-detail-shell';
+} from '../../../shared/record-detail-shell';
 import {
   OPERATIONAL_MODULES,
   OperationalModuleKey,
   OperationalRecord,
-} from './operational-modules.data';
-import { LeadEmailFormValue, LeadEmailModal, LeadEmailSeed } from './lead-email-modal';
-import { RecordEventsSection } from './lead-events-section';
-import { OperationalEmail, OperationalStore } from './operational-store';
+} from '../operational-modules.data';
+import { LeadEmailFormValue, LeadEmailModal, LeadEmailSeed } from '../lead-email-modal/lead-email-modal';
+import { RecordEventsSection } from '../lead-events-section/lead-events-section';
+import { OperationalEmail, OperationalStore } from '../operational-store';
 import {
   RecordActivitySection,
   RecordAttachmentsSection,
   RecordEmailsSection,
   RecordNotesSection,
-} from './record-sections';
+} from '../record-sections/record-sections';
 
 type DetailTab = 'Resumen' | 'Correos' | 'Eventos' | 'Notas' | 'Actividad' | 'Archivos';
 

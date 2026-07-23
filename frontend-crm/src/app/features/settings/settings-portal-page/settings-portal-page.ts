@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { ClientPortalStore } from '../../core/portal/client-portal.store';
+import { ClientPortalStore } from '../../../core/portal/client-portal.store';
 
 @Component({
   selector: 'app-settings-portal-page',

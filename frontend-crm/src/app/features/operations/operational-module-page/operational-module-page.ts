@@ -8,25 +8,25 @@ import {
   signal,
 } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { CRM_DATA } from '../../core/data-access/crm-data';
-import { LanguageService } from '../../core/i18n/language.service';
-import { Customer } from '../../core/models/customer';
+import { CRM_DATA } from '../../../core/data-access/crm-data';
+import { LanguageService } from '../../../core/i18n/language.service';
+import { Customer } from '../../../core/models/customer';
 import {
   RecordList,
   RecordListAction,
   RecordListField,
   RecordListRow,
   RecordListWidget,
-} from '../../shared/record-list';
-import { InlineEditableDateField } from '../../shared/inline-editable-date-field';
-import { PicklistOption, StyledPicklist } from '../../shared/styled-picklist';
+} from '../../../shared/record-list';
+import { InlineEditableDateField } from '../../../shared/inline-editable-date-field';
+import { PicklistOption, StyledPicklist } from '../../../shared/styled-picklist';
 import {
   ModuleField,
   OPERATIONAL_MODULES,
   OperationalModuleKey,
   OperationalRecord,
-} from './operational-modules.data';
-import { OperationalStore } from './operational-store';
+} from '../operational-modules.data';
+import { OperationalStore } from '../operational-store';
 
 interface ContractItemDraft {
   id: string;
