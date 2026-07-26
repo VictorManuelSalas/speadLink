@@ -375,6 +375,64 @@
       .ticket-form .full {
         grid-column: 1/-1;
       }
+      .ticket-form .field-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        color: var(--color-text-secondary);
+        font-size: 9.5px;
+        font-weight: 700;
+      }
+      .related-record {
+        min-height: 48px;
+        padding: 6px 11px;
+        border: 1px solid #bfdbfe;
+        border-radius: 10px;
+        background: color-mix(in srgb, var(--color-primary) 5%, var(--color-background));
+        display: grid;
+        grid-template-columns: 30px 1fr 22px;
+        align-items: center;
+        gap: 9px;
+      }
+      .related-record__icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        background: #2563eb;
+        color: #fff;
+        display: grid;
+        place-items: center;
+        font-size: 8px;
+        font-weight: 800;
+      }
+      .related-record__copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .related-record__copy b {
+        overflow: hidden;
+        color: var(--color-text-primary);
+        font-size: 10.5px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .related-record__copy small {
+        color: var(--color-text-secondary);
+        font-size: 8px;
+        font-weight: 600;
+      }
+      .related-record__check {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: #dcfce7;
+        color: #15803d;
+        display: grid;
+        place-items: center;
+        font-size: 9px;
+      }
       .ticket-form input,
       .ticket-form select,
       .ticket-form textarea {

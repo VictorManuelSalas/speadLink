@@ -592,6 +592,60 @@
       .note-action-menu button.danger:hover {
         background: #fef2f2;
       }
+      .billing-id-link {
+        color: var(--color-primary);
+        font-weight: 700;
+        text-decoration: none;
+      }
+      .billing-id-link:hover {
+        text-decoration: underline;
+      }
+      .menu-cell {
+        position: relative;
+        width: 44px;
+      }
+      .menu-cell .icon-button.is-active {
+        background: var(--color-muted);
+        color: var(--color-primary);
+      }
+      .billing-action-menu {
+        position: fixed;
+        z-index: 1300;
+        width: 160px;
+        padding: 7px;
+        border: 1px solid var(--color-border);
+        border-radius: 10px;
+        background: var(--color-surface);
+        box-shadow: 0 14px 35px rgba(15, 23, 42, 0.18);
+      }
+      .billing-action-menu a,
+      .billing-action-menu button {
+        width: 100%;
+        min-height: 37px;
+        padding: 0 10px;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        border: 0;
+        border-radius: 7px;
+        background: transparent;
+        color: var(--color-text-primary);
+        text-align: left;
+        text-decoration: none;
+        font: inherit;
+        font-weight: 600;
+        font-size: 11px;
+      }
+      .billing-action-menu a:hover,
+      .billing-action-menu button:hover {
+        background: var(--color-muted);
+      }
+      .billing-action-menu button.danger {
+        color: var(--color-danger);
+      }
+      .billing-action-menu button.danger:hover {
+        background: #fef2f2;
+      }
       .activity-section {
         display: flex;
         flex-direction: column;

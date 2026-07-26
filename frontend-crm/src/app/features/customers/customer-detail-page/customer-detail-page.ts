@@ -8,7 +8,9 @@ import { TicketStore } from '../../../core/data-access/ticket-store';
 import {
   CrmAttachment,
   Customer,
+  CustomerInvoice,
   CustomerNote,
+  CustomerPayment,
   CustomerTicket,
   EntityUser,
   TimelineItem,
@@ -90,6 +92,9 @@ export class CustomerDetailPage {
   readonly pinNewNote = signal(false);
   readonly editingNoteId = signal<string | null>(null);
   readonly noteMenuId = signal<string | null>(null);
+  readonly invoiceMenuId = signal<string | null>(null);
+  readonly paymentMenuId = signal<string | null>(null);
+  readonly billingMenuPosition = signal<{ top: number; left: number } | null>(null);
   readonly selectedNoteId = signal<string | null>(null);
   readonly activityFilter = signal<ActivityFilter>('all');
   readonly activityFilters: ReadonlyArray<{ label: string; value: ActivityFilter }> = [
@@ -595,5 +600,82 @@ export class CustomerDetailPage {
   }
   @HostListener('document:click') closeNoteMenu(): void {
     this.noteMenuId.set(null);
+  }
+  @HostListener('document:click') closeBillingMenus(): void {
+    this.invoiceMenuId.set(null);
+    this.paymentMenuId.set(null);
+  }
+  private positionBillingMenu(trigger: HTMLElement): void {
+    const rect = trigger.getBoundingClientRect();
+    const menuHeight = 172;
+    const menuWidth = 160;
+    const openUpward = rect.bottom + menuHeight + 8 > window.innerHeight;
+    this.billingMenuPosition.set({
+      top: openUpward ? rect.top - menuHeight - 6 : rect.bottom + 6,
+      left: Math.min(rect.right - menuWidth, window.innerWidth - menuWidth - 8),
+    });
+  }
+  toggleInvoiceMenu(event: Event, invoiceId: string): void {
+    event.stopPropagation();
+    const opening = this.invoiceMenuId() !== invoiceId;
+    this.invoiceMenuId.set(opening ? invoiceId : null);
+    this.paymentMenuId.set(null);
+    if (opening) this.positionBillingMenu(event.currentTarget as HTMLElement);
+  }
+  deleteInvoice(customer: Customer, invoiceId: string): void {
+    this.customer.update((current) =>
+      current?.id === customer.id
+        ? { ...current, invoices: current.invoices.filter((invoice) => invoice.id !== invoiceId) }
+        : current,
+    );
+    this.invoiceMenuId.set(null);
+  }
+  downloadInvoice(invoice: CustomerInvoice, customer: Customer): void {
+    const lines = [
+      `Factura,${invoice.id}`,
+      `Cliente,${customer.name}`,
+      `Descripción,${customer.plan}`,
+      `Emisión,${invoice.issuedAt}`,
+      `Vencimiento,${invoice.dueAt}`,
+      `Total,${invoice.total}`,
+      `Estado,${invoice.status}`,
+    ];
+    this.downloadTextFile(`${invoice.id}.csv`, lines.join('\n'));
+    this.invoiceMenuId.set(null);
+  }
+  togglePaymentMenu(event: Event, paymentId: string): void {
+    event.stopPropagation();
+    const opening = this.paymentMenuId() !== paymentId;
+    this.paymentMenuId.set(opening ? paymentId : null);
+    this.invoiceMenuId.set(null);
+    if (opening) this.positionBillingMenu(event.currentTarget as HTMLElement);
+  }
+  deletePayment(customer: Customer, paymentId: string): void {
+    this.customer.update((current) =>
+      current?.id === customer.id
+        ? { ...current, payments: current.payments.filter((payment) => payment.id !== paymentId) }
+        : current,
+    );
+    this.paymentMenuId.set(null);
+  }
+  downloadPayment(payment: CustomerPayment, customer: Customer): void {
+    const lines = [
+      `Pago,${payment.id}`,
+      `Cliente,${customer.name}`,
+      `Fecha,${payment.date}`,
+      `Referencia,${payment.reference}`,
+      `Método,${payment.method}`,
+      `Monto,${payment.amount}`,
+    ];
+    this.downloadTextFile(`${payment.id}.csv`, lines.join('\n'));
+    this.paymentMenuId.set(null);
+  }
+  private downloadTextFile(fileName: string, content: string): void {
+    const url = URL.createObjectURL(new Blob([content], { type: 'text/csv;charset=utf-8' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    link.click();
+    URL.revokeObjectURL(url);
   }
 }

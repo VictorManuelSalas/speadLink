@@ -1,0 +1,185 @@
+<button class="import-backdrop" type="button" aria-label="Cerrar" (click)="cancel()"></button>
+<section class="import-modal" role="dialog" aria-modal="true" aria-labelledby="import-title">
+  <header>
+    <div>
+      <span>IMPORTAR REGISTROS</span>
+      <h2 id="import-title">Validar archivo</h2>
+      <p>Sube un archivo CSV o XLSX, revisa el mapeo y valida antes de importar.</p>
+    </div>
+    <button type="button" aria-label="Cerrar" (click)="cancel()">×</button>
+  </header>
+
+  <div class="import-steps">
+    <span [class.is-active]="step() === 'upload'" [class.is-done]="step() !== 'upload'"
+      >1. Archivo</span
+    >
+    <span [class.is-active]="step() === 'configure'" [class.is-done]="step() === 'result'"
+      >2. Configurar</span
+    >
+    <span [class.is-active]="step() === 'result'">3. Resultado</span>
+  </div>
+
+  <div class="import-content">
+    @switch (step()) {
+      @case ('upload') {
+        <input
+          #fileInput
+          hidden
+          type="file"
+          accept=".csv,.xlsx"
+          (change)="handleFiles(fileInput.files); fileInput.value = ''"
+        />
+        <button
+          class="drop-zone"
+          type="button"
+          [class.is-dragging]="dragging()"
+          (click)="fileInput.click()"
+          (dragover)="onDragOver($event)"
+          (dragleave)="onDragLeave()"
+          (drop)="onDrop($event)"
+        >
+          <span>⇧</span><b>Arrastra tu archivo aquí</b>
+          <p>o haz clic para seleccionarlo</p>
+          <small>Solo se aceptan archivos .csv o .xlsx</small>
+        </button>
+        @if (fileError()) {
+          <p class="import-error">{{ fileError() }}</p>
+        }
+      }
+      @case ('configure') {
+        <div class="import-file-chip">
+          <span>▤</span
+          ><span
+            ><b>{{ fileName() }}</b
+            ><small>{{ dataRows().length }} fila(s) detectada(s)</small></span
+          ><button type="button" (click)="backToUpload()">Cambiar archivo</button>
+        </div>
+
+        <div class="import-field-group">
+          <span>Tipo de importación</span>
+          <div class="import-mode-options">
+            <button
+              type="button"
+              [class.is-selected]="mode() === 'insert'"
+              (click)="setMode('insert')"
+            >
+              Crear
+            </button>
+            <button
+              type="button"
+              [class.is-selected]="mode() === 'update'"
+              (click)="setMode('update')"
+            >
+              Actualizar
+            </button>
+            <button
+              type="button"
+              [class.is-selected]="mode() === 'upsert'"
+              (click)="setMode('upsert')"
+            >
+              Ambos
+            </button>
+          </div>
+        </div>
+
+        @if (needsIdentifier()) {
+          <label class="import-field-group">
+            <span>Campo identificador <b class="required-mark">*</b></span>
+            <select
+              [value]="identifierKey()"
+              (change)="setIdentifierKey($any($event.target).value)"
+            >
+              <option value="">Selecciona un campo</option>
+              @for (field of fields(); track field.key) {
+                <option [value]="field.key">{{ field.label }}</option>
+              }
+            </select>
+          </label>
+        }
+
+        <div class="import-field-group">
+          <span>Mapeo de columnas</span>
+          <div class="import-mapping">
+            <div class="import-mapping-row import-mapping-head">
+              <span>Columna del archivo</span><span>Campo del CRM</span>
+            </div>
+            @for (header of headers(); track header) {
+              <div class="import-mapping-row">
+                <span>{{ header }}</span>
+                <select
+                  [value]="columnMap()[header] || ''"
+                  (change)="setColumnMapping(header, $any($event.target).value)"
+                >
+                  <option value="">No importar</option>
+                  @for (field of fields(); track field.key) {
+                    <option [value]="field.key">
+                      {{ field.label }}{{ field.required ? ' *' : '' }}
+                    </option>
+                  }
+                </select>
+              </div>
+            }
+          </div>
+        </div>
+      }
+      @case ('result') {
+        @if (errors().length) {
+          <div class="import-result import-result--error">
+            <span>!</span>
+            <div>
+              <b>Se encontraron {{ errors().length }} error(es)</b>
+              <p>Corrige el archivo o el mapeo y vuelve a validar.</p>
+            </div>
+          </div>
+          <div class="import-error-list">
+            @for (error of errorPreview(); track $index) {
+              <div class="import-error-row">
+                <span>Fila {{ error.row }}</span><b>{{ error.field }}</b
+                ><small>{{ error.message }}</small>
+              </div>
+            }
+            @if (hiddenErrorCount() > 0) {
+              <p class="import-error-more">y {{ hiddenErrorCount() }} error(es) más…</p>
+            }
+          </div>
+        } @else {
+          <div class="import-result import-result--success">
+            <span>✓</span>
+            <div>
+              <b>{{ validRowCount() }} registro(s) listos para importar</b>
+              <p>No se encontraron errores. Puedes continuar con la importación.</p>
+            </div>
+          </div>
+        }
+      }
+    }
+  </div>
+
+  <footer>
+    <button class="button" type="button" (click)="cancel()">Cancelar</button>
+    @if (step() === 'configure') {
+      <button
+        class="button button--primary"
+        type="button"
+        [disabled]="!canValidate() || validating()"
+        (click)="validate()"
+      >
+        @if (validating()) {
+          Validando…
+        } @else {
+          Validate
+        }
+      </button>
+    } @else if (step() === 'result') {
+      <button type="button" class="button" (click)="step.set('configure')">← Ajustar mapeo</button>
+      <button
+        class="button button--primary"
+        type="button"
+        [disabled]="errors().length > 0"
+        (click)="confirmImport()"
+      >
+        ＋ Importar {{ validRowCount() }} registro(s)
+      </button>
+    }
+  </footer>
+</section>

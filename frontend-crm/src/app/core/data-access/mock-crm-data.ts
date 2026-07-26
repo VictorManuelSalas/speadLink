@@ -19,6 +19,7 @@ const seedAuthor = (offset: number): string => STAFF_USERS[offset % STAFF_USERS.
 const detail = (id: string, offset: number) => ({
   equipment: [
     {
+      id: `EQ-CPE-${1040 + offset}`,
       name: 'Antena CPE',
       model: offset % 2 ? 'Ubiquiti LiteBeam 5AC' : 'Ubiquiti NanoStation 5AC',
       serial: `SL-CPE-${1040 + offset}`,
@@ -27,6 +28,7 @@ const detail = (id: string, offset: number) => ({
       status: 'online' as const,
     },
     {
+      id: `EQ-RTR-${2090 + offset}`,
       name: 'Router Wi-Fi',
       model: 'TP-Link Archer C6',
       serial: `SL-RTR-${2090 + offset}`,

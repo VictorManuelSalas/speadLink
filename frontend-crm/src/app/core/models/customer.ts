@@ -46,6 +46,7 @@ export interface Customer extends BaseEntity {
 }
 
 export interface CustomerEquipment {
+  id: string;
   name: string;
   model: string;
   serial: string;

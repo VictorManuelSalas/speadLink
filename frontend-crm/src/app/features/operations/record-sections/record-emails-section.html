@@ -31,6 +31,11 @@
                   <button type="button" (click)="from(email, false)">Reenviar</button>
                 }
                 <button type="button" (click)="from(email, true)">Reenviar a…</button>
+                @if (email.status === 'DRAFT') {
+                  <button type="button" class="danger" (click)="deleteEmail(email)">
+                    Eliminar
+                  </button>
+                }
               </div>
             }
           </article>

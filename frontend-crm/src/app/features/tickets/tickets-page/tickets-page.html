@@ -183,14 +183,23 @@
           <button type="button" (click)="closeComposer()">×</button>
         </header>
         <div class="ticket-form">
-          <label
-            >{{ i18n.t('Cliente') }} <b class="required-mark">*</b
-            ><app-styled-picklist
+          <div class="field-group full">
+            <span>{{ i18n.t('Cliente') }} <b class="required-mark">*</b></span>
+            <app-styled-picklist
               [options]="clientOptions"
               [value]="newClientId()"
-              placeholder="Seleccionar cliente…"
+              placeholder="Buscar cliente…"
               (valueChange)="newClientId.set($event)"
-          /></label>
+            />
+            @if (selectedClient(); as client) {
+              <div class="related-record">
+                <span class="related-record__icon">{{ initials(client.name) }}</span>
+                <span class="related-record__copy"
+                  ><b>{{ client.name }}</b><small>Cliente · {{ client.id }}</small></span
+                ><span class="related-record__check">✓</span>
+              </div>
+            }
+          </div>
           <label
             >{{ i18n.t('Prioridad')
             }}<app-styled-picklist

@@ -3,6 +3,16 @@ import { authenticatedGuard, guestGuard, permissionGuard } from './core/auth/acc
 
 export const routes: Routes = [
   {
+    path: '',
+    pathMatch: 'full',
+    canActivate: [guestGuard],
+    title: 'SpeedLink | Internet para tu hogar',
+    loadComponent: () =>
+      import('./features/public/public-home-page/public-home-page').then(
+        (m) => m.PublicHomePage,
+      ),
+  },
+  {
     path: 'login',
     canActivate: [guestGuard],
     title: 'Acceso | SpeedLink CRM',

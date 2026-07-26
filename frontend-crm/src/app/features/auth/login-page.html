@@ -3,8 +3,10 @@
     <div class="login-showcase__glow login-showcase__glow--one"></div>
     <div class="login-showcase__glow login-showcase__glow--two"></div>
     <header class="login-brand">
-      <span><img src="/icons/brand/speedlink-logo.svg" alt="" /></span>
-      <b>SpeedLink <em>CRM</em></b>
+      <a class="login-brand__link" routerLink="/">
+        <span><img src="/icons/brand/speedlink-logo.svg" alt="" /></span>
+        <b>SpeedLink <em>CRM</em></b>
+      </a>
     </header>
     <div class="login-showcase__content">
       <span class="login-eyebrow">OPERACIÓN CONECTADA</span>
@@ -39,6 +41,7 @@
   </section>
 
   <section class="login-access">
+    <a class="login-back" routerLink="/"><span aria-hidden="true">←</span> Volver al inicio</a>
     <div class="login-language" aria-label="Idioma">
       <button
         type="button"
@@ -56,9 +59,9 @@
       </button>
     </div>
     <div class="login-card">
-      <div class="login-mobile-brand">
+      <a class="login-mobile-brand" routerLink="/">
         <span><img src="/icons/brand/speedlink-logo.svg" alt="" /></span><b>SpeedLink CRM</b>
-      </div>
+      </a>
       <span class="login-eyebrow">BIENVENIDO DE NUEVO</span>
       <h2>Inicia sesión en tu cuenta</h2>
       <p class="login-subtitle">Ingresa tus credenciales para continuar al CRM.</p>

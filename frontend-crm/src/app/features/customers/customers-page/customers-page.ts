@@ -19,6 +19,7 @@ import {
   RecordListRow,
   RecordListWidget,
 } from '../../../shared/record-list';
+import { ImportValidationResult } from '../../../shared/import-validation-modal';
 import { InlineEditableDateField } from '../../../shared/inline-editable-date-field';
 import { PicklistOption, StyledPicklist } from '../../../shared/styled-picklist';
 
@@ -69,8 +70,8 @@ export class CustomersPage {
     { key: 'technician', label: 'Técnico', type: 'lookup' },
   ] as const;
   readonly listFields: ReadonlyArray<RecordListField> = [
-    { key: 'name', label: 'Nombre', type: 'text' },
-    { key: 'email', label: 'Correo', type: 'email' },
+    { key: 'name', label: 'Nombre', type: 'text', required: true },
+    { key: 'email', label: 'Correo', type: 'email', required: true },
     { key: 'phone', label: 'Teléfono', type: 'phone' },
     {
       key: 'status',
@@ -256,9 +257,32 @@ export class CustomersPage {
     else if (actionId === 'delete')
       this.customers.update((customers) => customers.filter((customer) => !ids.has(customer.id)));
   }
-  importCustomers(rows: ReadonlyArray<RecordListRow>): void {
+  importCustomers(result: ImportValidationResult): void {
+    const { mode, identifierKey, rows } = result;
     const now = new Date().toISOString();
     rows.forEach((row, index) => {
+      const identifierValue = identifierKey ? String(row[identifierKey] ?? '') : '';
+      const existing = identifierValue
+        ? this.customers().find(
+            (customer) => String(customer[identifierKey as keyof Customer]) === identifierValue,
+          )
+        : undefined;
+      if (existing && mode !== 'insert') {
+        const changes: Partial<Customer> = { updatedAt: now };
+        for (const key of ['name', 'email', 'phone', 'community', 'plan'] as const) {
+          if (row[key]) changes[key] = String(row[key]);
+        }
+        if (row['monthlyFee']) changes.monthlyFee = Number(row['monthlyFee']) || 0;
+        if (row['billingDay']) changes.billingDay = Number(row['billingDay']) || 1;
+        if (row['currentBalance']) changes.currentBalance = Number(row['currentBalance']) || 0;
+        this.customers.update((customers) =>
+          customers.map((customer) =>
+            customer.id === existing.id ? { ...customer, ...changes } : customer,
+          ),
+        );
+        return;
+      }
+      if (existing || mode === 'update') return;
       const name = String(row['name'] || `Cliente importado ${index + 1}`);
       const customer: Customer = {
         id: String(row['id'] || `SL-${Date.now() + index}`),

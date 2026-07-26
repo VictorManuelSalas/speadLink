@@ -195,20 +195,6 @@
           </div>
         </div>
         <footer>
-          <label
-            >Actualizar estado
-            <select
-              #previewStatus
-              [value]="ticket.status"
-              (change)="changeStatus(ticket, previewStatus.value)"
-            >
-              <option value="open">Abierto</option>
-              <option value="in_progress">En progreso</option>
-              <option value="waiting">En espera</option>
-              <option value="resolved">Resuelto</option>
-              <option value="closed">Cerrado</option>
-            </select>
-          </label>
           <button type="button" (click)="closePreview()">Cerrar</button>
           <a class="primary-button" [routerLink]="['/tickets', ticket.id]">Ver ticket →</a>
         </footer>
@@ -237,6 +223,15 @@
           <button type="button" aria-label="Cerrar" (click)="closeComposer()">×</button>
         </header>
         <div class="composer-form">
+          <div class="field-group full">
+            <span>Cliente</span>
+            <div class="related-record">
+              <span class="related-record__icon">{{ initials(customerName()) }}</span>
+              <span class="related-record__copy"
+                ><b>{{ customerName() }}</b><small>Cliente · {{ customerId() }}</small></span
+              ><span class="related-record__check">✓</span>
+            </div>
+          </div>
           <label class="full"
             >Asunto <b class="required-mark">*</b
             ><input

@@ -4,6 +4,8 @@
       }
       .email {
         position: relative;
+        width: 100%;
+        box-sizing: border-box;
         padding: 17px;
         border: 1px solid var(--color-border);
         border-radius: 14px;
@@ -22,12 +24,20 @@
         display: grid;
         place-items: center;
       }
+      .email > div {
+        min-width: 0;
+      }
       .email header {
         display: flex;
         align-items: center;
         gap: 8px;
+        min-width: 0;
       }
       .email h3 {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        min-width: 0;
         font-size: 13px;
       }
       .email em {
@@ -84,4 +94,10 @@
       }
       .menu button:hover {
         background: var(--color-muted);
+      }
+      .menu button.danger {
+        color: var(--color-danger, #dc2626);
+      }
+      .menu button.danger:hover {
+        background: #fef2f2;
       }

@@ -7,13 +7,7 @@
         <p>{{ description() }}</p>
       </div>
       <div class="heading-actions">
-        <input
-          #importInput
-          hidden
-          type="file"
-          accept=".csv,text/csv"
-          (change)="importCsv(importInput.files); importInput.value = ''"
-        /><button class="button" type="button" (click)="importInput.click()">⇧ Importar</button
+        <button class="button" type="button" (click)="importModalOpen.set(true)">⇧ Importar</button
         ><button class="button" type="button" (click)="exportRows(filtered(), '')">
           ⇩ Exportar</button
         ><button class="button primary" type="button" (click)="newRequested.emit()">
@@ -21,6 +15,13 @@
         </button>
       </div>
     </header>
+    @if (importModalOpen()) {
+      <app-import-validation-modal
+        [fields]="fields()"
+        (closed)="importModalOpen.set(false)"
+        (imported)="handleValidatedImport($event)"
+      />
+    }
     <section class="widgets" [style.--widget-count]="widgets().length">
       @for (widget of widgets(); track widget.label) {
         <article>

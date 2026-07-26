@@ -18,6 +18,7 @@ import {
   RecordListRow,
   RecordListWidget,
 } from '../../../shared/record-list';
+import { ImportValidationResult } from '../../../shared/import-validation-modal';
 import { InlineEditableDateField } from '../../../shared/inline-editable-date-field';
 import { PicklistOption, StyledPicklist } from '../../../shared/styled-picklist';
 import {
@@ -33,7 +34,10 @@ interface ContractItemDraft {
   serviceId: string;
   quantity: number;
   unitPrice: number;
+  locked?: boolean;
 }
+
+const INTERNET_PERMANENCE_MONTHS = 6;
 
 @Component({
   selector: 'app-operational-module-page',
@@ -69,6 +73,8 @@ export class OperationalModulePage {
   readonly bulkValue = signal('');
   readonly draft = signal<Record<string, string>>({});
   readonly contractItems = signal<ReadonlyArray<ContractItemDraft>>([]);
+  readonly editingContractId = signal<string | null>(null);
+  readonly editingContract = signal<{ contractNumber: string; clientName: string } | null>(null);
   readonly contractTotal = computed(() =>
     this.contractItems().reduce((total, item) => total + item.quantity * item.unitPrice, 0),
   );
@@ -113,28 +119,35 @@ export class OperationalModulePage {
     return field?.options ?? [];
   });
   readonly canCreate = computed(() => {
+    const itemsReady =
+      this.contractItems().length > 0 &&
+      this.contractItems().every((item) => item.serviceId && item.quantity > 0);
+    if (this.moduleKey === 'contracts' && this.editingContractId()) return itemsReady;
     const fieldsReady = this.definition.fields
       .filter((field) => field.required)
       .every((field) => this.draft()[field.key]?.trim());
-    return (
-      fieldsReady &&
-      (this.moduleKey !== 'contracts' ||
-        (this.contractItems().length > 0 &&
-          this.contractItems().every((item) => item.serviceId && item.quantity > 0)))
-    );
+    return fieldsReady && (this.moduleKey !== 'contracts' || itemsReady);
   });
 
   constructor() {
     this.route.queryParamMap.subscribe((params) => {
-      if (this.moduleKey !== 'contracts' || params.get('create') !== 'true') return;
+      if (params.get('create') !== 'true') return;
       const clientId = params.get('clientId') ?? '';
-      this.openCreate({
-        client: clientId,
-        contractNumber: `SL-CTR-${new Date().getFullYear()}-${String(this.records().length + 818).padStart(4, '0')}`,
-        startDate: new Date().toISOString().slice(0, 10),
-        status: 'PENDING_SIGNATURE',
-        notes: 'Nuevo contrato generado por solicitud de cambio de plan.',
-      });
+      if (this.moduleKey === 'contracts') {
+        this.openCreate({
+          client: clientId,
+          contractNumber: `SL-CTR-${new Date().getFullYear()}-${String(this.records().length + 818).padStart(4, '0')}`,
+          startDate: new Date().toISOString().slice(0, 10),
+          status: 'PENDING_SIGNATURE',
+          notes: 'Nuevo contrato generado por solicitud de cambio de plan.',
+        });
+      } else if (this.moduleKey === 'assignments') {
+        this.openCreate({
+          client: clientId,
+          assignedAt: new Date().toISOString().slice(0, 10),
+          status: 'ACTIVE',
+        });
+      }
     });
   }
   listFields(): ReadonlyArray<RecordListField> {
@@ -156,6 +169,7 @@ export class OperationalModulePage {
                     ? 'phone'
                     : 'text',
       options: field.options,
+      required: field.required,
     }));
   }
   listWidgets(): ReadonlyArray<RecordListWidget> {
@@ -165,17 +179,19 @@ export class OperationalModulePage {
     }));
   }
   listRowActions(): ReadonlyArray<RecordListAction> {
-    return this.moduleKey === 'leads'
-      ? [
-          { id: 'view', label: 'Ver', icon: '↗' },
-          { id: 'convert', label: 'Convertir', icon: '✓' },
-          { id: 'message', label: 'Enviar mensaje', icon: '✉' },
-          { id: 'delete', label: 'Eliminar', icon: '⊘', danger: true },
-        ]
-      : [
-          { id: 'view', label: 'Ver', icon: '↗' },
-          { id: 'delete', label: 'Eliminar', icon: '⊘', danger: true },
-        ];
+    if (this.moduleKey === 'leads') {
+      return [
+        { id: 'view', label: 'Ver', icon: '↗' },
+        { id: 'convert', label: 'Convertir', icon: '✓' },
+        { id: 'message', label: 'Enviar mensaje', icon: '✉' },
+        { id: 'delete', label: 'Eliminar', icon: '⊘', danger: true },
+      ];
+    }
+    const actions: RecordListAction[] = [{ id: 'view', label: 'Ver', icon: '↗' }];
+    if (this.moduleKey === 'contracts')
+      actions.push({ id: 'add-service', label: 'Agregar servicio', icon: '＋' });
+    actions.push({ id: 'delete', label: 'Eliminar', icon: '⊘', danger: true });
+    return actions;
   }
   listBulkActions(): ReadonlyArray<RecordListAction> {
     const common: RecordListAction[] = [
@@ -192,6 +208,7 @@ export class OperationalModulePage {
     if (actionId === 'convert') this.convertLead(record);
     else if (actionId === 'message' && record['email'])
       window.location.href = `mailto:${String(record['email'])}`;
+    else if (actionId === 'add-service') this.openEditContractItems(record);
     else if (actionId === 'delete') this.deleteRecord(record.id);
   }
   handleListBulkAction(
@@ -211,15 +228,24 @@ export class OperationalModulePage {
     } else if (actionId === 'convert') this.convertSelected();
     else if (actionId === 'delete') this.deleteSelected();
   }
-  importRecords(rows: ReadonlyArray<RecordListRow>): void {
+  importRecords(result: ImportValidationResult): void {
+    const { mode, identifierKey, rows } = result;
     rows.forEach((row, index) => {
-      const record = {
-        ...row,
-        id: String(row['id'] || `${this.definition.idPrefix}-${Date.now() + index}`),
-        createdAt: String(row['createdAt'] || new Date().toISOString()),
-        updatedAt: new Date().toISOString(),
-      } as OperationalRecord;
-      this.store.add(this.moduleKey, record);
+      const identifierValue = identifierKey ? String(row[identifierKey] ?? '') : '';
+      const existing = identifierValue
+        ? this.records().find((record) => String(record[identifierKey]) === identifierValue)
+        : undefined;
+      if (existing && mode !== 'insert') {
+        this.store.update(this.moduleKey, existing.id, row as Partial<OperationalRecord>);
+      } else if (!existing && mode !== 'update') {
+        const record = {
+          ...row,
+          id: String(row['id'] || `${this.definition.idPrefix}-${Date.now() + index}`),
+          createdAt: String(row['createdAt'] || new Date().toISOString()),
+          updatedAt: new Date().toISOString(),
+        } as OperationalRecord;
+        this.store.add(this.moduleKey, record);
+      }
     });
   }
   asString(value: string | number | boolean): string {
@@ -259,6 +285,8 @@ export class OperationalModulePage {
     );
   }
   openCreate(seed: Record<string, string> = {}): void {
+    this.editingContractId.set(null);
+    this.editingContract.set(null);
     this.draft.set(seed);
     this.contractItems.set(
       this.moduleKey === 'contracts'
@@ -267,26 +295,104 @@ export class OperationalModulePage {
     );
     this.createOpen.set(true);
   }
+  openEditContractItems(record: OperationalRecord): void {
+    if (this.moduleKey !== 'contracts') return;
+    this.editingContractId.set(record.id);
+    this.editingContract.set({
+      contractNumber: String(record['contractNumber'] ?? record.id),
+      clientName: String(record['client'] ?? ''),
+    });
+    this.draft.set({ client: String(record['clientId'] ?? '') });
+    this.contractItems.set(
+      this.parseContractItems(record).map((item) => ({
+        id: `contract-item-${item.serviceId || 'svc'}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        serviceId: item.serviceId,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        locked: this.store.find('services', item.serviceId)?.['type'] === 'Internet',
+      })),
+    );
+    this.createOpen.set(true);
+  }
   closeCreate(): void {
     this.createOpen.set(false);
     this.draft.set({});
     this.contractItems.set([]);
+    this.editingContractId.set(null);
+    this.editingContract.set(null);
+  }
+  private parseContractItems(
+    record: OperationalRecord,
+  ): ReadonlyArray<{ serviceId: string; quantity: number; unitPrice: number }> {
+    try {
+      const parsed = JSON.parse(String(record['items'] ?? '[]'));
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
   }
   setDraft(key: string, value: string): void {
     this.draft.update((draft) => ({ ...draft, [key]: value }));
   }
   fieldPicklistOptions(field: ModuleField): ReadonlyArray<PicklistOption> {
+    if (this.moduleKey === 'assignments' && field.key === 'equipment') {
+      return this.store
+        .recordsFor('equipment')
+        .filter((record) => record['status'] === 'AVAILABLE')
+        .map((record) => ({
+          value: record.id,
+          label: `${String(record['name'])} · ${String(record['brand'])}`,
+          detail: String(record['serialNumber'] ?? ''),
+        }));
+    }
     return (field.options ?? []).map((option) => ({
       value: option,
       label: field.optionLabels?.[option] || this.statusLabel(option),
     }));
   }
-  contractServiceOptions(): ReadonlyArray<PicklistOption> {
-    return this.store.recordsFor('services').map((service) => ({
-      value: service.id,
-      label: String(service['name']),
-      detail: `${String(service['type'])} · ${this.asNumber(service['price']) ? '$' + this.asNumber(service['price']) : 'Sin costo'}`,
-    }));
+  private hasOtherInternetItem(currentItemId: string): boolean {
+    return this.contractItems().some((item) => {
+      if (item.id === currentItemId || !item.serviceId) return false;
+      return this.store.find('services', item.serviceId)?.['type'] === 'Internet';
+    });
+  }
+  private monthsSince(dateValue: string): number {
+    const start = new Date(dateValue);
+    if (Number.isNaN(start.getTime())) return Infinity;
+    const now = new Date();
+    return (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth());
+  }
+  /** True while the client hasn't completed the mandatory 6-month permanence on
+   * their current internet plan, so picking a *new* Internet service should be blocked
+   * (they should get a new contract instead, via the plan-change flow). */
+  internetPermanenceBlocked(clientId: string): boolean {
+    if (!clientId) return false;
+    const excludeId = this.editingContractId();
+    const lastInternetStart = this.store
+      .recordsFor('contracts')
+      .filter((contract) => contract.id !== excludeId && contract['clientId'] === clientId)
+      .filter((contract) =>
+        this.parseContractItems(contract).some(
+          (item) => this.store.find('services', item.serviceId)?.['type'] === 'Internet',
+        ),
+      )
+      .map((contract) => String(contract['startDate'] ?? ''))
+      .sort()
+      .at(-1);
+    return !!lastInternetStart && this.monthsSince(lastInternetStart) < INTERNET_PERMANENCE_MONTHS;
+  }
+  contractServiceOptions(currentItemId: string): ReadonlyArray<PicklistOption> {
+    const clientId = this.draft()['client'] ?? '';
+    const blockInternet =
+      this.hasOtherInternetItem(currentItemId) || this.internetPermanenceBlocked(clientId);
+    return this.store
+      .recordsFor('services')
+      .filter((service) => !(blockInternet && service['type'] === 'Internet'))
+      .map((service) => ({
+        value: service.id,
+        label: String(service['name']),
+        detail: `${String(service['type'])} · ${this.asNumber(service['price']) ? '$' + this.asNumber(service['price']) : 'Sin costo'}`,
+      }));
   }
   addContractItem(): void {
     this.contractItems.update((items) => [
@@ -295,7 +401,8 @@ export class OperationalModulePage {
     ]);
   }
   removeContractItem(id: string): void {
-    if (this.contractItems().length === 1) return;
+    const target = this.contractItems().find((item) => item.id === id);
+    if (!target || target.locked || this.contractItems().length === 1) return;
     this.contractItems.update((items) => items.filter((item) => item.id !== id));
     this.syncContractTotal();
   }
@@ -306,9 +413,16 @@ export class OperationalModulePage {
   ): void {
     this.contractItems.update((items) =>
       items.map((item) => {
-        if (item.id !== id) return item;
+        if (item.id !== id || item.locked) return item;
         if (field === 'serviceId') {
           const service = this.store.find('services', value);
+          const isInternet = service?.['type'] === 'Internet';
+          if (
+            isInternet &&
+            (this.hasOtherInternetItem(id) ||
+              this.internetPermanenceBlocked(this.draft()['client'] ?? ''))
+          )
+            return item;
           return { ...item, serviceId: value, unitPrice: this.asNumber(service?.['price'] ?? 0) };
         }
         return {
@@ -334,6 +448,10 @@ export class OperationalModulePage {
   }
   createRecord(): void {
     if (!this.canCreate()) return;
+    if (this.moduleKey === 'contracts' && this.editingContractId()) {
+      this.saveContractItemsEdit();
+      return;
+    }
     const now = new Date().toISOString();
     const record: OperationalRecord = {
       id: `${this.definition.idPrefix}-${this.records().length + 1001}`,
@@ -377,6 +495,21 @@ export class OperationalModulePage {
     if (!record['status'] && this.statusOptions().length)
       record['status'] = this.statusOptions()[0];
     this.store.add(this.moduleKey, record);
+    this.closeCreate();
+  }
+  private saveContractItemsEdit(): void {
+    const id = this.editingContractId();
+    if (!id) return;
+    this.store.update('contracts', id, {
+      totalMonthly: this.contractTotal(),
+      items: JSON.stringify(
+        this.contractItems().map(({ serviceId, quantity, unitPrice }) => ({
+          serviceId,
+          quantity,
+          unitPrice,
+        })),
+      ),
+    });
     this.closeCreate();
   }
   isSelected(id: string): boolean {

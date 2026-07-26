@@ -13,7 +13,12 @@
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5" /></svg>
   </button>
   @if (open()) {
-    <div class="menu" role="listbox" (click)="$event.stopPropagation()">
+    <div
+      class="menu"
+      role="listbox"
+      [class.menu--upward]="openUpward()"
+      (click)="$event.stopPropagation()"
+    >
       @if (options().length > 6) {
         <label class="search"
           ><svg viewBox="0 0 24 24">

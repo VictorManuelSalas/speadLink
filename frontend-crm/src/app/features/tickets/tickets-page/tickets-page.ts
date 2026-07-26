@@ -7,6 +7,7 @@ import { LanguageService } from '../../../core/i18n/language.service';
 import { CrmAttachment, CustomerTicket } from '../../../core/models/customer';
 import { AttachmentPicker } from '../../../shared/attachment-picker';
 import { PicklistOption, StyledPicklist } from '../../../shared/styled-picklist';
+import { ImportValidationResult } from '../../../shared/import-validation-modal';
 import {
   RecordList,
   RecordListAction,
@@ -52,6 +53,9 @@ export class TicketsPage {
     { value: 'Otro', label: 'Otro' },
   ];
   readonly newClientId = signal('');
+  readonly selectedClient = computed(() =>
+    this.customers.find((client) => client.id === this.newClientId()),
+  );
   readonly newPriority = signal('medium');
   readonly newAssignee = signal('Andrea Torres');
   readonly newCategory = signal('Conectividad');
@@ -72,8 +76,8 @@ export class TicketsPage {
     { key: 'updatedAt', label: 'Última actualización', type: 'date' },
   ] as const;
   readonly listFields: ReadonlyArray<RecordListField> = [
-    { key: 'subject', label: 'Asunto', type: 'text' },
-    { key: 'clientName', label: 'Cliente', type: 'lookup' },
+    { key: 'subject', label: 'Asunto', type: 'text', required: true },
+    { key: 'clientName', label: 'Cliente', type: 'lookup', required: true },
     {
       key: 'status',
       label: 'Estado',
@@ -198,8 +202,24 @@ export class TicketsPage {
       ids.forEach((id) => this.store.updateStatus(id, 'resolved', new Date().toISOString()));
     else if (actionId === 'delete') ids.forEach((id) => this.store.delete(id));
   }
-  importTickets(rows: ReadonlyArray<RecordListRow>): void {
+  importTickets(result: ImportValidationResult): void {
+    const { mode, identifierKey, rows } = result;
     rows.forEach((row, index) => {
+      const identifierValue = identifierKey ? String(row[identifierKey] ?? '') : '';
+      const existing = identifierValue
+        ? this.store.tickets().find((ticket) => String(ticket[identifierKey as keyof typeof ticket]) === identifierValue)
+        : undefined;
+      if (existing && mode !== 'insert') {
+        const changes: Partial<CustomerTicket> = {};
+        if (row['subject']) changes.subject = String(row['subject']);
+        if (row['category']) changes.category = String(row['category']) as CustomerTicket['category'];
+        if (row['priority']) changes.priority = String(row['priority']) as CustomerTicket['priority'];
+        if (row['status']) changes.status = String(row['status']) as CustomerTicket['status'];
+        if (row['assignedTo']) changes.assignedTo = String(row['assignedTo']);
+        this.store.update(existing.id, changes);
+        return;
+      }
+      if (existing || mode === 'update') return;
       const client =
         this.customers.find((item) => item.id === String(row['clientId'])) ?? this.customers[0];
       if (!client) return;

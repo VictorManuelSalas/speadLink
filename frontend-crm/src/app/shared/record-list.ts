@@ -10,6 +10,7 @@ import {
   signal,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { ImportValidationModal, ImportValidationResult } from './import-validation-modal';
 import { InlineEditableDateField } from './inline-editable-date-field';
 import { LanguageService } from '../core/i18n/language.service';
 
@@ -37,6 +38,7 @@ export interface RecordListField {
   readonly label: string;
   readonly type: RecordListFieldType;
   readonly options?: ReadonlyArray<string>;
+  readonly required?: boolean;
 }
 export interface RecordListWidget {
   readonly label: string;
@@ -61,7 +63,7 @@ interface ActiveFilter {
 
 @Component({
   selector: 'app-record-list',
-  imports: [CurrencyPipe, DatePipe, InlineEditableDateField, RouterLink],
+  imports: [CurrencyPipe, DatePipe, InlineEditableDateField, ImportValidationModal, RouterLink],
   templateUrl: './record-list.html',
   styleUrl: './record-list.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -94,7 +96,8 @@ export class RecordList {
     field?: string;
     value?: string;
   }>();
-  readonly recordsImported = output<ReadonlyArray<RecordListRow>>();
+  readonly recordsImported = output<ImportValidationResult>();
+  readonly importModalOpen = signal(false);
   readonly query = signal('');
   readonly dense = signal(false);
   readonly filterPanel = signal(false);
@@ -367,39 +370,8 @@ export class RecordList {
   private csv(v: string) {
     return `"${v.replaceAll('"', '""')}"`;
   }
-  async importCsv(files: FileList | null) {
-    const file = files?.[0];
-    if (!file) return;
-    const lines = (await file.text()).split(/\r?\n/).filter(Boolean);
-    if (lines.length < 2) return;
-    const headers = this.parseLine(lines[0]);
-    const rows = lines.slice(1).map((line) => {
-      const values = this.parseLine(line);
-      return Object.fromEntries(
-        headers.map((h, i) => {
-          const field = this.fields().find((f) => f.key === h || f.label === h);
-          return [field?.key ?? h, values[i] ?? ''];
-        }),
-      ) as RecordListRow;
-    });
-    this.recordsImported.emit(rows);
-  }
-  private parseLine(line: string) {
-    const result: string[] = [];
-    let current = '',
-      quoted = false;
-    for (let i = 0; i < line.length; i++) {
-      const ch = line[i];
-      if (ch === '"' && line[i + 1] === '"') {
-        current += '"';
-        i++;
-      } else if (ch === '"') quoted = !quoted;
-      else if (ch === ',' && !quoted) {
-        result.push(current);
-        current = '';
-      } else current += ch;
-    }
-    result.push(current);
-    return result;
+  handleValidatedImport(result: ImportValidationResult): void {
+    this.recordsImported.emit(result);
+    this.importModalOpen.set(false);
   }
 }

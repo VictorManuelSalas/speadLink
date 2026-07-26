@@ -109,7 +109,7 @@
         />
 
         @if (activeTab() === 'Notas') {
-          <app-record-notes-section [recordId]="item.id" />
+          <app-record-notes-section [recordId]="item.id" [autoOpen]="noteComposerOpen()" />
         } @else if (activeTab() === 'Correos') {
           <app-record-emails-section
             [recordId]="item.id"
@@ -363,7 +363,101 @@
                     </div>
                   </app-record-information-card>
 
-                  @if (moduleKey !== 'leads') {
+                  @if (moduleKey === 'contracts') {
+                    <article class="card section-card contract-items-card">
+                      <div class="card-heading">
+                        <div>
+                          <h2>Ítems del contrato</h2>
+                          <p>Servicios incluidos y precio acordado con el cliente.</p>
+                        </div>
+                        <button class="button" type="button" (click)="addContractItem()">
+                          ＋ Agregar servicio
+                        </button>
+                      </div>
+                      <div class="contract-items-head">
+                        <span>Servicio</span><span>Cantidad</span><span>Precio unitario</span
+                        ><span>Subtotal</span><span></span>
+                      </div>
+                      @for (contractItem of contractItems(); track contractItem.id) {
+                        <div class="contract-item-row" [class.is-locked]="contractItem.locked">
+                          <app-styled-picklist
+                            [options]="contractServiceOptions(contractItem.id)"
+                            [value]="contractItem.serviceId"
+                            [disabled]="!!contractItem.locked"
+                            placeholder="Seleccionar servicio"
+                            (valueChange)="updateContractItem(contractItem.id, 'serviceId', $event)"
+                          />
+                          <input
+                            #quantity
+                            type="number"
+                            min="1"
+                            step="1"
+                            [value]="contractItem.quantity"
+                            [disabled]="!!contractItem.locked"
+                            (input)="updateContractItem(contractItem.id, 'quantity', quantity.value)"
+                          />
+                          <input
+                            #unitPrice
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            [value]="contractItem.unitPrice"
+                            [disabled]="!!contractItem.locked"
+                            (input)="
+                              updateContractItem(contractItem.id, 'unitPrice', unitPrice.value)
+                            "
+                          />
+                          <strong>{{
+                            contractItem.quantity * contractItem.unitPrice
+                              | currency: 'MXN' : 'symbol-narrow' : '1.2-2' : i18n.locale()
+                          }}</strong>
+                          @if (contractItem.serviceId) {
+                            <a
+                              class="contract-item-link"
+                              [routerLink]="['/services', contractItem.serviceId]"
+                              aria-label="Ver servicio"
+                              >↗</a
+                            >
+                          } @else {
+                            <span></span>
+                          }
+                          <button
+                            class="remove-contract-item"
+                            type="button"
+                            aria-label="Eliminar ítem"
+                            [disabled]="contractItem.locked || contractItems().length === 1"
+                            (click)="removeContractItem(contractItem.id)"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      }
+                      <p class="contract-items-hint">
+                        Los servicios de Internet ya contratados no se pueden modificar aquí. Para
+                        cambiar de plan, genera un contrato nuevo (mínimo 6 meses de permanencia).
+                      </p>
+                      <footer class="contract-items-footer">
+                        <span>{{ contractItems().length }} servicio(s)</span>
+                        <div>
+                          <small>Mensualidad total</small
+                          ><b>{{
+                            contractTotal()
+                              | currency: 'MXN' : 'symbol-narrow' : '1.2-2' : i18n.locale()
+                          }}</b>
+                        </div>
+                        <button
+                          class="button button--primary"
+                          type="button"
+                          [disabled]="!contractItemsValid() || !contractItemsDirty()"
+                          (click)="saveContractItems()"
+                        >
+                          Guardar cambios
+                        </button>
+                      </footer>
+                    </article>
+                  }
+
+                  @if (moduleKey !== 'leads' && moduleKey !== 'contracts') {
                     <article class="card section-card related-card">
                       <div class="card-heading">
                         <div>
@@ -432,11 +526,11 @@
                 <div record-aside>
                   <app-record-quick-actions>
                     @if (moduleKey === 'leads') {
-                      <button type="button" (click)="activeTab.set('Correos')">
-                        ✉ Enviar email
-                      </button>
+                      <button type="button" (click)="openEmailComposer()">✉ Enviar email</button>
                     }
-                    <button type="button" (click)="activeTab.set('Notas')">＋ Agregar nota</button>
+                    <button type="button" (click)="openNoteComposerQuickAction()">
+                      ＋ Agregar nota
+                    </button>
                     @if (moduleKey !== 'leads') {
                       <button type="button">▤ Generar reporte</button>
                     }

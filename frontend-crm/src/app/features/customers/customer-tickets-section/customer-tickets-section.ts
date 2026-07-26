@@ -35,6 +35,7 @@ export class CustomerTicketsSection {
   readonly i18n = inject(LanguageService);
   readonly tickets = input.required<ReadonlyArray<CustomerTicket>>();
   readonly customerName = input.required<string>();
+  readonly customerId = input.required<string>();
   readonly ticketCreated = output<NewCustomerTicket>();
   readonly ticketStatusChanged = output<{
     ticket: CustomerTicket;

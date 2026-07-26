@@ -1,10 +1,25 @@
 import { Injectable, signal } from '@angular/core';
+import { CUSTOMERS } from '../../core/data-access/mock-crm-data';
 import { CrmAttachment } from '../../core/models/customer';
 import {
   OPERATIONAL_MODULES,
   OperationalModuleKey,
   OperationalRecord,
 } from './operational-modules.data';
+
+const CUSTOMER_EQUIPMENT_RECORDS: ReadonlyArray<OperationalRecord> = CUSTOMERS.flatMap(
+  (customer) =>
+    customer.equipment.map((item) => ({
+      id: item.id,
+      name: item.name,
+      brand: item.model,
+      serialNumber: item.serial,
+      macAddress: item.mac,
+      status: 'ASSIGNED',
+      purchaseCost: 0,
+      assignedTo: customer.name,
+    })),
+);
 
 export interface OperationalNote {
   id: string;
@@ -48,7 +63,9 @@ export class OperationalStore {
     Object.fromEntries(
       Object.entries(OPERATIONAL_MODULES).map(([key, definition]) => [
         key,
-        [...definition.records],
+        key === 'equipment'
+          ? [...definition.records, ...CUSTOMER_EQUIPMENT_RECORDS]
+          : [...definition.records],
       ]),
     ) as unknown as Record<OperationalModuleKey, ReadonlyArray<OperationalRecord>>,
   );
@@ -279,6 +296,23 @@ export class OperationalStore {
       'blue',
       'Correos',
       draft && existingId ? 'EDIT' : 'CREATE',
+    );
+  }
+
+  deleteEmail(id: string, emailId: string): void {
+    const email = (this.emails()[id] ?? []).find((item) => item.id === emailId);
+    if (!email) return;
+    this.emails.update((emails) => ({
+      ...emails,
+      [id]: (emails[id] ?? []).filter((item) => item.id !== emailId),
+    }));
+    this.addActivity(
+      id,
+      'Borrador de correo eliminado',
+      email.subject || 'Sin asunto',
+      'amber',
+      'Correos',
+      'DELETE',
     );
   }
 

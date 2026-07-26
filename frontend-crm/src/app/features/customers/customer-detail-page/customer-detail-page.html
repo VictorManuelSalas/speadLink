@@ -66,7 +66,12 @@
               <h2>Contratos</h2>
               <p>{{ customerContracts(c).length }} contrato(s) relacionados con este cliente</p>
             </div>
-            <a class="button button--primary" routerLink="/contracts">Ver módulo de contratos</a>
+            <a
+              class="button button--primary"
+              routerLink="/contracts"
+              [queryParams]="{ create: 'true', clientId: c.id }"
+              >＋ Nuevo contrato</a
+            >
           </header>
           <div class="contract-list">
             @for (contract of customerContracts(c); track contract.id) {
@@ -198,9 +203,15 @@
                       <h2>Equipos asignados</h2>
                       <p>{{ c.equipment.length }} dispositivos en el sitio</p>
                     </div>
+                    <a
+                      class="button button--primary"
+                      routerLink="/assignments"
+                      [queryParams]="{ create: 'true', clientId: c.id }"
+                      >＋ Agregar</a
+                    >
                   </div>
-                  @for (equipment of c.equipment; track equipment.serial) {
-                    <div class="equipment-row">
+                  @for (equipment of c.equipment; track equipment.id) {
+                    <a class="equipment-row" [routerLink]="['/equipment', equipment.id]">
                       <span class="kpi__icon kpi__icon--violet">▣</span
                       ><span
                         ><b>{{ equipment.name }} · {{ equipment.model }}</b
@@ -211,7 +222,7 @@
                       ><em class="success"
                         >● {{ equipment.status === 'online' ? 'En línea' : equipment.status }}</em
                       >
-                    </div>
+                    </a>
                   }
                 </article>
                 @if (pinnedNotes(c).length > 0) {
@@ -323,7 +334,9 @@
                       @for (invoice of c.invoices; track invoice.id) {
                         <tr>
                           <td>
-                            <b>{{ invoice.id }}</b>
+                            <a class="billing-id-link" [routerLink]="['/invoices', invoice.id]">{{
+                              invoice.id
+                            }}</a>
                           </td>
                           <td>
                             <span class="billing-description"
@@ -354,7 +367,41 @@
                               }}</span
                             >
                           </td>
-                          <td><button class="icon-button" aria-label="Ver factura">↗</button></td>
+                          <td class="menu-cell">
+                            <button
+                              class="icon-button"
+                              [class.is-active]="invoiceMenuId() === invoice.id"
+                              aria-label="Acciones de la factura"
+                              (click)="toggleInvoiceMenu($event, invoice.id)"
+                            >
+                              •••
+                            </button>
+                            @if (invoiceMenuId() === invoice.id) {
+                              <div
+                                class="billing-action-menu"
+                                [style.top.px]="billingMenuPosition()?.top"
+                                [style.left.px]="billingMenuPosition()?.left"
+                                (click)="$event.stopPropagation()"
+                              >
+                                <a [routerLink]="['/invoices', invoice.id]"
+                                  ><span>↗</span>Ver</a
+                                >
+                                <button type="button" (click)="downloadInvoice(invoice, c)">
+                                  <span>⇩</span>Descargar
+                                </button>
+                                <button type="button" (click)="invoiceMenuId.set(null)">
+                                  <span>✎</span>Editar
+                                </button>
+                                <button
+                                  class="danger"
+                                  type="button"
+                                  (click)="deleteInvoice(c, invoice.id)"
+                                >
+                                  <span>⊘</span>Eliminar
+                                </button>
+                              </div>
+                            }
+                          </td>
                         </tr>
                       }
                     </tbody>
@@ -386,7 +433,9 @@
                         <tr>
                           <td>{{ payment.date | date: 'd MMM, y' : '' : i18n.locale() }}</td>
                           <td>
-                            <code>{{ payment.reference }}</code>
+                            <a class="billing-id-link" [routerLink]="['/payments', payment.id]"
+                              ><code>{{ payment.reference }}</code></a
+                            >
                           </td>
                           <td>{{ payment.method }}</td>
                           <td>
@@ -398,8 +447,40 @@
                           <td>
                             <span class="status status--paid"><i></i>Confirmado</span>
                           </td>
-                          <td>
-                            <button class="icon-button" aria-label="Acciones del pago">•••</button>
+                          <td class="menu-cell">
+                            <button
+                              class="icon-button"
+                              [class.is-active]="paymentMenuId() === payment.id"
+                              aria-label="Acciones del pago"
+                              (click)="togglePaymentMenu($event, payment.id)"
+                            >
+                              •••
+                            </button>
+                            @if (paymentMenuId() === payment.id) {
+                              <div
+                                class="billing-action-menu"
+                                [style.top.px]="billingMenuPosition()?.top"
+                                [style.left.px]="billingMenuPosition()?.left"
+                                (click)="$event.stopPropagation()"
+                              >
+                                <a [routerLink]="['/payments', payment.id]"
+                                  ><span>↗</span>Ver</a
+                                >
+                                <button type="button" (click)="downloadPayment(payment, c)">
+                                  <span>⇩</span>Descargar
+                                </button>
+                                <button type="button" (click)="paymentMenuId.set(null)">
+                                  <span>✎</span>Editar
+                                </button>
+                                <button
+                                  class="danger"
+                                  type="button"
+                                  (click)="deletePayment(c, payment.id)"
+                                >
+                                  <span>⊘</span>Eliminar
+                                </button>
+                              </div>
+                            }
                           </td>
                         </tr>
                       }
@@ -413,6 +494,7 @@
             <app-customer-tickets-section
               [tickets]="c.tickets"
               [customerName]="c.name"
+              [customerId]="c.id"
               (ticketCreated)="createCustomerTicket(c, $event)"
               (ticketStatusChanged)="changeCustomerTicketStatus(c, $event.ticket, $event.status)"
             />

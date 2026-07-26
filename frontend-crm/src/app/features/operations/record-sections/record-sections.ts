@@ -3,6 +3,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   HostListener,
+  effect,
   inject,
   input,
   signal,
@@ -34,6 +35,7 @@ const SECTION_STYLES = `
 })
 export class RecordNotesSection {
   readonly recordId = input.required<string>();
+  readonly autoOpen = input(false);
   readonly store = inject(OperationalStore);
   readonly composing = signal(false);
   readonly draft = signal('');
@@ -42,6 +44,11 @@ export class RecordNotesSection {
   readonly menuId = signal<string | null>(null);
   readonly attachments = signal<ReadonlyArray<CrmAttachment>>([]);
   readonly attachmentReset = signal(0);
+  constructor() {
+    effect(() => {
+      if (this.autoOpen()) this.composing.set(true);
+    });
+  }
   notes() {
     return [...this.store.notesFor(this.recordId())].sort(
       (a, b) => Number(b.pinned) - Number(a.pinned) || b.createdAt.localeCompare(a.createdAt),
@@ -243,6 +250,10 @@ export class RecordEmailsSection {
   menuClick(ev: MouseEvent, id: string) {
     ev.stopPropagation();
     this.menuId.set(this.menuId() === id ? null : id);
+  }
+  deleteEmail(e: OperationalEmail) {
+    this.store.deleteEmail(this.recordId(), e.id);
+    this.menuId.set(null);
   }
   @HostListener('document:click') closeMenu() {
     this.menuId.set(null);

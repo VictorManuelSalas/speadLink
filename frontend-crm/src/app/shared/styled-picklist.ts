@@ -32,6 +32,7 @@ export class StyledPicklist {
   readonly disabled = input(false);
   readonly valueChange = output<string>();
   readonly open = signal(false);
+  readonly openUpward = signal(false);
   readonly query = signal('');
   readonly selected = computed(() =>
     this.options().find((option) => option.value === this.value()),
@@ -48,10 +49,11 @@ export class StyledPicklist {
   });
   toggle(event: Event): void {
     event.stopPropagation();
-    this.open() ? this.close() : this.open.set(true);
+    this.open() ? this.close() : this.openMenu(event);
   }
   openMenu(event: Event): void {
     event.preventDefault();
+    this.updateOpenDirection();
     this.open.set(true);
   }
   choose(value: string): void {
@@ -61,6 +63,12 @@ export class StyledPicklist {
   close(): void {
     this.open.set(false);
     this.query.set('');
+  }
+  private updateOpenDirection(): void {
+    const rect = this.host.nativeElement.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+    this.openUpward.set(spaceBelow < 280 && spaceAbove > spaceBelow);
   }
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: Event): void {

@@ -1,0 +1,412 @@
+<header class="ph-nav" [class.is-open]="mobileMenuOpen()">
+  <div class="ph-nav__bar">
+    <a class="ph-nav__brand" routerLink="/" (click)="closeMobileMenu()">
+      <span><img src="/icons/brand/speedlink-logo.svg" alt="" /></span>
+      <b>SpeedLink</b>
+    </a>
+
+    <nav class="ph-nav__links" aria-label="Navegación principal">
+      <a href="#planes" (click)="closeMobileMenu()">Planes</a>
+      <a href="#beneficios" (click)="closeMobileMenu()">Beneficios</a>
+      <a href="#cobertura" (click)="closeMobileMenu()">Cobertura</a>
+      <a href="#proceso" (click)="closeMobileMenu()">Cómo funciona</a>
+      <a href="#faq" (click)="closeMobileMenu()">Preguntas</a>
+      <a href="#contacto" (click)="closeMobileMenu()">Contacto</a>
+    </nav>
+
+    <div class="ph-nav__actions">
+      <a class="button button--primary" href="#cobertura">Contáctanos</a>
+      <a class="button button--ghost" routerLink="/login">Iniciar sesión</a>
+    </div>
+
+    <button
+      type="button"
+      class="ph-nav__toggle"
+      [attr.aria-expanded]="mobileMenuOpen()"
+      aria-controls="ph-mobile-menu"
+      [attr.aria-label]="mobileMenuOpen() ? 'Cerrar menú' : 'Abrir menú'"
+      (click)="toggleMobileMenu()"
+    >
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+
+  @if (mobileMenuOpen()) {
+    <nav class="ph-nav__mobile" id="ph-mobile-menu" aria-label="Navegación móvil">
+      <a href="#planes" (click)="closeMobileMenu()">Planes</a>
+      <a href="#beneficios" (click)="closeMobileMenu()">Beneficios</a>
+      <a href="#cobertura" (click)="closeMobileMenu()">Cobertura</a>
+      <a href="#proceso" (click)="closeMobileMenu()">Cómo funciona</a>
+      <a href="#faq" (click)="closeMobileMenu()">Preguntas</a>
+      <a href="#contacto" (click)="closeMobileMenu()">Contacto</a>
+      <a class="button button--primary" href="#cobertura" (click)="closeMobileMenu()"
+        >Contáctanos</a
+      >
+      <a class="button button--ghost" routerLink="/login" (click)="closeMobileMenu()"
+        >Iniciar sesión</a
+      >
+    </nav>
+  }
+</header>
+
+<main class="ph-main">
+  <section class="ph-hero">
+    <div class="ph-hero__glow ph-hero__glow--one" aria-hidden="true"></div>
+    <div class="ph-hero__glow ph-hero__glow--two" aria-hidden="true"></div>
+
+    <div class="ph-hero__content">
+      <span class="ph-eyebrow">INTERNET PARA TU HOGAR</span>
+      <h1>Conéctate con SpeedLink,<br />el Internet de tu comunidad.</h1>
+      <p>
+        Planes de Internet accesibles con soporte cercano. Consulta cobertura y elige el plan que
+        mejor se adapte a tu hogar o negocio.
+      </p>
+      <div class="ph-hero__actions">
+        <a class="button button--primary" href="#planes">Ver planes</a>
+        <a class="button button--ghost button--on-dark" href="#cobertura">Consultar cobertura</a>
+      </div>
+      <p class="ph-hero__promo">🎉 Primer mes gratis en todos los planes</p>
+    </div>
+  </section>
+
+  <section class="ph-section" id="planes" aria-labelledby="planes-title">
+    <div class="ph-section__head">
+      <span class="ph-eyebrow ph-eyebrow--light">PLANES</span>
+      <h2 id="planes-title">Elige el plan que se adapta a ti</h2>
+      <p>Todos los planes incluyen el primer mes gratis.</p>
+    </div>
+
+    <div class="ph-plans">
+      @for (plan of plans; track plan.id) {
+        <article class="ph-plan-card" [class.is-recommended]="plan.recommended">
+          @if (plan.recommended) {
+            <span class="ph-plan-card__badge">Más elegido</span>
+          }
+          <h3>{{ plan.name }}</h3>
+          <p class="ph-plan-card__speed">{{ plan.speed }}</p>
+          <p class="ph-plan-card__price">
+            {{ plan.monthlyPrice | currency: 'MXN' : 'symbol-narrow' : '1.0-0' }}
+            <span>MXN / mes</span>
+          </p>
+          <p class="ph-plan-card__install">
+            Instalación:
+            {{ plan.installationPrice | currency: 'MXN' : 'symbol-narrow' : '1.0-0' }} MXN
+          </p>
+          <ul class="ph-plan-card__list">
+            @for (item of plan.audience; track item) {
+              <li>{{ item }}</li>
+            }
+          </ul>
+          <a
+            class="button"
+            [class.button--primary]="plan.recommended"
+            [class.button--secondary]="!plan.recommended"
+            href="#cobertura"
+            >Quiero este plan</a
+          >
+        </article>
+      }
+    </div>
+  </section>
+
+  <section class="ph-section ph-section--muted" id="beneficios" aria-labelledby="beneficios-title">
+    <div class="ph-section__head">
+      <span class="ph-eyebrow ph-eyebrow--light">BENEFICIOS</span>
+      <h2 id="beneficios-title">Por qué elegir SpeedLink</h2>
+    </div>
+
+    <div class="ph-benefits">
+      @for (benefit of benefits; track benefit.title) {
+        <article class="ph-benefit-card">
+          <span class="ph-benefit-card__icon"><img [src]="benefit.icon" alt="" /></span>
+          <h3>{{ benefit.title }}</h3>
+          <p>{{ benefit.description }}</p>
+        </article>
+      }
+    </div>
+  </section>
+
+  <section class="ph-section" id="cobertura" aria-labelledby="cobertura-title">
+    <div class="ph-coverage">
+      <div class="ph-coverage__intro">
+        <span class="ph-eyebrow ph-eyebrow--light">COBERTURA</span>
+        <h2 id="cobertura-title">Consulta si hay servicio en tu zona</h2>
+        <p>
+          Compártenos tus datos y el equipo de SpeedLink se pondrá en contacto contigo para
+          confirmar la disponibilidad del servicio en tu comunidad.
+        </p>
+      </div>
+
+      <form class="ph-coverage__form" (submit)="submitCoverageForm($event)" novalidate>
+        @if (coverageStatus() === 'success') {
+          <div class="ph-coverage__result ph-coverage__result--success" role="status">
+            <p>
+              <strong>¡Listo!</strong> Recibimos tu solicitud. El equipo de SpeedLink se pondrá en
+              contacto contigo para confirmar la cobertura.
+            </p>
+            <button type="button" class="button button--secondary" (click)="resetCoverageForm()">
+              Enviar otra solicitud
+            </button>
+          </div>
+        } @else {
+          @if (coverageStatus() === 'error') {
+            <div class="ph-coverage__alert" role="alert">{{ coverageError() }}</div>
+          }
+
+          <div class="ph-form-grid">
+            <label>
+              <span>Nombre completo *</span>
+              <input
+                type="text"
+                name="name"
+                autocomplete="name"
+                required
+                [value]="coverageForm().name"
+                (input)="updateCoverageField('name', $any($event.target).value)"
+              />
+            </label>
+
+            <label>
+              <span>Teléfono *</span>
+              <input
+                type="tel"
+                name="phone"
+                autocomplete="tel"
+                required
+                [value]="coverageForm().phone"
+                (input)="updateCoverageField('phone', $any($event.target).value)"
+              />
+            </label>
+
+            <label>
+              <span>Tipo de prospecto *</span>
+              <select
+                name="prospectType"
+                required
+                [value]="coverageForm().prospectType"
+                (change)="updateCoverageField('prospectType', $any($event.target).value)"
+              >
+                <option value="">Selecciona una opción</option>
+                <option value="Hogar">Hogar</option>
+                <option value="Negocio">Negocio</option>
+              </select>
+            </label>
+
+            <label>
+              <span>Comunidad / Colonia *</span>
+              <input
+                type="text"
+                name="community"
+                required
+                [value]="coverageForm().community"
+                (input)="updateCoverageField('community', $any($event.target).value)"
+              />
+            </label>
+
+            <label>
+              <span>Referencia de ubicación</span>
+              <input
+                type="text"
+                name="location"
+                placeholder="Calle, punto de referencia..."
+                [value]="coverageForm().location"
+                (input)="updateCoverageField('location', $any($event.target).value)"
+              />
+            </label>
+
+            <label class="ph-form-grid__full ph-location-check">
+              <span class="ph-checkbox-row">
+                <input
+                  type="checkbox"
+                  name="useLocation"
+                  [checked]="locationStatus() === 'loading' || locationStatus() === 'granted'"
+                  (change)="toggleUseLocation($any($event.target).checked)"
+                />
+                <span>Obtener mi ubicación actual</span>
+              </span>
+              @if (locationStatus() === 'loading') {
+                <small class="ph-location-hint">Obteniendo tu ubicación…</small>
+              }
+              @if (locationStatus() === 'granted') {
+                <small class="ph-location-hint ph-location-hint--ok">
+                  Ubicación obtenida: {{ coverageForm().latitude | number: '1.4-4' }},
+                  {{ coverageForm().longitude | number: '1.4-4' }}
+                </small>
+              }
+              @if (locationStatus() === 'denied') {
+                <small class="ph-location-hint ph-location-hint--error">
+                  No pudimos obtener tu ubicación. Puedes continuar sin ella.
+                </small>
+              }
+              @if (locationStatus() === 'unsupported') {
+                <small class="ph-location-hint ph-location-hint--error">
+                  Tu navegador no permite compartir ubicación.
+                </small>
+              }
+            </label>
+
+            <label>
+              <span>Plan de tu interés</span>
+              <select
+                name="plan"
+                [value]="coverageForm().plan"
+                (change)="updateCoverageField('plan', $any($event.target).value)"
+              >
+                <option value="">Selecciona un plan</option>
+                @for (plan of plans; track plan.id) {
+                  <option [value]="plan.name">{{ plan.name }} · {{ plan.speed }}</option>
+                }
+              </select>
+            </label>
+
+            <label class="ph-form-grid__full">
+              <span>Comentarios</span>
+              <textarea
+                name="comments"
+                rows="3"
+                [value]="coverageForm().comments"
+                (input)="updateCoverageField('comments', $any($event.target).value)"
+              ></textarea>
+            </label>
+          </div>
+
+          <button class="button button--primary" type="submit" [disabled]="coverageStatus() === 'loading'">
+            @if (coverageStatus() === 'loading') {
+              Enviando…
+            } @else {
+              Consultar cobertura
+            }
+          </button>
+        }
+      </form>
+    </div>
+  </section>
+
+  <section class="ph-section ph-section--muted" id="proceso" aria-labelledby="proceso-title">
+    <div class="ph-section__head">
+      <span class="ph-eyebrow ph-eyebrow--light">PROCESO</span>
+      <h2 id="proceso-title">Cómo funciona</h2>
+    </div>
+
+    <ol class="ph-steps">
+      @for (step of steps; track step.step) {
+        <li class="ph-step-card">
+          <span class="ph-step-card__number">{{ step.step }}</span>
+          <h3>{{ step.title }}</h3>
+          <p>{{ step.description }}</p>
+        </li>
+      }
+    </ol>
+  </section>
+
+  <section class="ph-section ph-support" aria-labelledby="soporte-title">
+    <div class="ph-support__card">
+      <div>
+        <span class="ph-eyebrow ph-eyebrow--light">SOPORTE</span>
+        <h2 id="soporte-title">¿Ya eres cliente SpeedLink?</h2>
+        <p>
+          Inicia sesión en tu portal de cliente para revisar tu servicio, tus recibos y contactar
+          a soporte.
+        </p>
+      </div>
+      <a class="button button--primary" routerLink="/login">Iniciar sesión</a>
+    </div>
+  </section>
+
+  <section class="ph-section" id="faq" aria-labelledby="faq-title">
+    <div class="ph-section__head">
+      <span class="ph-eyebrow ph-eyebrow--light">PREGUNTAS FRECUENTES</span>
+      <h2 id="faq-title">Resolvemos tus dudas</h2>
+    </div>
+
+    <div class="ph-faq">
+      @for (faq of faqs; track faq.question; let i = $index) {
+        <div class="ph-faq-item" [class.is-open]="openFaqIndex() === i">
+          <h3>
+            <button
+              type="button"
+              [attr.aria-expanded]="openFaqIndex() === i"
+              [attr.aria-controls]="'faq-panel-' + i"
+              (click)="toggleFaq(i)"
+            >
+              {{ faq.question }}
+              <span class="ph-faq-item__chevron" aria-hidden="true">⌄</span>
+            </button>
+          </h3>
+          @if (openFaqIndex() === i) {
+            <p [id]="'faq-panel-' + i">{{ faq.answer }}</p>
+          }
+        </div>
+      }
+    </div>
+  </section>
+
+  <section class="ph-section ph-section--muted" id="contacto" aria-labelledby="contacto-title">
+    <div class="ph-section__head">
+      <span class="ph-eyebrow ph-eyebrow--light">CONTACTO</span>
+      <h2 id="contacto-title">Estamos para ayudarte</h2>
+    </div>
+
+    <div class="ph-contact">
+      <a class="ph-contact-card" [href]="'tel:' + contact.whatsapp">
+        <span class="ph-contact-card__icon" aria-hidden="true">📞</span>
+        <b>Teléfono</b>
+        <span>{{ contact.phone }}</span>
+      </a>
+      <a class="ph-contact-card" [href]="'https://wa.me/52' + contact.whatsapp" target="_blank" rel="noopener">
+        <span class="ph-contact-card__icon" aria-hidden="true">💬</span>
+        <b>WhatsApp</b>
+        <span>{{ contact.phone }}</span>
+      </a>
+      <a class="ph-contact-card" [href]="'mailto:' + contact.email">
+        <span class="ph-contact-card__icon" aria-hidden="true">✉️</span>
+        <b>Correo</b>
+        <span>{{ contact.email }}</span>
+      </a>
+      <div class="ph-contact-card ph-contact-card--static">
+        <span class="ph-contact-card__icon" aria-hidden="true">📍</span>
+        <b>Dirección</b>
+        <span>{{ contact.address }}</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="ph-final-cta">
+    <div class="ph-final-cta__glow" aria-hidden="true"></div>
+    <div class="ph-final-cta__content">
+      <h2>¿Listo para conectarte con SpeedLink?</h2>
+      <p>Consulta cobertura hoy mismo y aprovecha el primer mes gratis.</p>
+      <div class="ph-hero__actions">
+        <a class="button button--primary" href="#cobertura">Consultar cobertura</a>
+        <a class="button button--ghost button--on-dark" routerLink="/login">Iniciar sesión</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="ph-footer">
+  <div class="ph-footer__top">
+    <div class="ph-footer__brand">
+      <span><img src="/icons/brand/speedlink-logo.svg" alt="" /></span>
+      <b>SpeedLink</b>
+    </div>
+    <nav class="ph-footer__links" aria-label="Navegación del pie de página">
+      <a href="#planes">Planes</a>
+      <a href="#beneficios">Beneficios</a>
+      <a href="#cobertura">Cobertura</a>
+      <a href="#faq">Preguntas</a>
+      <a href="#contacto">Contacto</a>
+      <a routerLink="/login">Iniciar sesión</a>
+    </nav>
+    <div class="ph-footer__contact">
+      <a [href]="'tel:' + contact.whatsapp">{{ contact.phone }}</a>
+      <a [href]="'mailto:' + contact.email">{{ contact.email }}</a>
+      <span>{{ contact.address }}</span>
+      <div class="ph-footer__social">
+        <span>{{ contact.facebook }}</span>
+        <span>{{ contact.instagram }}</span>
+      </div>
+    </div>
+  </div>
+  <p class="ph-footer__legal">© {{ currentYear }} SpeedLink Telecom · Todos los derechos reservados</p>
+</footer>

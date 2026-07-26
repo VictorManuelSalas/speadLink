@@ -16,6 +16,7 @@ import { FileUploadModal } from '../../../shared/file-upload-modal';
 import { InlineEditableDateField } from '../../../shared/inline-editable-date-field';
 import { InlineEditableField } from '../../../shared/inline-editable-field';
 import { RecordField, RecordFieldConfig } from '../../../shared/record-field';
+import { PicklistOption, StyledPicklist } from '../../../shared/styled-picklist';
 import {
   RecordDetailLayout,
   RecordHeader,
@@ -59,6 +60,16 @@ interface LookupPreview {
   initials: string;
 }
 
+interface ContractItemDraft {
+  id: string;
+  serviceId: string;
+  quantity: number;
+  unitPrice: number;
+  locked?: boolean;
+}
+
+const INTERNET_PERMANENCE_MONTHS = 6;
+
 @Component({
   selector: 'app-operational-record-detail-page',
   imports: [
@@ -83,6 +94,7 @@ interface LookupPreview {
     RecordEventsSection,
     RecordNotesSection,
     RouterLink,
+    StyledPicklist,
   ],
   templateUrl: './operational-record-detail-page.html',
   styleUrl: './operational-record-detail-page.scss',
@@ -109,11 +121,35 @@ export class OperationalRecordDetailPage {
       ? ['Resumen', 'Correos', 'Eventos', 'Notas', 'Archivos', 'Actividad']
       : ['Resumen', 'Notas', 'Archivos', 'Actividad'];
   readonly activeTab = signal<DetailTab>('Resumen');
+  readonly contractItems = signal<ReadonlyArray<ContractItemDraft>>([]);
+  readonly contractTotal = computed(() =>
+    this.contractItems().reduce((total, item) => total + item.quantity * item.unitPrice, 0),
+  );
+  readonly contractItemsValid = computed(
+    () =>
+      this.contractItems().length > 0 &&
+      this.contractItems().every((item) => item.serviceId && item.quantity > 0),
+  );
+  readonly contractItemsDirty = signal(false);
   constructor() {
     this.route.queryParamMap.subscribe((params) => {
       const tab = params.get('tab');
       if (tab && this.tabs.includes(tab as DetailTab)) this.activeTab.set(tab as DetailTab);
     });
+    if (this.moduleKey === 'contracts') {
+      const record = this.record();
+      if (record) {
+        this.contractItems.set(
+          this.parseContractItems(record).map((item) => ({
+            id: `contract-item-${item.serviceId || 'svc'}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+            serviceId: item.serviceId,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            locked: this.store.find('services', item.serviceId)?.['type'] === 'Internet',
+          })),
+        );
+      }
+    }
   }
   recordTabs(id: string): ReadonlyArray<RecordTabItem> {
     return this.tabs.map((label) => ({
@@ -354,7 +390,8 @@ export class OperationalRecordDetailPage {
       .filter(
         (key) =>
           key !== 'id' &&
-          !(this.moduleKey === 'leads' && (key === 'latitude' || key === 'longitude')),
+          !(this.moduleKey === 'leads' && (key === 'latitude' || key === 'longitude')) &&
+          !(this.moduleKey === 'contracts' && key === 'items'),
       )
       .map((key) => {
         const column = this.definition.columns.find((item) => item.key === key);
@@ -452,6 +489,11 @@ export class OperationalRecordDetailPage {
     const [latitude, longitude] = coordinates.split(',').map((value) => Number(value.trim()));
     if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return;
     this.store.update('leads', id, { latitude, longitude });
+  }
+  openNoteComposerQuickAction(): void {
+    this.activeTab.set('Notas');
+    this.noteComposerOpen.set(true);
+    setTimeout(() => this.noteComposerOpen.set(false));
   }
   openEmailComposer(): void {
     this.activeTab.set('Correos');
@@ -955,5 +997,118 @@ export class OperationalRecordDetailPage {
   archive(id: string): void {
     this.store.archive(this.moduleKey, id);
     void this.router.navigate(['/', this.moduleKey]);
+  }
+  private parseContractItems(
+    record: OperationalRecord,
+  ): ReadonlyArray<{ serviceId: string; quantity: number; unitPrice: number }> {
+    try {
+      const parsed = JSON.parse(String(record['items'] ?? '[]'));
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  private hasOtherInternetItem(currentItemId: string): boolean {
+    return this.contractItems().some((item) => {
+      if (item.id === currentItemId || !item.serviceId) return false;
+      return this.store.find('services', item.serviceId)?.['type'] === 'Internet';
+    });
+  }
+  private monthsSince(dateValue: string): number {
+    const start = new Date(dateValue);
+    if (Number.isNaN(start.getTime())) return Infinity;
+    const now = new Date();
+    return (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth());
+  }
+  /** True while the client hasn't completed the mandatory 6-month permanence on
+   * their current internet plan, so picking a *new* Internet service should be blocked
+   * (they should get a new contract instead, via the plan-change flow). */
+  internetPermanenceBlocked(clientId: string): boolean {
+    if (!clientId) return false;
+    const lastInternetStart = this.store
+      .recordsFor('contracts')
+      .filter((contract) => contract.id !== this.recordId && contract['clientId'] === clientId)
+      .filter((contract) =>
+        this.parseContractItems(contract).some(
+          (item) => this.store.find('services', item.serviceId)?.['type'] === 'Internet',
+        ),
+      )
+      .map((contract) => String(contract['startDate'] ?? ''))
+      .sort()
+      .at(-1);
+    return !!lastInternetStart && this.monthsSince(lastInternetStart) < INTERNET_PERMANENCE_MONTHS;
+  }
+  contractServiceOptions(currentItemId: string): ReadonlyArray<PicklistOption> {
+    const clientId = String(this.record()?.['clientId'] ?? '');
+    const blockInternet =
+      this.hasOtherInternetItem(currentItemId) || this.internetPermanenceBlocked(clientId);
+    return this.store
+      .recordsFor('services')
+      .filter((service) => !(blockInternet && service['type'] === 'Internet'))
+      .map((service) => ({
+        value: service.id,
+        label: String(service['name']),
+        detail: `${String(service['type'])} · ${this.asNumber(service['price']) ? '$' + this.asNumber(service['price']) : 'Sin costo'}`,
+      }));
+  }
+  addContractItem(): void {
+    this.contractItems.update((items) => [
+      ...items,
+      { id: `contract-item-${Date.now()}`, serviceId: '', quantity: 1, unitPrice: 0 },
+    ]);
+    this.contractItemsDirty.set(true);
+  }
+  removeContractItem(id: string): void {
+    const target = this.contractItems().find((item) => item.id === id);
+    if (!target || target.locked || this.contractItems().length === 1) return;
+    this.contractItems.update((items) => items.filter((item) => item.id !== id));
+    this.contractItemsDirty.set(true);
+  }
+  updateContractItem(
+    id: string,
+    field: 'serviceId' | 'quantity' | 'unitPrice',
+    value: string,
+  ): void {
+    let changed = false;
+    this.contractItems.update((items) =>
+      items.map((item) => {
+        if (item.id !== id || item.locked) return item;
+        if (field === 'serviceId') {
+          const service = this.store.find('services', value);
+          const isInternet = service?.['type'] === 'Internet';
+          if (
+            isInternet &&
+            (this.hasOtherInternetItem(id) ||
+              this.internetPermanenceBlocked(String(this.record()?.['clientId'] ?? '')))
+          )
+            return item;
+          changed = true;
+          return { ...item, serviceId: value, unitPrice: this.asNumber(service?.['price'] ?? 0) };
+        }
+        changed = true;
+        return {
+          ...item,
+          [field]:
+            field === 'quantity'
+              ? Math.max(1, Number(value) || 1)
+              : Math.max(0, Number(value) || 0),
+        };
+      }),
+    );
+    if (changed) this.contractItemsDirty.set(true);
+  }
+  saveContractItems(): void {
+    if (!this.contractItemsValid() || !this.contractItemsDirty()) return;
+    this.store.update('contracts', this.recordId, {
+      totalMonthly: this.contractTotal(),
+      items: JSON.stringify(
+        this.contractItems().map(({ serviceId, quantity, unitPrice }) => ({
+          serviceId,
+          quantity,
+          unitPrice,
+        })),
+      ),
+    });
+    this.contractItemsDirty.set(false);
   }
 }

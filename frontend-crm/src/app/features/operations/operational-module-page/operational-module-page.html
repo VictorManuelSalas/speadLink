@@ -1,439 +1,163 @@
-    <app-record-list
-      [title]="definition.title"
-      [description]="definition.description"
-      [newLabel]="'Nuevo ' + definition.singular"
-      [baseRoute]="'/' + moduleKey"
-      [accent]="definition.accent"
-      [records]="records()"
-      [columns]="definition.columns"
-      [fields]="listFields()"
-      [widgets]="listWidgets()"
-      [rowActions]="listRowActions()"
-      [bulkActions]="listBulkActions()"
-      (newRequested)="openCreate()"
-      (rowAction)="handleListRowAction($event.actionId, $event.record)"
-      (bulkAction)="
+<app-record-list [title]="definition.title" [description]="definition.description"
+  [newLabel]="'Nuevo ' + definition.singular" [baseRoute]="'/' + moduleKey" [accent]="definition.accent"
+  [records]="records()" [columns]="definition.columns" [fields]="listFields()" [widgets]="listWidgets()"
+  [rowActions]="listRowActions()" [bulkActions]="listBulkActions()" (newRequested)="openCreate()"
+  (rowAction)="handleListRowAction($event.actionId, $event.record)" (bulkAction)="
         handleListBulkAction($event.actionId, $event.records, $event.field, $event.value)
-      "
-      (recordsImported)="importRecords($event)"
-    />
-    <header class="page-header">
-      <div>
-        <div class="breadcrumbs">
-          <span>CRM</span><b>›</b><span>{{ definition.title }}</span>
-        </div>
-        <h1>{{ definition.title }}</h1>
-        <p>{{ definition.description }}</p>
-      </div>
-      <div class="page-header__actions">
-        <button class="button" type="button" (click)="exportCsv()">⇩ Exportar</button>
-        <button class="button button--primary" type="button" (click)="openCreate()">
-          ＋ Nuevo {{ definition.singular }}
-        </button>
-      </div>
-    </header>
+      " (recordsImported)="importRecords($event)" />
+<header class="page-header">
+  <div>
+    <div class="breadcrumbs">
+      <span>CRM</span><b>›</b><span>{{ definition.title }}</span>
+    </div>
+    <h1>{{ definition.title }}</h1>
+    <p>{{ definition.description }}</p>
+  </div>
+  <div class="page-header__actions">
+    <button class="button" type="button" (click)="exportCsv()">⇩ Exportar</button>
+    <button class="button button--primary" type="button" (click)="openCreate()">
+      ＋ Nuevo {{ definition.singular }}
+    </button>
+  </div>
+</header>
 
-    <section class="module-stats">
-      @for (metric of definition.metrics; track metric.label) {
-        <article class="card">
-          <span class="stat-icon stat-icon--{{ metric.tone }}">{{ metricIcon(metric.tone) }}</span>
-          <div>
-            <small>{{ metric.label }}</small
-            ><b>{{ metric.value }}</b
-            ><em>{{ metric.detail }}</em>
-          </div>
-        </article>
+ 
+
+@if (createOpen()) {
+<button class="module-backdrop" type="button" aria-label="Cerrar" (click)="closeCreate()"></button>
+<section class="create-dialog" [class.create-dialog--wide]="moduleKey === 'contracts'" role="dialog" aria-modal="true">
+  <header>
+    <div>
+      <span>{{ definition.eyebrow }}</span>
+      @if (editingContractId()) {
+      <h2>Agregar servicio</h2>
+      <p>{{ editingContract()?.contractNumber }} · {{ editingContract()?.clientName }}</p>
+      } @else {
+      <h2>Nuevo {{ definition.singular }}</h2>
+      <p>Completa la información principal del registro.</p>
       }
-    </section>
-
-    <section class="card customer-table-card">
-      <div class="filterbar">
-        <label class="table-search"
-          ><span>⌕</span
-          ><input
-            #search
-            type="search"
-            [placeholder]="'Buscar en ' + definition.title.toLowerCase()"
-            (input)="query.set(search.value)"
-        /></label>
-        @if (statusOptions().length) {
-          <select #status aria-label="Filtrar por estado" (change)="statusFilter.set(status.value)">
-            <option value="all">Todos los estados</option>
-            @for (option of statusOptions(); track option) {
-              <option [value]="option">{{ statusLabel(option) }}</option>
-            }
-          </select>
+    </div>
+    <button type="button" (click)="closeCreate()">×</button>
+  </header>
+  <div class="record-form">
+    @if (!editingContractId()) {
+    @for (field of definition.fields; track field.key) {
+    @if (!(moduleKey === 'contracts' && field.key === 'totalMonthly')) {
+    <label [class.full]="field.key === 'description' || field.key === 'notes'"><span class="field-label">{{ field.label
+        }}
+        @if (field.required) {
+        <b aria-label="Obligatorio">*</b>
         }
-        <button
-          class="button"
-          type="button"
-          [class.is-active]="dense()"
-          (click)="dense.set(!dense())"
-        >
-          ☷ Vista compacta
-        </button>
-        <span class="filterbar__count">{{ filtered().length }} resultados</span>
+      </span>
+      @if (field.type === 'select') {
+      <app-styled-picklist [options]="fieldPicklistOptions(field)" [value]="draft()[field.key] || ''"
+        (valueChange)="setDraft(field.key, $event)" />
+      } @else if (field.type === 'date') {
+      <div class="form-date">
+        <app-inline-editable-date-field [label]="field.label" [value]="draft()[field.key] || ''"
+          placeholder="Seleccionar fecha" [alwaysShowEdit]="true" [compact]="true"
+          (valueSaved)="setDraft(field.key, $event)" />
       </div>
-      @if (moduleKey === 'leads' && selectedCount()) {
-        <div class="bulk-toolbar">
-          <span
-            ><b>{{ selectedCount() }}</b> seleccionados</span
-          >
-          <button type="button" (click)="openBulkEdit()">✎ Editar</button>
-          <button type="button" (click)="exportSelected()">⇩ Exportar</button>
-          <button type="button" (click)="convertSelected()">✓ Convertir</button>
-          <button class="danger" type="button" (click)="deleteSelected()">⊘ Eliminar</button>
-          <button
-            class="bulk-close"
-            type="button"
-            aria-label="Limpiar selección"
-            (click)="clearSelection()"
-          >
-            ×
-          </button>
-        </div>
+      } @else if (field.key === 'description' || field.key === 'notes') {
+      <textarea #textarea rows="4" [required]="field.required" [value]="draft()[field.key] || ''"
+        [placeholder]="field.placeholder || ''" (input)="setDraft(field.key, textarea.value)"></textarea>
+      } @else {
+      <input #input [type]="inputType(field.key, field.type)" [required]="field.required" [min]="field.min ?? null"
+        [max]="field.max ?? null" [value]="draft()[field.key] || ''" [placeholder]="field.placeholder || ''"
+        (input)="setDraft(field.key, input.value)" />
       }
-      <div class="table-scroll">
-        <table [class.is-dense]="dense()">
-          <thead>
-            <tr>
-              @if (moduleKey === 'leads') {
-                <th class="selection-cell">
-                  <input
-                    type="checkbox"
-                    [checked]="allPageSelected()"
-                    (change)="togglePageSelection()"
-                    aria-label="Seleccionar página"
-                  />
-                </th>
-              }
-              @for (column of definition.columns; track column.key) {
-                <th>{{ column.label }}</th>
-              }
-              <th aria-label="Acciones"></th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (record of paginated(); track record.id) {
-              <tr>
-                @if (moduleKey === 'leads') {
-                  <td class="selection-cell">
-                    <input
-                      type="checkbox"
-                      [checked]="isSelected(record.id)"
-                      (click)="$event.stopPropagation()"
-                      (change)="toggleSelection(record.id)"
-                      [attr.aria-label]="'Seleccionar ' + record.id"
-                    />
-                  </td>
-                }
-                @for (column of definition.columns; track column.key) {
-                  <td>
-                    @switch (column.type) {
-                      @case ('identity') {
-                        <a class="record-identity" [routerLink]="['/', moduleKey, record.id]"
-                          ><span
-                            class="record-avatar"
-                            [style.background]="definition.accent + '18'"
-                            [style.color]="definition.accent"
-                            >{{ initials(record[column.key]) }}</span
-                          ><span
-                            ><b>{{ record[column.key] }}</b
-                            ><small>{{ record.id }}</small></span
-                          ></a
-                        >
-                      }
-                      @case ('status') {
-                        <span
-                          class="record-status record-status--{{ statusTone(record[column.key]) }}"
-                          ><i></i>{{ statusLabel(record[column.key]) }}</span
-                        >
-                      }
-                      @case ('money') {
-                        <b>{{
-                          asNumber(record[column.key])
-                            | currency: 'MXN' : 'symbol-narrow' : '1.0-2' : i18n.locale()
-                        }}</b>
-                      }
-                      @case ('date') {
-                        <time>{{
-                          asString(record[column.key]) | date: 'dd MMM y' : '' : i18n.locale()
-                        }}</time>
-                      }
-                      @default {
-                        <span class="cell-value">{{ record[column.key] || '—' }}</span>
-                      }
-                    }
-                  </td>
-                }
-                <td class="row-menu-cell">
-                  <button
-                    class="row-action"
-                    type="button"
-                    aria-label="Opciones"
-                    (click)="toggleRowMenu($event, record.id)"
-                  >
-                    •••
-                  </button>
-                  @if (rowMenuId() === record.id) {
-                    <div class="row-action-menu" (click)="$event.stopPropagation()">
-                      <a [routerLink]="['/', moduleKey, record.id]"><span>↗</span>Ver</a>
-                      @if (moduleKey === 'leads') {
-                        @if (record['status'] !== 'CONVERTED') {
-                          <button type="button" (click)="convertLead(record)">
-                            <span>✓</span>Convertir
-                          </button>
-                        }
-                        @if (record['phone']) {
-                          <a [href]="whatsappUrl(record['phone'])" target="_blank" rel="noopener"
-                            ><span class="wa-mark">◉</span>WhatsApp</a
-                          >
-                        }
-                        @if (record['email']) {
-                          <a [href]="'mailto:' + record['email']"><span>✉</span>Enviar email</a>
-                        }
-                      }
-                      <button class="danger" type="button" (click)="deleteRecord(record.id)">
-                        <span>⊘</span>Eliminar
-                      </button>
-                    </div>
-                  }
-                </td>
-              </tr>
-            } @empty {
-              <tr>
-                <td
-                  class="empty-state"
-                  [attr.colspan]="definition.columns.length + (moduleKey === 'leads' ? 2 : 1)"
-                >
-                  <span>⌕</span>
-                  <h2>Sin resultados</h2>
-                  <p>Prueba con otra búsqueda o cambia los filtros.</p>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-      <footer class="pagination">
-        <span>Mostrando {{ pageStart() }}–{{ pageEnd() }} de {{ filtered().length }}</span>
+    </label>
+    }
+    }
+    }
+    @if (moduleKey === 'contracts') {
+    <section class="contract-items-builder">
+      <header>
         <div>
-          <button class="icon-button" [disabled]="page() === 1" (click)="page.set(page() - 1)">
-            ‹</button
-          ><button class="page-number is-active">{{ page() }}</button
-          ><button
-            class="icon-button"
-            [disabled]="pageEnd() === filtered().length"
-            (click)="page.set(page() + 1)"
-          >
-            ›
-          </button>
+          <span>ÍTEMS DEL CONTRATO <b>*</b></span>
+          <p>Servicios incluidos y precio acordado con el cliente.</p>
+        </div>
+        <button class="button" type="button" (click)="addContractItem()">
+          ＋ Agregar servicio
+        </button>
+      </header>
+      <div class="contract-items-head">
+        <span>Servicio</span><span>Cantidad</span><span>Precio unitario</span><span>Subtotal</span><span></span>
+      </div>
+      @for (item of contractItems(); track item.id) {
+      <div class="contract-item-row" [class.is-locked]="item.locked">
+        <app-styled-picklist [options]="contractServiceOptions(item.id)" [value]="item.serviceId"
+          [disabled]="!!item.locked" placeholder="Seleccionar servicio"
+          (valueChange)="updateContractItem(item.id, 'serviceId', $event)" />
+        <input #quantity type="number" min="1" step="1" [value]="item.quantity" [disabled]="!!item.locked"
+          (input)="updateContractItem(item.id, 'quantity', quantity.value)" />
+        <input #unitPrice type="number" min="0" step="0.01" [value]="item.unitPrice" [disabled]="!!item.locked"
+          (input)="updateContractItem(item.id, 'unitPrice', unitPrice.value)" />
+        <strong>{{
+          item.quantity * item.unitPrice
+          | currency: 'MXN' : 'symbol-narrow' : '1.2-2' : i18n.locale()
+          }}</strong>
+        <button class="remove-contract-item" type="button" aria-label="Eliminar ítem"
+          [disabled]="item.locked || contractItems().length === 1" (click)="removeContractItem(item.id)">
+          ×
+        </button>
+      </div>
+      }
+      @if (editingContractId()) {
+      <p class="contract-items-hint">
+        Los servicios de Internet ya contratados no se pueden modificar aquí. Para cambiar de plan,
+        genera un contrato nuevo (mínimo 6 meses de permanencia).
+      </p>
+      }
+      <footer>
+        <span>{{ contractItems().length }} servicio(s)</span>
+        <div>
+          <small>Mensualidad total</small><b>{{
+            contractTotal() | currency: 'MXN' : 'symbol-narrow' : '1.2-2' : i18n.locale()
+            }}</b>
         </div>
       </footer>
     </section>
-
-    @if (createOpen()) {
-      <button
-        class="module-backdrop"
-        type="button"
-        aria-label="Cerrar"
-        (click)="closeCreate()"
-      ></button>
-      <section
-        class="create-dialog"
-        [class.create-dialog--wide]="moduleKey === 'contracts'"
-        role="dialog"
-        aria-modal="true"
-      >
-        <header>
-          <div>
-            <span>{{ definition.eyebrow }}</span>
-            <h2>Nuevo {{ definition.singular }}</h2>
-            <p>Completa la información principal del registro.</p>
-          </div>
-          <button type="button" (click)="closeCreate()">×</button>
-        </header>
-        <div class="record-form">
-          @for (field of definition.fields; track field.key) {
-            @if (!(moduleKey === 'contracts' && field.key === 'totalMonthly')) {
-              <label [class.full]="field.key === 'description' || field.key === 'notes'"
-                ><span class="field-label"
-                  >{{ field.label }}
-                  @if (field.required) {
-                    <b aria-label="Obligatorio">*</b>
-                  }
-                </span>
-                @if (field.type === 'select') {
-                  <app-styled-picklist
-                    [options]="fieldPicklistOptions(field)"
-                    [value]="draft()[field.key] || ''"
-                    (valueChange)="setDraft(field.key, $event)"
-                  />
-                } @else if (field.type === 'date') {
-                  <div class="form-date">
-                    <app-inline-editable-date-field
-                      [label]="field.label"
-                      [value]="draft()[field.key] || ''"
-                      placeholder="Seleccionar fecha"
-                      [alwaysShowEdit]="true"
-                      [compact]="true"
-                      (valueSaved)="setDraft(field.key, $event)"
-                    />
-                  </div>
-                } @else if (field.key === 'description' || field.key === 'notes') {
-                  <textarea
-                    #textarea
-                    rows="4"
-                    [required]="field.required"
-                    [value]="draft()[field.key] || ''"
-                    [placeholder]="field.placeholder || ''"
-                    (input)="setDraft(field.key, textarea.value)"
-                  ></textarea>
-                } @else {
-                  <input
-                    #input
-                    [type]="inputType(field.key, field.type)"
-                    [required]="field.required"
-                    [min]="field.min ?? null"
-                    [max]="field.max ?? null"
-                    [value]="draft()[field.key] || ''"
-                    [placeholder]="field.placeholder || ''"
-                    (input)="setDraft(field.key, input.value)"
-                  />
-                }
-              </label>
-            }
-          }
-          @if (moduleKey === 'contracts') {
-            <section class="contract-items-builder">
-              <header>
-                <div>
-                  <span>ÍTEMS DEL CONTRATO <b>*</b></span>
-                  <p>Servicios incluidos y precio acordado con el cliente.</p>
-                </div>
-                <button class="button" type="button" (click)="addContractItem()">
-                  ＋ Agregar servicio
-                </button>
-              </header>
-              <div class="contract-items-head">
-                <span>Servicio</span><span>Cantidad</span><span>Precio unitario</span
-                ><span>Subtotal</span><span></span>
-              </div>
-              @for (item of contractItems(); track item.id) {
-                <div class="contract-item-row">
-                  <app-styled-picklist
-                    [options]="contractServiceOptions()"
-                    [value]="item.serviceId"
-                    placeholder="Seleccionar servicio"
-                    (valueChange)="updateContractItem(item.id, 'serviceId', $event)"
-                  />
-                  <input
-                    #quantity
-                    type="number"
-                    min="1"
-                    step="1"
-                    [value]="item.quantity"
-                    (input)="updateContractItem(item.id, 'quantity', quantity.value)"
-                  />
-                  <input
-                    #unitPrice
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    [value]="item.unitPrice"
-                    (input)="updateContractItem(item.id, 'unitPrice', unitPrice.value)"
-                  />
-                  <strong>{{
-                    item.quantity * item.unitPrice
-                      | currency: 'MXN' : 'symbol-narrow' : '1.2-2' : i18n.locale()
-                  }}</strong>
-                  <button
-                    class="remove-contract-item"
-                    type="button"
-                    aria-label="Eliminar ítem"
-                    [disabled]="contractItems().length === 1"
-                    (click)="removeContractItem(item.id)"
-                  >
-                    ×
-                  </button>
-                </div>
-              }
-              <footer>
-                <span>{{ contractItems().length }} servicio(s)</span>
-                <div>
-                  <small>Mensualidad total</small
-                  ><b>{{
-                    contractTotal() | currency: 'MXN' : 'symbol-narrow' : '1.2-2' : i18n.locale()
-                  }}</b>
-                </div>
-              </footer>
-            </section>
-          }
-        </div>
-        <footer>
-          <small><b>*</b> Campos obligatorios según el modelo de datos.</small>
-          <button class="button" type="button" (click)="closeCreate()">Cancelar</button
-          ><button
-            class="button button--primary"
-            type="button"
-            [disabled]="!canCreate()"
-            (click)="createRecord()"
-          >
-            Crear {{ definition.singular }}
-          </button>
-        </footer>
-      </section>
     }
-    @if (bulkEditOpen()) {
-      <button
-        class="module-backdrop"
-        type="button"
-        aria-label="Cerrar"
-        (click)="bulkEditOpen.set(false)"
-      ></button>
-      <section class="bulk-dialog" role="dialog" aria-modal="true">
-        <header>
-          <div>
-            <span>EDICIÓN MASIVA</span>
-            <h2>Editar {{ selectedCount() }} leads</h2>
-            <p>El cambio se aplicará a todos los registros seleccionados.</p>
-          </div>
-          <button type="button" (click)="bulkEditOpen.set(false)">×</button>
-        </header>
-        <div>
-          <label
-            >Campo<select
-              #bulkFieldSelect
-              [value]="bulkField()"
-              (change)="setBulkField(bulkFieldSelect.value)"
-            >
-              <option value="status">Estado</option>
-              <option value="source">Origen</option>
-              <option value="prospectType">Tipo de prospecto</option>
-            </select></label
-          ><label
-            >Nuevo valor<select
-              #bulkValueSelect
-              [value]="bulkValue()"
-              (change)="bulkValue.set(bulkValueSelect.value)"
-            >
-              <option value="">Seleccionar…</option>
-              @for (option of bulkOptions(); track option) {
-                <option [value]="option">{{ statusLabel(option) }}</option>
-              }
-            </select></label
-          >
-        </div>
-        <footer>
-          <button class="button" type="button" (click)="bulkEditOpen.set(false)">Cancelar</button
-          ><button
-            class="button button--primary"
-            type="button"
-            [disabled]="!bulkValue()"
-            (click)="applyBulkEdit()"
-          >
-            Aplicar cambios
-          </button>
-        </footer>
-      </section>
-    }
+  </div>
+  <footer>
+    <small><b>*</b> Campos obligatorios según el modelo de datos.</small>
+    <button class="button" type="button" (click)="closeCreate()">Cancelar</button><button class="button button--primary"
+      type="button" [disabled]="!canCreate()" (click)="createRecord()">
+      @if (editingContractId()) { Guardar cambios } @else { Crear {{ definition.singular }} }
+    </button>
+  </footer>
+</section>
+}
+@if (bulkEditOpen()) {
+<button class="module-backdrop" type="button" aria-label="Cerrar" (click)="bulkEditOpen.set(false)"></button>
+<section class="bulk-dialog" role="dialog" aria-modal="true">
+  <header>
+    <div>
+      <span>EDICIÓN MASIVA</span>
+      <h2>Editar {{ selectedCount() }} leads</h2>
+      <p>El cambio se aplicará a todos los registros seleccionados.</p>
+    </div>
+    <button type="button" (click)="bulkEditOpen.set(false)">×</button>
+  </header>
+  <div>
+    <label>Campo<select #bulkFieldSelect [value]="bulkField()" (change)="setBulkField(bulkFieldSelect.value)">
+        <option value="status">Estado</option>
+        <option value="source">Origen</option>
+        <option value="prospectType">Tipo de prospecto</option>
+      </select></label><label>Nuevo valor<select #bulkValueSelect [value]="bulkValue()"
+        (change)="bulkValue.set(bulkValueSelect.value)">
+        <option value="">Seleccionar…</option>
+        @for (option of bulkOptions(); track option) {
+        <option [value]="option">{{ statusLabel(option) }}</option>
+        }
+      </select></label>
+  </div>
+  <footer>
+    <button class="button" type="button" (click)="bulkEditOpen.set(false)">Cancelar</button><button
+      class="button button--primary" type="button" [disabled]="!bulkValue()" (click)="applyBulkEdit()">
+      Aplicar cambios
+    </button>
+  </footer>
+</section>
+}
