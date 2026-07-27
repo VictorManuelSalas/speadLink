@@ -7,6 +7,7 @@ EXPOSE 4200
 CMD ["npm", "start", "--", "--host", "0.0.0.0", "--poll", "1000"]
 
 FROM development AS build
+ENV NG_CLI_ANALYTICS=false
 RUN npm run build
 
 FROM nginx:1.29-alpine AS production
