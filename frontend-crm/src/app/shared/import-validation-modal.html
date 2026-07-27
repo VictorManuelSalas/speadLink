@@ -85,13 +85,12 @@
         @if (needsIdentifier()) {
           <label class="import-field-group">
             <span>Campo identificador <b class="required-mark">*</b></span>
-            <select
-              [value]="identifierKey()"
-              (change)="setIdentifierKey($any($event.target).value)"
-            >
-              <option value="">Selecciona un campo</option>
+            <select (change)="setIdentifierKey($any($event.target).value)">
+              <option value="" [selected]="!identifierKey()">Selecciona un campo</option>
               @for (field of fields(); track field.key) {
-                <option [value]="field.key">{{ field.label }}</option>
+                <option [value]="field.key" [selected]="identifierKey() === field.key">
+                  {{ field.label }}
+                </option>
               }
             </select>
           </label>
@@ -106,13 +105,10 @@
             @for (header of headers(); track header) {
               <div class="import-mapping-row">
                 <span>{{ header }}</span>
-                <select
-                  [value]="columnMap()[header] || ''"
-                  (change)="setColumnMapping(header, $any($event.target).value)"
-                >
-                  <option value="">No importar</option>
+                <select (change)="setColumnMapping(header, $any($event.target).value)">
+                  <option value="" [selected]="!columnMap()[header]">No importar</option>
                   @for (field of fields(); track field.key) {
-                    <option [value]="field.key">
+                    <option [value]="field.key" [selected]="columnMap()[header] === field.key">
                       {{ field.label }}{{ field.required ? ' *' : '' }}
                     </option>
                   }
