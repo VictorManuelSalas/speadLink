@@ -5,6 +5,7 @@ RUN npm ci
 COPY . .
 ENV NG_CLI_ANALYTICS=false
 RUN npm run build
+RUN ls -la /app/dist/ && echo "--- Contents of speedlink-crm ---" && ls -la /app/dist/speedlink-crm/ || echo "ERROR: dist/speedlink-crm not found"
 
 FROM nginx:1.29-alpine AS production
 ENV PORT=80
