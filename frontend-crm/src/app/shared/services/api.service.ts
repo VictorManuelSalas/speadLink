@@ -8,10 +8,10 @@ import { catchError, delay, map, tap } from 'rxjs/operators';
 })
 export class ApiService {
   // 🔄 CAMBIAR ESTA URL CUANDO TENGAN LOS ENDPOINTS REALES
-  private apiUrl = 'https://api.speedlink.mx/api'; // ← Reemplaza con tu URL real
+  // private apiUrl = 'https://api.speedlink.mx/api'; // ← Reemplaza con tu URL real
 
   // Para desarrollo, descomentar esta línea para usar mock local
-  // private apiUrl = '/assets/mock-api.json';
+  private apiUrl = '/assets/mock-api.json'; // ← Mock local para desarrollo
 
   private mockDataCache: any = null;
   private isMockMode = false; // Detecta si estamos usando mock
@@ -26,7 +26,7 @@ export class ApiService {
     if (this.mockDataCache) {
       return of(this.mockDataCache);
     }
-    return this.http.get('/assets/mock-api.json').pipe(
+    return this.http.get('../../assets/mock-api.json').pipe(
       delay(300),
       tap(data => (this.mockDataCache = data)),
       catchError(() => {
