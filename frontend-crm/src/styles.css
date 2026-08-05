@@ -225,6 +225,28 @@ body {
 body {
   font-size: 14px;
 }
+
+/* Legible minimums for supporting copy, forms, and data tables. */
+label,
+small,
+dt {
+  font-size: 11px !important;
+}
+
+input:not([type='checkbox']):not([type='radio']),
+select,
+textarea,
+form button {
+  font-size: 13px !important;
+}
+
+table th {
+  font-size: 11px !important;
+}
+
+table td {
+  font-size: 12px !important;
+}
 button,
 input,
 select {

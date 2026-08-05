@@ -337,7 +337,7 @@
     </div>
 
     <div class="ph-contact">
-      <a class="ph-contact-card" [href]="'tel:' + contact.whatsapp">
+      <a class="ph-contact-card" [href]="'tel:' + contact().phone">
         <div> <span class="ph-contact-card__icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
               stroke-linejoin="round">
@@ -347,9 +347,9 @@
           </span>
           <b>Teléfono</b>
         </div>
-        <span>{{ contact.phone }}</span>
+        <span>{{ contact().phone }}</span>
       </a>
-      <a class="ph-contact-card" [href]="'https://wa.me/52' + contact.whatsapp" target="_blank" rel="noopener">
+      <a class="ph-contact-card" [href]="'https://wa.me/52' + contact().whatsapp" target="_blank" rel="noopener">
         <div> <span class="ph-contact-card__icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="currentColor">
               <path
@@ -358,9 +358,9 @@
           </span>
           <b>WhatsApp</b>
         </div>
-        <span>{{ contact.phone }}</span>
+        <span>{{ contact().phone }}</span>
       </a>
-      <a class="ph-contact-card" [href]="'mailto:' + contact.email">
+      <a class="ph-contact-card" [href]="'mailto:' + contact().email">
         <div>
           <span class="ph-contact-card__icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -371,7 +371,7 @@
           </span>
           <b>Correo</b>
         </div>
-        <span>{{ contact.email }}</span>
+        <span>{{ contact().email }}</span>
       </a>
       <div class="ph-contact-card ph-contact-card--static">
         <div> <span class="ph-contact-card__icon" aria-hidden="true">
@@ -383,7 +383,7 @@
           </span>
           <b>Dirección</b>
         </div>
-        <span>{{ contact.address }}</span>
+        <span>{{ contact().address }}</span>
       </div>
     </div>
   </section>
@@ -415,12 +415,12 @@
       <a routerLink="/login">Iniciar sesión</a>
     </nav>
     <div class="ph-footer__contact">
-      <a [href]="'tel:' + contact.whatsapp">{{ contact.phone }}</a>
-      <a [href]="'mailto:' + contact.email">{{ contact.email }}</a>
-      <span>{{ contact.address }}</span>
+      <a [href]="'tel:' + contact().whatsapp">{{ contact().phone }}</a>
+      <a [href]="'mailto:' + contact().email">{{ contact().email }}</a>
+      <span>{{ contact().address }}</span>
       <div class="ph-footer__social">
-        <span>{{ contact.facebook }}</span>
-        <span>{{ contact.instagram }}</span>
+        <span>{{ contact().facebook }}</span>
+        <span>{{ contact().instagram }}</span>
       </div>
     </div>
   </div>

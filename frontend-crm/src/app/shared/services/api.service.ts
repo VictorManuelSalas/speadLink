@@ -15,10 +15,10 @@ import {
 })
 export class ApiService {
   // 🔄 CAMBIAR ESTA URL CUANDO TENGAN LOS ENDPOINTS REALES
-  private apiUrl = 'https://api.speedlink.mx/api'; // ← Reemplaza con tu URL real
+  // private apiUrl = 'https://api.speedlink.mx/api'; // ← Reemplaza con tu URL real
 
   // Para desarrollo, descomentar esta línea para usar mock local (TypeScript)
-  // private apiUrl = 'MOCK_MODE'; // ← Activa modo mock directo
+  private apiUrl = 'MOCK_MODE'; // ← Activa modo mock directo
 
   private isMockMode = this.apiUrl === 'MOCK_MODE'; // Detecta si estamos usando mock
 

@@ -4,7 +4,7 @@ import { Meta } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import { OperationalRecord } from '../../operations/operational-modules.data';
 import { OperationalStore } from '../../operations/operational-store';
-import { ApiService } from '@app/shared/services/api.service';
+import { ApiService } from '../../../shared/services/api.service';
 import {
   SPEEDLINK_CONTACT,
 } from '../public-home.data';
@@ -65,7 +65,7 @@ export class PublicHomePage {
   readonly faqs = signal<any[]>([]);
   readonly streamingServices = signal<string[]>([]);
   readonly streamingLogos = signal<Record<string, string>>({});
-  readonly contact = SPEEDLINK_CONTACT;
+  readonly contact = signal<any>(null);
   readonly currentYear = new Date().getFullYear();
 
   readonly mobileMenuOpen = signal(false);
@@ -75,7 +75,8 @@ export class PublicHomePage {
   readonly coverageError = signal('');
   readonly locationStatus = signal<LocationStatus>('idle');
 
-  constructor() {
+  constructor(
+  ) {
     this.meta.updateTag({
       name: 'description',
       content:
@@ -95,7 +96,8 @@ export class PublicHomePage {
 
   private loadAllData(): void {
     // Cargar servicios (planes de internet + streaming)
-    this.apiService.getServices().subscribe(response => {
+    this.apiService.getServices().subscribe((response: any) => {
+      console.log('Servicios cargados desde la API:', response.data.services);
       const services = response.data.services;
       const internetPlans = services.filter((s: any) => s.type === 'internet');
       const streamingList = services.filter((s: any) => s.type === 'streaming');
@@ -114,17 +116,23 @@ export class PublicHomePage {
     });
 
     // Cargar beneficios
-    this.apiService.getBenefits().subscribe(response => {
+    this.apiService.getBenefits().subscribe((response: any) => {
       this.benefits.set(response.data.benefits);
     });
 
     // Cargar pasos del proceso
-    this.apiService.getProcessSteps().subscribe(response => {
+    this.apiService.getProcessSteps().subscribe((response: any) => {
       this.steps.set(response.data.steps);
     });
 
+    // Cargar contacto
+    this.apiService.getContactInfo().subscribe((response: any) => {
+      console.log('Información de contacto cargada desde la API:', response.data.contact);
+      this.contact.set(response.data.contact);
+    });
+
     // Cargar FAQs
-    this.apiService.getFaqs().subscribe(response => {
+    this.apiService.getFaqs().subscribe((response: any) => {
       this.faqs.set(response.data.faqs);
     });
   }
