@@ -4,7 +4,7 @@ import { OperationalStore } from '../operational-store';
 import { MOCK_SERVICES } from '../../../shared/services/mock-data';
 
 interface ServiceItem {
-  id: number;
+  id: string;
   name: string;
   type: 'internet' | 'streaming';
   description?: string;
@@ -329,7 +329,7 @@ export class InterestedServicesSectionComponent {
     return '';
   }
 
-  isServiceAdded(serviceId: number): boolean {
+  isServiceAdded(serviceId: string): boolean {
     return this.services().some(s => s.id === serviceId);
   }
 
@@ -345,7 +345,7 @@ export class InterestedServicesSectionComponent {
     this.updateRecordServices();
   }
 
-  removeService(serviceId: number): void {
+  removeService(serviceId: string): void {
     this.services.update(services => services.filter(s => s.id !== serviceId));
     this.updateRecordServices();
   }
@@ -358,7 +358,7 @@ export class InterestedServicesSectionComponent {
     // Actualizar el registro con los servicios seleccionados
     const record = this.store.recordsFor('leads').find(r => r.id === this.recordId);
     if (record) {
-      const updatedRecord = { ...record };
+      const updatedRecord = { ...record } as any;
 
       // Actualizar plan
       const internetPlan = this.services().find(s => s.type === 'internet');
