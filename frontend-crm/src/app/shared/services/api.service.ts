@@ -1,24 +1,50 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { catchError, delay } from 'rxjs/operators';
+import { catchError, delay, map, tap } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApiService {
   // 🔄 CAMBIAR ESTA URL CUANDO TENGAN LOS ENDPOINTS REALES
-  // private apiUrl = 'https://api.speedlink.mx/api'; // ← Reemplaza con tu URL real
+  private apiUrl = 'https://api.speedlink.mx/api'; // ← Reemplaza con tu URL real
 
   // Para desarrollo, descomentar esta línea para usar mock local
-  private apiUrl = '/assets/mock-api.json';
+  // private apiUrl = '/assets/mock-api.json';
 
-  constructor(private http: HttpClient) {}
+  private mockDataCache: any = null;
+  private isMockMode = false; // Detecta si estamos usando mock
+
+  constructor(private http: HttpClient) {
+    // Detectar si estamos en modo mock
+    this.isMockMode = this.apiUrl === '/assets/mock-api.json';
+  }
+
+  // Cargar datos del mock (se cachea después de la primera carga)
+  private loadMockData(): Observable<any> {
+    if (this.mockDataCache) {
+      return of(this.mockDataCache);
+    }
+    return this.http.get('/assets/mock-api.json').pipe(
+      delay(300),
+      tap(data => (this.mockDataCache = data)),
+      catchError(() => {
+        console.warn('No se pudo cargar mock-api.json, usando datos embebidos');
+        return of(this.getEmbeddedMockData());
+      })
+    );
+  }
 
   // Obtener servicios (planes de internet + streaming)
   getServices(): Observable<any> {
+    if (this.isMockMode) {
+      return this.loadMockData().pipe(
+        map(data => data.services || this.getMockServices())
+      );
+    }
     return this.http.get(`${this.apiUrl}/services`).pipe(
-      delay(300), // Simular latencia
+      delay(300),
       catchError(error => {
         console.error('Error cargando servicios:', error);
         return of(this.getMockServices());
@@ -28,6 +54,11 @@ export class ApiService {
 
   // Obtener beneficios
   getBenefits(): Observable<any> {
+    if (this.isMockMode) {
+      return this.loadMockData().pipe(
+        map(data => data.benefits || this.getMockBenefits())
+      );
+    }
     return this.http.get(`${this.apiUrl}/benefits`).pipe(
       delay(300),
       catchError(error => {
@@ -39,6 +70,11 @@ export class ApiService {
 
   // Obtener pasos del proceso
   getProcessSteps(): Observable<any> {
+    if (this.isMockMode) {
+      return this.loadMockData().pipe(
+        map(data => data['process-steps'] || this.getMockProcessSteps())
+      );
+    }
     return this.http.get(`${this.apiUrl}/process-steps`).pipe(
       delay(300),
       catchError(error => {
@@ -50,6 +86,11 @@ export class ApiService {
 
   // Obtener FAQs
   getFaqs(): Observable<any> {
+    if (this.isMockMode) {
+      return this.loadMockData().pipe(
+        map(data => data.faqs || this.getMockFaqs())
+      );
+    }
     return this.http.get(`${this.apiUrl}/faqs`).pipe(
       delay(300),
       catchError(error => {
@@ -61,6 +102,11 @@ export class ApiService {
 
   // Obtener información de contacto
   getContactInfo(): Observable<any> {
+    if (this.isMockMode) {
+      return this.loadMockData().pipe(
+        map(data => data['contact-info'] || this.getMockContactInfo())
+      );
+    }
     return this.http.get(`${this.apiUrl}/contact-info`).pipe(
       delay(300),
       catchError(error => {
@@ -71,6 +117,16 @@ export class ApiService {
   }
 
   // ==================== DATOS MOCK (fallback) ====================
+
+  private getEmbeddedMockData() {
+    return {
+      services: this.getMockServices(),
+      benefits: this.getMockBenefits(),
+      'process-steps': this.getMockProcessSteps(),
+      faqs: this.getMockFaqs(),
+      'contact-info': this.getMockContactInfo(),
+    };
+  }
 
   private getMockServices() {
     return {
