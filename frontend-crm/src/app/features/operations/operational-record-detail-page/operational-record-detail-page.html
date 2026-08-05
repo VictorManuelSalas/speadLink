@@ -363,6 +363,10 @@
                     </div>
                   </app-record-information-card>
 
+                  @if (moduleKey === 'leads') {
+                    <app-interested-services-section [recordId]="item.id" />
+                  }
+
                   @if (moduleKey === 'contracts') {
                     <article class="card section-card contract-items-card">
                       <div class="card-heading">

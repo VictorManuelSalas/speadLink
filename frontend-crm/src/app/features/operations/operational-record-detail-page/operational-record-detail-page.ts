@@ -41,6 +41,7 @@ import {
   RecordEmailsSection,
   RecordNotesSection,
 } from '../record-sections/record-sections';
+import { InterestedServicesSectionComponent } from '../record-sections/interested-services-section';
 
 type DetailTab = 'Resumen' | 'Correos' | 'Eventos' | 'Notas' | 'Actividad' | 'Archivos';
 
@@ -93,6 +94,7 @@ const INTERNET_PERMANENCE_MONTHS = 6;
     RecordEmailsSection,
     RecordEventsSection,
     RecordNotesSection,
+    InterestedServicesSectionComponent,
     RouterLink,
     StyledPicklist,
   ],
