@@ -3,10 +3,9 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . .
-RUN npm run build -- --progress=false
+RUN npm run build -- --progress=false && echo "✅ Build completed" && exit 0
 
 FROM nginx:1.29-alpine
-ENV PORT=80
 COPY nginx.conf /etc/nginx/templates/default.conf.template
 COPY --from=builder /app/dist/speedlink-crm/browser /usr/share/nginx/html
 EXPOSE 80
