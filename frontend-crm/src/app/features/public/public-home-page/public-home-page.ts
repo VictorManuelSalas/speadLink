@@ -4,12 +4,9 @@ import { Meta } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import { OperationalRecord } from '../../operations/operational-modules.data';
 import { OperationalStore } from '../../operations/operational-store';
+import { ApiService } from '@app/shared/services/api.service';
 import {
-  SPEEDLINK_BENEFITS,
   SPEEDLINK_CONTACT,
-  SPEEDLINK_FAQS,
-  SPEEDLINK_PLANS,
-  SPEEDLINK_STEPS,
 } from '../public-home.data';
 
 type ProspectType = '' | 'Hogar' | 'Negocio';
@@ -21,12 +18,17 @@ interface CoverageForm {
   community: string;
   location: string;
   plan: string;
+  includeStreaming: boolean;
+  streamingServices: string[];
   comments: string;
   latitude: number | null;
   longitude: number | null;
 }
 
-type CoverageFormKey = keyof Omit<CoverageForm, 'latitude' | 'longitude'>;
+type CoverageFormKey = keyof Omit<
+  CoverageForm,
+  'latitude' | 'longitude' | 'includeStreaming' | 'streamingServices'
+>;
 type CoverageStatus = 'idle' | 'loading' | 'success' | 'error';
 type LocationStatus = 'idle' | 'loading' | 'granted' | 'denied' | 'unsupported';
 
@@ -37,6 +39,8 @@ const EMPTY_COVERAGE_FORM: CoverageForm = {
   community: '',
   location: '',
   plan: '',
+  includeStreaming: false,
+  streamingServices: [],
   comments: '',
   latitude: null,
   longitude: null,
@@ -52,10 +56,15 @@ const EMPTY_COVERAGE_FORM: CoverageForm = {
 export class PublicHomePage {
   private readonly meta = inject(Meta);
   private readonly store = inject(OperationalStore);
-  readonly plans = SPEEDLINK_PLANS;
-  readonly benefits = SPEEDLINK_BENEFITS;
-  readonly steps = SPEEDLINK_STEPS;
-  readonly faqs = SPEEDLINK_FAQS;
+  private readonly apiService = inject(ApiService);
+
+  // Datos cargados dinámicamente desde la API
+  readonly plans = signal<any[]>([]);
+  readonly benefits = signal<any[]>([]);
+  readonly steps = signal<any[]>([]);
+  readonly faqs = signal<any[]>([]);
+  readonly streamingServices = signal<string[]>([]);
+  readonly streamingLogos = signal<Record<string, string>>({});
   readonly contact = SPEEDLINK_CONTACT;
   readonly currentYear = new Date().getFullYear();
 
@@ -79,6 +88,45 @@ export class PublicHomePage {
         'Internet estable para mantenerte conectado. Planes desde $300 MXN al mes, primer mes gratis.',
     });
     this.meta.updateTag({ property: 'og:type', content: 'website' });
+
+    // Cargar datos desde la API
+    this.loadAllData();
+  }
+
+  private loadAllData(): void {
+    // Cargar servicios (planes de internet + streaming)
+    this.apiService.getServices().subscribe(response => {
+      const services = response.data.services;
+      const internetPlans = services.filter((s: any) => s.type === 'internet');
+      const streamingList = services.filter((s: any) => s.type === 'streaming');
+
+      this.plans.set(internetPlans);
+      this.streamingServices.set(streamingList.map((s: any) => s.name));
+
+      const logos = streamingList.reduce(
+        (acc: Record<string, string>, s: any) => ({
+          ...acc,
+          [s.name]: s.logo,
+        }),
+        {}
+      );
+      this.streamingLogos.set(logos);
+    });
+
+    // Cargar beneficios
+    this.apiService.getBenefits().subscribe(response => {
+      this.benefits.set(response.data.benefits);
+    });
+
+    // Cargar pasos del proceso
+    this.apiService.getProcessSteps().subscribe(response => {
+      this.steps.set(response.data.steps);
+    });
+
+    // Cargar FAQs
+    this.apiService.getFaqs().subscribe(response => {
+      this.faqs.set(response.data.faqs);
+    });
   }
 
   toggleMobileMenu(): void {
@@ -96,6 +144,23 @@ export class PublicHomePage {
   updateCoverageField(key: CoverageFormKey, value: string): void {
     this.coverageForm.update((form) => ({ ...form, [key]: value }));
     if (this.coverageStatus() === 'error') this.coverageStatus.set('idle');
+  }
+
+  toggleStreamingService(service: string, checked: boolean): void {
+    this.coverageForm.update((form) => ({
+      ...form,
+      streamingServices: checked
+        ? [...form.streamingServices, service]
+        : form.streamingServices.filter((item) => item !== service),
+    }));
+  }
+
+  toggleIncludeStreaming(checked: boolean): void {
+    this.coverageForm.update((form) => ({
+      ...form,
+      includeStreaming: checked,
+      streamingServices: checked ? form.streamingServices : [],
+    }));
   }
 
   toggleUseLocation(checked: boolean): void {
@@ -151,6 +216,9 @@ export class PublicHomePage {
     const address = [form.community.trim(), form.location.trim()].filter(Boolean).join(', ');
     const notes = [
       form.plan ? `Plan de interés: ${form.plan}.` : null,
+      form.streamingServices.length
+        ? `Streaming de interés: ${form.streamingServices.join(', ')}.`
+        : null,
       form.comments.trim() || null,
       'Prospecto generado desde el sitio web público de SpeedLink.',
     ]
