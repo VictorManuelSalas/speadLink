@@ -1,11 +1,10 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 COPY . .
 ENV NG_CLI_ANALYTICS=false
-RUN npm run build
-RUN ls -la /app/dist/ && echo "--- Contents of speedlink-crm ---" && ls -la /app/dist/speedlink-crm/ || echo "ERROR: dist/speedlink-crm not found"
+RUN npm run build -- --progress=false && ls -la dist/speedlink-crm/
 
 FROM nginx:1.29-alpine AS production
 ENV PORT=80
