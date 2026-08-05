@@ -1,7 +1,7 @@
 import { Component, Input, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { OperationalStore } from '../operational-store';
-import { MOCK_SERVICES } from '@app/shared/services/mock-data';
+import { MOCK_SERVICES } from '../../../shared/services/mock-data';
 
 interface ServiceItem {
   id: number;
