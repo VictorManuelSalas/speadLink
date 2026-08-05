@@ -4,12 +4,12 @@ import { Observable } from 'rxjs';
 import { MOCK_SERVICES } from './mock-data';
 
 interface ServiceInterest {
-  id: number;
+  id: string;
   name: string;
 }
 
 interface StreamingServiceInterest {
-  id: number;
+  id: string;
   name: string;
 }
 
@@ -37,7 +37,7 @@ interface LeadData {
   comments?: string;
 
   // Metadata
-  source: 'website';
+  source: 'web';
   timestamp: string;
   timezone?: string;
 }
@@ -111,7 +111,7 @@ export class LeadsService {
       comments: formData.comments?.trim() || undefined,
 
       // Metadata
-      source: 'website',
+      source: 'web',
       timestamp: now.toISOString(),
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
     };

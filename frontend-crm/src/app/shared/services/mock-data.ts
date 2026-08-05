@@ -6,7 +6,7 @@ export const MOCK_SERVICES = {
     services: [
       {
         type: 'internet',
-        id: 1,
+        id: "SRV-INT-100",
         name: 'Básico',
         speed: '5 Mbps',
         monthlyPrice: 300,
@@ -16,7 +16,7 @@ export const MOCK_SERVICES = {
       },
       {
         type: 'internet',
-        id: 2,
+        id: "SRV-INT-10",
         name: 'Intermedio',
         speed: '10 Mbps',
         monthlyPrice: 350,
@@ -31,7 +31,7 @@ export const MOCK_SERVICES = {
       },
       {
         type: 'internet',
-        id: 3,
+        id: "SRV-INT-1",
         name: 'Custom',
         speed: '15 Mbps',
         monthlyPrice: 400,
@@ -46,7 +46,7 @@ export const MOCK_SERVICES = {
       },
       {
         type: 'streaming',
-        id: 101,
+         id: "SRV-STR-10",
         name: 'Netflix',
         monthlyPrice: null,
         priceAvailableOnRequest: true,
@@ -55,7 +55,7 @@ export const MOCK_SERVICES = {
       },
       {
         type: 'streaming',
-        id: 102,
+          id: "SRV-STR-11",
         name: 'Disney+',
         monthlyPrice: null,
         priceAvailableOnRequest: true,
@@ -64,7 +64,7 @@ export const MOCK_SERVICES = {
       },
       {
         type: 'streaming',
-        id: 103,
+         id: "SRV-STR-30",
         name: 'Prime Video',
         monthlyPrice: null,
         priceAvailableOnRequest: true,
@@ -73,7 +73,7 @@ export const MOCK_SERVICES = {
       },
       {
         type: 'streaming',
-        id: 104,
+          id: "SRV-STR-1110",
         name: 'ViX',
         monthlyPrice: null,
         priceAvailableOnRequest: true,
