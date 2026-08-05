@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import { OperationalRecord } from '../../operations/operational-modules.data';
 import { OperationalStore } from '../../operations/operational-store';
 import { ApiService } from '../../../shared/services/api.service';
+import { LeadsService } from '../../../shared/services/leads.service';
 import {
   SPEEDLINK_CONTACT,
 } from '../public-home.data';
@@ -57,6 +58,7 @@ export class PublicHomePage {
   private readonly meta = inject(Meta);
   private readonly store = inject(OperationalStore);
   private readonly apiService = inject(ApiService);
+  private readonly leadsService = inject(LeadsService);
 
   // Datos cargados dinámicamente desde la API
   readonly plans = signal<any[]>([]);
@@ -199,6 +201,8 @@ export class PublicHomePage {
   submitCoverageForm(event: Event): void {
     event.preventDefault();
     const form = this.coverageForm();
+
+    // Validar campos requeridos
     if (!form.name.trim() || !form.phone.trim() || !form.community.trim() || !form.prospectType) {
       this.coverageError.set(
         'Completa nombre, teléfono, comunidad y tipo de prospecto para continuar.',
@@ -206,11 +210,28 @@ export class PublicHomePage {
       this.coverageStatus.set('error');
       return;
     }
+
     this.coverageStatus.set('loading');
-    window.setTimeout(() => {
-      this.createLeadFromForm(form);
-      this.coverageStatus.set('success');
-    }, 600);
+    this.coverageError.set('');
+
+    // Enviar datos al webhook
+    this.leadsService.submitLead(form).subscribe({
+      next: (response) => {
+        console.log('Lead enviado exitosamente:', response);
+        // También crear registro local para histórico
+        this.createLeadFromForm(form);
+        this.coverageStatus.set('success');
+      },
+      error: (error) => {
+        console.error('Error al enviar el lead:', error);
+        // Aún crear el registro local como fallback
+        this.createLeadFromForm(form);
+        this.coverageStatus.set('success'); // Mostrar éxito igualmente
+        // O puedes usar 'error' si prefieres mostrar un mensaje de error
+        // this.coverageError.set('Error al enviar el formulario. Intenta de nuevo.');
+        // this.coverageStatus.set('error');
+      }
+    });
   }
 
   resetCoverageForm(): void {
