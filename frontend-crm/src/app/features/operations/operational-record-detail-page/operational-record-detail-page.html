@@ -273,7 +273,7 @@
                                 <div class="status-editor" style="display: flex; gap: 8px; align-items: center;">
                                   <app-styled-picklist
                                     [options]="getFieldPicklistOptions(field)"
-                                    [value]="item[field.key] || ''"
+                                    [value]="fieldValueAsString(item[field.key])"
                                     (valueChange)="savePicklist(item.id, field.key, $event)"
                                     style="flex: 1;"
                                   />

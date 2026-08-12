@@ -531,6 +531,10 @@ export class OperationalRecordDetailPage {
     }));
   }
 
+  fieldValueAsString(value: any): string {
+    return value ? String(value) : '';
+  }
+
   getLookupOptions(fieldKey: string): { options: ReadonlyArray<string>; optionLabels: Record<string, string> } {
     const configured = this.definition.fields.find((f) => f.key === fieldKey);
     if (!configured?.options) {
