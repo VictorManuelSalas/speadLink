@@ -1,7 +1,7 @@
 <app-record-list [title]="definition.title" [description]="definition.description"
   [newLabel]="'Nuevo ' + definition.singular" [baseRoute]="'/' + moduleKey" [accent]="definition.accent"
   [records]="records()" [columns]="definition.columns" [fields]="listFields()" [widgets]="listWidgets()"
-  [rowActions]="listRowActions()" [bulkActions]="listBulkActions()" (newRequested)="openCreate()"
+  [rowActions]="listRowActions()" [bulkActions]="listBulkActions()" [initialQuery]="query()" (newRequested)="openCreate()"
   (rowAction)="handleListRowAction($event.actionId, $event.record)" (bulkAction)="
         handleListBulkAction($event.actionId, $event.records, $event.field, $event.value)
       " (recordsImported)="importRecords($event)" />
@@ -43,7 +43,8 @@
     @if (!editingContractId()) {
     @for (field of definition.fields; track field.key) {
     @if (!(moduleKey === 'contracts' && field.key === 'totalMonthly')) {
-    <label [class.full]="field.key === 'description' || field.key === 'notes'"><span class="field-label">{{ field.label
+    <label [class.full]="field.key === 'description' || field.key === 'notes'" [class.has-error]="getFieldError(field.key)">
+      <span class="field-label">{{ field.label
         }}
         @if (field.required) {
         <b aria-label="Obligatorio">*</b>
@@ -60,11 +61,15 @@
       </div>
       } @else if (field.key === 'description' || field.key === 'notes') {
       <textarea #textarea rows="4" [required]="field.required" [value]="draft()[field.key] || ''"
-        [placeholder]="field.placeholder || ''" (input)="setDraft(field.key, textarea.value)"></textarea>
+        [placeholder]="field.placeholder || ''" (input)="setDraft(field.key, textarea.value)"
+        [class.error]="getFieldError(field.key)"></textarea>
       } @else {
       <input #input [type]="inputType(field.key, field.type)" [required]="field.required" [min]="field.min ?? null"
         [max]="field.max ?? null" [value]="draft()[field.key] || ''" [placeholder]="field.placeholder || ''"
-        (input)="setDraft(field.key, input.value)" />
+        (input)="setDraft(field.key, input.value)" [class.error]="getFieldError(field.key)" />
+      }
+      @if (getFieldError(field.key)) {
+      <span class="field-error">{{ getFieldError(field.key) }}</span>
       }
     </label>
     }

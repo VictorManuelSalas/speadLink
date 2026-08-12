@@ -22,7 +22,7 @@ export const SPEEDLINK_PLANS: ReadonlyArray<SpeedlinkPlan> = [
     name: 'Intermedio',
     speed: '10 Mbps',
     monthlyPrice: 350,
-    installationPrice: 800,
+    installationPrice: 750,
     recommended: true,
     audience: ['Streaming', 'Varios dispositivos', 'Uso familiar', 'Mayor velocidad y estabilidad'],
   },

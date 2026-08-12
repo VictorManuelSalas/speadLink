@@ -620,6 +620,25 @@
         margin-top: 6px;
         color: var(--color-text-secondary);
       }
+      .contracts-section {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+      .contracts-heading {
+        padding: 12px 0 4px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+      }
+      .contracts-heading h2 {
+        font-size: 21px;
+      }
+      .contracts-heading p {
+        margin-top: 6px;
+        color: var(--color-text-secondary);
+      }
       .note-composer {
         overflow: hidden;
       }

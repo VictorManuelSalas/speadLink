@@ -1,4 +1,4 @@
-<div class="editable-field" [class.is-editing]="editing()">
+<div class="editable-field" [class.is-editing]="editing()" [class.has-error]="validationError()">
   <span class="editable-field__label">{{ label() }}</span>
   @if (editing()) {
     <div class="editable-field__editor">
@@ -6,15 +6,20 @@
         #editor
         [type]="type()"
         [value]="draft()"
-        (input)="draft.set(editor.value)"
+        (input)="onDraftChange(editor.value)"
         (keydown.enter)="save()"
         (keydown.escape)="cancel()"
+        [class.error]="validationError()"
+        aria-label="Editar {{ label() }}"
       />
+      @if (validationError()) {
+        <div class="editable-field__error">{{ validationError() }}</div>
+      }
       <button
         type="button"
         class="save"
         aria-label="Guardar"
-        [disabled]="!draft().trim()"
+        [disabled]="!draft().trim() || validationError()"
         (click)="save()"
       >
         ✓

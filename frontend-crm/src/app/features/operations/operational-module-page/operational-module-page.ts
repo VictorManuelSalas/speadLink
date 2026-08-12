@@ -10,6 +10,7 @@ import {
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { CRM_DATA } from '../../../core/data-access/crm-data';
 import { LanguageService } from '../../../core/i18n/language.service';
+import { FieldValidatorService } from '../../../core/services/field-validator.service';
 import { Customer } from '../../../core/models/customer';
 import {
   RecordList,
@@ -57,6 +58,7 @@ export class OperationalModulePage {
   private readonly route = inject(ActivatedRoute);
   private readonly store = inject(OperationalStore);
   private readonly crmData = inject(CRM_DATA);
+  private readonly validator = inject(FieldValidatorService);
   readonly i18n = inject(LanguageService);
   readonly moduleKey = this.route.snapshot.data['moduleKey'] as OperationalModuleKey;
   readonly definition = OPERATIONAL_MODULES[this.moduleKey];
@@ -75,6 +77,7 @@ export class OperationalModulePage {
   readonly contractItems = signal<ReadonlyArray<ContractItemDraft>>([]);
   readonly editingContractId = signal<string | null>(null);
   readonly editingContract = signal<{ contractNumber: string; clientName: string } | null>(null);
+  readonly validationErrors = signal<Set<string>>(new Set());
   readonly contractTotal = computed(() =>
     this.contractItems().reduce((total, item) => total + item.quantity * item.unitPrice, 0),
   );
@@ -126,11 +129,16 @@ export class OperationalModulePage {
     const fieldsReady = this.definition.fields
       .filter((field) => field.required)
       .every((field) => this.draft()[field.key]?.trim());
-    return fieldsReady && (this.moduleKey !== 'contracts' || itemsReady);
+    const hasErrors = this.validationErrors().size > 0;
+    return fieldsReady && !hasErrors && (this.moduleKey !== 'contracts' || itemsReady);
   });
 
   constructor() {
     this.route.queryParamMap.subscribe((params) => {
+      const searchParam = params.get('search');
+      if (searchParam) {
+        this.query.set(searchParam);
+      }
       if (params.get('create') !== 'true') return;
       const clientId = params.get('clientId') ?? '';
       if (this.moduleKey === 'contracts') {
@@ -288,6 +296,7 @@ export class OperationalModulePage {
     this.editingContractId.set(null);
     this.editingContract.set(null);
     this.draft.set(seed);
+    this.validationErrors.set(new Set());
     this.contractItems.set(
       this.moduleKey === 'contracts'
         ? [{ id: `contract-item-${Date.now()}`, serviceId: '', quantity: 1, unitPrice: 0 }]
@@ -320,6 +329,7 @@ export class OperationalModulePage {
     this.contractItems.set([]);
     this.editingContractId.set(null);
     this.editingContract.set(null);
+    this.validationErrors.set(new Set());
   }
   private parseContractItems(
     record: OperationalRecord,
@@ -333,6 +343,52 @@ export class OperationalModulePage {
   }
   setDraft(key: string, value: string): void {
     this.draft.update((draft) => ({ ...draft, [key]: value }));
+    this.validateField(key);
+  }
+
+  validateField(fieldKey: string): void {
+    const field = this.definition.fields.find((f) => f.key === fieldKey);
+    if (!field) return;
+
+    const value = this.draft()[fieldKey] ?? '';
+    const config = {
+      required: field.required,
+      validateAs: field.validateAs,
+      min: field.min,
+      max: field.max,
+      minLength: field.minLength,
+      maxLength: field.maxLength,
+    };
+
+    const result = this.validator.validateField(value, config);
+
+    this.validationErrors.update((errors) => {
+      const next = new Set(errors);
+      if (!result.valid) {
+        next.add(fieldKey);
+      } else {
+        next.delete(fieldKey);
+      }
+      return next;
+    });
+  }
+
+  getFieldError(fieldKey: string): string | null {
+    const field = this.definition.fields.find((f) => f.key === fieldKey);
+    if (!field || !this.validationErrors().has(fieldKey)) return null;
+
+    const value = this.draft()[fieldKey] ?? '';
+    const config = {
+      required: field.required,
+      validateAs: field.validateAs,
+      min: field.min,
+      max: field.max,
+      minLength: field.minLength,
+      maxLength: field.maxLength,
+    };
+
+    const result = this.validator.validateField(value, config);
+    return result.error || null;
   }
   fieldPicklistOptions(field: ModuleField): ReadonlyArray<PicklistOption> {
     if (this.moduleKey === 'assignments' && field.key === 'equipment') {

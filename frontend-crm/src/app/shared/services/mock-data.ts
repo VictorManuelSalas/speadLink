@@ -10,7 +10,7 @@ export const MOCK_SERVICES = {
         name: 'Básico',
         speed: '5 Mbps',
         monthlyPrice: 300,
-        installationPrice: 1000,
+        installationPrice: 900,
         recommended: false,
         audience: ['Redes sociales', 'Navegación', 'Videos', 'Tareas', 'Uso cotidiano'],
       },
@@ -20,7 +20,7 @@ export const MOCK_SERVICES = {
         name: 'Intermedio',
         speed: '10 Mbps',
         monthlyPrice: 350,
-        installationPrice: 900,
+        installationPrice: 750,
         recommended: true,
         audience: [
           'Streaming',
@@ -35,7 +35,7 @@ export const MOCK_SERVICES = {
         name: 'Custom',
         speed: '15 Mbps',
         monthlyPrice: 400,
-        installationPrice: 800,
+        installationPrice: 650,
         recommended: false,
         audience: [
           'Trabajo en línea',

@@ -98,6 +98,25 @@ button:disabled {
   cursor: not-allowed;
   opacity: 0.45;
 }
+input.error {
+  border-color: #ef4444;
+  background-color: rgba(239, 68, 68, 0.05);
+}
+input.error:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+}
+.editable-field.has-error .editable-field__editor {
+  flex-wrap: wrap;
+}
+.editable-field__error {
+  width: 100%;
+  color: #ef4444;
+  font-size: 11px;
+  margin-top: -2px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
 @media (hover: none) {
   .editable-field__value button {
     opacity: 1;

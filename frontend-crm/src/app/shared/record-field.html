@@ -127,6 +127,7 @@
         [value]="value()"
         [displayValue]="config().displayValue || ''"
         [href]="config().href || automaticHref()"
+        [validationConfig]="config().validationConfig || null"
         (valueSaved)="valueSaved.emit($event)"
       />
     } @else {

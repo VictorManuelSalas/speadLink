@@ -4,6 +4,7 @@ import {
   Component,
   HostListener,
   computed,
+  effect,
   inject,
   input,
   output,
@@ -88,6 +89,7 @@ export class RecordList {
     { id: 'export', label: 'Exportar', icon: '⇩' },
     { id: 'delete', label: 'Eliminar', icon: '⊘', danger: true },
   ]);
+  readonly initialQuery = input('');
   readonly newRequested = output<void>();
   readonly rowAction = output<{ actionId: string; record: RecordListRow }>();
   readonly bulkAction = output<{
@@ -100,6 +102,15 @@ export class RecordList {
   readonly importModalOpen = signal(false);
   readonly query = signal('');
   readonly dense = signal(false);
+
+  constructor() {
+    effect(() => {
+      const initialQuery = this.initialQuery();
+      if (initialQuery) {
+        this.query.set(initialQuery);
+      }
+    });
+  }
   readonly filterPanel = signal(false);
   readonly filters = signal<ReadonlyArray<ActiveFilter>>([]);
   readonly selected = signal<ReadonlySet<string>>(new Set());

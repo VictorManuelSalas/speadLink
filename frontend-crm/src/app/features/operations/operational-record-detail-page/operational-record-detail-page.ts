@@ -43,7 +43,7 @@ import {
 } from '../record-sections/record-sections';
 import { InterestedServicesSectionComponent } from '../record-sections/interested-services-section';
 
-type DetailTab = 'Resumen' | 'Correos' | 'Eventos' | 'Notas' | 'Actividad' | 'Archivos';
+type DetailTab = 'Resumen' | 'Correos' | 'Eventos' | 'Notas' | 'Actividad' | 'Archivos' | 'Contratos' | 'Equipamiento' | 'Relaciones' | 'Detalles' | 'Conciliación' | 'Comprobante';
 
 interface RelatedItem {
   icon: string;
@@ -121,7 +121,19 @@ export class OperationalRecordDetailPage {
   readonly tabs: ReadonlyArray<DetailTab> =
     this.moduleKey === 'leads'
       ? ['Resumen', 'Correos', 'Eventos', 'Notas', 'Archivos', 'Actividad']
-      : ['Resumen', 'Notas', 'Archivos', 'Actividad'];
+      : this.moduleKey === 'services'
+        ? ['Resumen', 'Contratos', 'Notas', 'Archivos', 'Actividad']
+        : this.moduleKey === 'equipment'
+          ? ['Resumen', 'Equipamiento', 'Notas', 'Archivos', 'Actividad']
+          : this.moduleKey === 'assignments'
+            ? ['Resumen', 'Relaciones', 'Notas', 'Archivos', 'Actividad']
+            : this.moduleKey === 'invoices'
+              ? ['Resumen', 'Detalles', 'Notas', 'Archivos', 'Actividad']
+              : this.moduleKey === 'payments'
+                ? ['Resumen', 'Conciliación', 'Notas', 'Archivos', 'Actividad']
+                : this.moduleKey === 'expenses'
+                  ? ['Resumen', 'Comprobante', 'Notas', 'Archivos', 'Actividad']
+                  : ['Resumen', 'Notas', 'Archivos', 'Actividad'];
   readonly activeTab = signal<DetailTab>('Resumen');
   readonly contractItems = signal<ReadonlyArray<ContractItemDraft>>([]);
   readonly contractTotal = computed(() =>
@@ -154,6 +166,7 @@ export class OperationalRecordDetailPage {
     }
   }
   recordTabs(id: string): ReadonlyArray<RecordTabItem> {
+    const record = this.record();
     return this.tabs.map((label) => ({
       label,
       count:
@@ -165,7 +178,9 @@ export class OperationalRecordDetailPage {
               ? this.recordFiles(id).length
               : label === 'Correos'
                 ? this.emails(id).length
-                : undefined,
+                : label === 'Contratos' && record
+                  ? this.relatedItems(record).length
+                  : undefined,
     }));
   }
   setActiveTab(value: string): void {
@@ -392,8 +407,10 @@ export class OperationalRecordDetailPage {
       .filter(
         (key) =>
           key !== 'id' &&
+          key !== 'updatedAt' &&
           !(this.moduleKey === 'leads' && (key === 'latitude' || key === 'longitude')) &&
-          !(this.moduleKey === 'contracts' && key === 'items'),
+          !(this.moduleKey === 'contracts' && key === 'items') &&
+          !(this.moduleKey === 'services' && key === 'updatedAt'),
       )
       .map((key) => {
         const column = this.definition.columns.find((item) => item.key === key);
@@ -430,13 +447,17 @@ export class OperationalRecordDetailPage {
           ? 'select'
           : field.type === 'date'
             ? 'date'
-            : field.type === 'money'
+            : field.type === 'money' && !field.editable
               ? 'money'
-              : this.editableInputType(field.key) === 'email'
-                ? 'email'
-                : this.editableInputType(field.key) === 'tel'
-                  ? 'phone'
-                  : 'text';
+              : field.inputType === 'number' && field.editable
+                ? 'text'
+                : this.editableInputType(field.key) === 'email'
+                  ? 'email'
+                  : this.editableInputType(field.key) === 'tel'
+                    ? 'phone'
+                    : field.type === 'money'
+                      ? 'money'
+                      : 'text';
     return {
       key: field.key,
       label: field.label,
@@ -850,24 +871,23 @@ export class OperationalRecordDetailPage {
           tone: 'blue',
         },
       ],
-      services: [
-        {
+      services: (() => {
+        const clients = [
+          { id: '817', name: 'José Luis Hernández', detail: `1 × ${this.primaryValue(record)}` },
+          { id: '812', name: 'Morgan Díaz', detail: 'Renovación anual automática' },
+          { id: '805', name: 'Consultorio Dental Sonríe', detail: `2 × ${this.primaryValue(record)}` },
+          { id: '820', name: 'Distribuidora Nova', detail: `1 × ${this.primaryValue(record)}` },
+          { id: '825', name: 'Farmacia El Árnica', detail: 'Plan anual vigente' },
+        ];
+        return clients.map((client, index) => ({
           icon: '▤',
-          title: 'SL-CTR-0817 · José Luis Hernández',
-          detail: `1 × ${this.primaryValue(record)}`,
+          title: `SL-CTR-0${client.id} · ${client.name}`,
+          detail: client.detail,
           meta: 'Activo',
           tone: 'green',
-          route: ['/contracts', 'CTR-2026-817'],
-        },
-        {
-          icon: '▤',
-          title: 'SL-CTR-0812 · Morgan Díaz',
-          detail: 'Renovación anual automática',
-          meta: 'Activo',
-          tone: 'green',
-          route: ['/contracts', 'CTR-2026-816'],
-        },
-      ],
+          route: ['/contracts', `CTR-2026-${client.id}`],
+        }));
+      })(),
       equipment: [
         {
           icon: '⌂',

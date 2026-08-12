@@ -461,40 +461,6 @@
                     </article>
                   }
 
-                  @if (moduleKey !== 'leads' && moduleKey !== 'contracts') {
-                    <article class="card section-card related-card">
-                      <div class="card-heading">
-                        <div>
-                          <h2>{{ relatedTitle() }}</h2>
-                          <p>{{ relatedSubtitle() }}</p>
-                        </div>
-                        <button class="link-button" type="button">Ver todos</button>
-                      </div>
-                      @for (related of relatedItems(item); track related.title) {
-                        @if (related.route) {
-                          <a class="related-row related-row--link" [routerLink]="related.route">
-                            <span class="related-icon related-icon--{{ related.tone }}">{{
-                              related.icon
-                            }}</span
-                            ><span
-                              ><b>{{ related.title }}</b
-                              ><small>{{ related.detail }}</small></span
-                            ><em>{{ related.meta }} <i>↗</i></em>
-                          </a>
-                        } @else {
-                          <div class="related-row">
-                            <span class="related-icon related-icon--{{ related.tone }}">{{
-                              related.icon
-                            }}</span
-                            ><span
-                              ><b>{{ related.title }}</b
-                              ><small>{{ related.detail }}</small></span
-                            ><em>{{ related.meta }}</em>
-                          </div>
-                        }
-                      }
-                    </article>
-                  }
                   @if (pinnedNotes(item.id).length) {
                     <article class="card section-card overview-pinned-notes">
                       <div class="card-heading">
@@ -545,6 +511,48 @@
                   <app-record-recent-activity [recordId]="item.id" />
                 </div>
               </app-record-detail-layout>
+            }
+            @case ('Contratos') {
+              @if (relatedItems(item).length) {
+                <section class="contracts-section">
+                  <header class="contracts-heading">
+                    <div>
+                      <h2>{{ relatedTitle() }}</h2>
+                      <p>{{ relatedSubtitle() }}</p>
+                    </div>
+                    <a
+                      class="button button--primary"
+                      [routerLink]="['/contracts']"
+                      [queryParams]="{ search: primaryValue(item) }"
+                    >Ver todos</a>
+                  </header>
+                  <article class="card section-card related-card">
+                    @for (related of relatedItems(item); track related.title) {
+                      @if (related.route) {
+                        <a class="related-row related-row--link" [routerLink]="related.route">
+                          <span class="related-icon related-icon--{{ related.tone }}">{{
+                            related.icon
+                          }}</span
+                          ><span
+                            ><b>{{ related.title }}</b
+                            ><small>{{ related.detail }}</small></span
+                          ><em>{{ related.meta }} <i>↗</i></em>
+                        </a>
+                      } @else {
+                        <div class="related-row">
+                          <span class="related-icon related-icon--{{ related.tone }}">{{
+                            related.icon
+                          }}</span
+                          ><span
+                            ><b>{{ related.title }}</b
+                            ><small>{{ related.detail }}</small></span
+                          ><em>{{ related.meta }}</em>
+                        </div>
+                      }
+                    }
+                  </article>
+                </section>
+              }
             }
             @case ('Notas') {
               <section class="notes-section">

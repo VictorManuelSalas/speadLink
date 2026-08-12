@@ -1,4 +1,4 @@
-import { Component, Input, inject, signal } from '@angular/core';
+import { Component, Input, OnInit, OnChanges, inject, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { OperationalStore } from '../operational-store';
@@ -20,14 +20,27 @@ interface ServiceItem {
   templateUrl: './interested-services-section.html',
   styleUrl: './interested-services-section.scss'
 })
-export class InterestedServicesSectionComponent {
+export class InterestedServicesSectionComponent implements OnInit, OnChanges {
   @Input() recordId: string = '';
 
   private store = inject(OperationalStore);
   services = signal<ServiceItem[]>([]);
+  private recordIdSignal = signal<string>('');
 
   constructor() {
-    this.loadServices();
+    effect(() => {
+      if (this.recordIdSignal()) {
+        this.loadServices();
+      }
+    });
+  }
+
+  ngOnInit() {
+    this.recordIdSignal.set(this.recordId);
+  }
+
+  ngOnChanges() {
+    this.recordIdSignal.set(this.recordId);
   }
 
   private loadServices(): void {

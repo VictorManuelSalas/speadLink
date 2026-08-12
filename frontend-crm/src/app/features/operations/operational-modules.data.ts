@@ -24,8 +24,11 @@ export interface ModuleField {
   placeholder?: string;
   min?: number;
   max?: number;
+  minLength?: number;
+  maxLength?: number;
   schemaKey?: string;
   optionLabels?: Readonly<Record<string, string>>;
+  validateAs?: 'email' | 'phone' | 'number' | 'date' | 'text' | 'url';
 }
 
 export interface OperationalModuleDefinition {
@@ -68,10 +71,10 @@ export const OPERATIONAL_MODULES: Readonly<
       { key: 'updatedAt', label: 'Actualizado', type: 'date' },
     ],
     fields: [
-      { key: 'name', label: 'Nombre', type: 'text', required: true },
-      { key: 'email', label: 'Correo', type: 'text' },
-      { key: 'phone', label: 'Teléfono', type: 'text' },
-      { key: 'cellphone', label: 'Celular', type: 'text' },
+      { key: 'name', label: 'Nombre', type: 'text', required: true, minLength: 2, maxLength: 150 },
+      { key: 'email', label: 'Correo', type: 'text', validateAs: 'email' },
+      { key: 'phone', label: 'Teléfono', type: 'text', validateAs: 'phone' },
+      { key: 'cellphone', label: 'Celular', type: 'text', validateAs: 'phone' },
       {
         key: 'prospectType',
         label: 'Tipo de prospecto',
@@ -79,9 +82,9 @@ export const OPERATIONAL_MODULES: Readonly<
         options: ['Hogar', 'Negocio'],
         schemaKey: 'type',
       },
-      { key: 'address', label: 'Dirección', type: 'text' },
-      { key: 'latitude', label: 'Latitud', type: 'number' },
-      { key: 'longitude', label: 'Longitud', type: 'number' },
+      { key: 'address', label: 'Dirección', type: 'text', minLength: 5, maxLength: 255 },
+      { key: 'latitude', label: 'Latitud', type: 'number', min: -90, max: 90 },
+      { key: 'longitude', label: 'Longitud', type: 'number', min: -180, max: 180 },
       {
         key: 'source',
         label: 'Origen',
@@ -94,7 +97,7 @@ export const OPERATIONAL_MODULES: Readonly<
         type: 'select',
         options: ['NEW', 'CONTACTED', 'QUALIFIED', 'LOST', 'CONVERTED'],
       },
-      { key: 'notes', label: 'Notas', type: 'text' },
+      { key: 'notes', label: 'Notas', type: 'text', maxLength: 1000 },
     ],
     records: [
       {
@@ -158,19 +161,18 @@ export const OPERATIONAL_MODULES: Readonly<
       { key: 'price', label: 'Precio', type: 'money' },
       { key: 'contracts', label: 'Contratos', type: 'text' },
       { key: 'status', label: 'Estado', type: 'status' },
-      { key: 'updatedAt', label: 'Actualizado', type: 'date' },
     ],
     fields: [
-      { key: 'name', label: 'Nombre', type: 'text', required: true },
-      { key: 'description', label: 'Descripción', type: 'text' },
-      { key: 'price', label: 'Precio', type: 'number', required: true },
+      { key: 'name', label: 'Nombre', type: 'text', required: true, minLength: 2, maxLength: 150 },
+      { key: 'description', label: 'Descripción', type: 'text', maxLength: 500 },
+      { key: 'price', label: 'Precio', type: 'number', required: true, min: 0, max: 999999 },
       {
         key: 'type',
         label: 'Tipo',
         type: 'select',
         options: ['Internet', 'Streaming', 'Complemento'],
       },
-      { key: 'isActive', label: 'Activo', type: 'select', options: ['true', 'false'] },
+      { key: 'status', label: 'Estado', type: 'select', options: ['ACTIVE', 'INACTIVE', 'ARCHIVED'] },
     ],
     records: [
       {
@@ -181,7 +183,6 @@ export const OPERATIONAL_MODULES: Readonly<
         price: 350,
         contracts: 412,
         status: 'ACTIVE',
-        updatedAt: '2026-07-18',
       },
       {
         id: 'SRV-100',
@@ -190,7 +191,6 @@ export const OPERATIONAL_MODULES: Readonly<
         price: 850,
         contracts: 184,
         status: 'ACTIVE',
-        updatedAt: '2026-07-15',
       },
       {
         id: 'SRV-090',
@@ -199,7 +199,6 @@ export const OPERATIONAL_MODULES: Readonly<
         price: 620,
         contracts: 327,
         status: 'ACTIVE',
-        updatedAt: '2026-07-12',
       },
       {
         id: 'SRV-ADD-4',
@@ -208,7 +207,6 @@ export const OPERATIONAL_MODULES: Readonly<
         price: 120,
         contracts: 96,
         status: 'ACTIVE',
-        updatedAt: '2026-07-10',
       },
     ],
   },
@@ -235,21 +233,21 @@ export const OPERATIONAL_MODULES: Readonly<
       { key: 'purchaseCost', label: 'Costo', type: 'money' },
     ],
     fields: [
-      { key: 'name', label: 'Nombre', type: 'text', required: true },
-      { key: 'brand', label: 'Marca', type: 'text' },
-      { key: 'model', label: 'Modelo', type: 'text' },
-      { key: 'serialNumber', label: 'Número de serie', type: 'text' },
-      { key: 'macAddress', label: 'Dirección MAC', type: 'text' },
+      { key: 'name', label: 'Nombre', type: 'text', required: true, minLength: 2, maxLength: 150 },
+      { key: 'brand', label: 'Marca', type: 'text', minLength: 2, maxLength: 100 },
+      { key: 'model', label: 'Modelo', type: 'text', minLength: 2, maxLength: 100 },
+      { key: 'serialNumber', label: 'Número de serie', type: 'text', minLength: 2, maxLength: 100 },
+      { key: 'macAddress', label: 'Dirección MAC', type: 'text', validateAs: 'text', minLength: 17, maxLength: 17 },
       {
         key: 'status',
         label: 'Estado',
         type: 'select',
         options: ['AVAILABLE', 'ASSIGNED', 'DAMAGED', 'RETIRED', 'IN_REPAIR'],
       },
-      { key: 'purchaseCost', label: 'Costo', type: 'number' },
+      { key: 'purchaseCost', label: 'Costo', type: 'number', min: 0, max: 9999999 },
       { key: 'purchaseDate', label: 'Fecha de compra', type: 'date' },
-      { key: 'assignedTo', label: 'Asignado a', type: 'text' },
-      { key: 'notes', label: 'Notas', type: 'text' },
+      { key: 'assignedTo', label: 'Asignado a', type: 'text', minLength: 2, maxLength: 150 },
+      { key: 'notes', label: 'Notas', type: 'text', maxLength: 1000 },
     ],
     records: [
       {
@@ -329,9 +327,9 @@ export const OPERATIONAL_MODULES: Readonly<
         schemaKey: 'equipmentId',
         required: true,
       },
-      { key: 'assignedAt', label: 'Fecha de asignación', type: 'date' },
-      { key: 'returnedAt', label: 'Fecha de devolución', type: 'date' },
-      { key: 'notes', label: 'Notas', type: 'text' },
+      { key: 'assignedAt', label: 'Fecha de asignación', type: 'date', validateAs: 'date' },
+      { key: 'returnedAt', label: 'Fecha de devolución', type: 'date', validateAs: 'date' },
+      { key: 'notes', label: 'Notas', type: 'text', maxLength: 1000 },
     ],
     records: [
       {
@@ -384,7 +382,7 @@ export const OPERATIONAL_MODULES: Readonly<
       { key: 'totalMonthly', label: 'Mensualidad', type: 'money' },
     ],
     fields: [
-      { key: 'contractNumber', label: 'Número de contrato', type: 'text', required: true },
+      { key: 'contractNumber', label: 'Número de contrato', type: 'text', required: true, minLength: 2, maxLength: 50 },
       {
         key: 'client',
         label: 'Cliente',
@@ -399,17 +397,17 @@ export const OPERATIONAL_MODULES: Readonly<
         schemaKey: 'clientId',
         required: true,
       },
-      { key: 'startDate', label: 'Fecha de inicio', type: 'date', required: true },
-      { key: 'endDate', label: 'Fecha final', type: 'date' },
-      { key: 'signedAt', label: 'Fecha de firma', type: 'date' },
-      { key: 'totalMonthly', label: 'Mensualidad', type: 'number', required: true, min: 0 },
+      { key: 'startDate', label: 'Fecha de inicio', type: 'date', required: true, validateAs: 'date' },
+      { key: 'endDate', label: 'Fecha final', type: 'date', validateAs: 'date' },
+      { key: 'signedAt', label: 'Fecha de firma', type: 'date', validateAs: 'date' },
+      { key: 'totalMonthly', label: 'Mensualidad', type: 'number', required: true, min: 0, max: 999999 },
       {
         key: 'status',
         label: 'Estado',
         type: 'select',
         options: ['PENDING_SIGNATURE', 'ACTIVE', 'EXPIRED', 'CANCELLED'],
       },
-      { key: 'notes', label: 'Notas', type: 'text' },
+      { key: 'notes', label: 'Notas', type: 'text', maxLength: 1000 },
     ],
     records: [
       {
@@ -470,7 +468,7 @@ export const OPERATIONAL_MODULES: Readonly<
       { key: 'status', label: 'Estado', type: 'status' },
     ],
     fields: [
-      { key: 'folio', label: 'Folio', type: 'text', required: true },
+      { key: 'folio', label: 'Folio', type: 'text', required: true, minLength: 2, maxLength: 50 },
       {
         key: 'client',
         label: 'Cliente',
@@ -484,18 +482,18 @@ export const OPERATIONAL_MODULES: Readonly<
         schemaKey: 'clientId',
         required: true,
       },
-      { key: 'issueDate', label: 'Fecha de emisión', type: 'date' },
-      { key: 'dueDate', label: 'Fecha de vencimiento', type: 'date', required: true },
-      { key: 'subtotal', label: 'Subtotal', type: 'number', required: true, min: 0 },
-      { key: 'taxAmount', label: 'Impuestos', type: 'number', min: 0 },
-      { key: 'total', label: 'Total', type: 'number', required: true, min: 0 },
+      { key: 'issueDate', label: 'Fecha de emisión', type: 'date', validateAs: 'date' },
+      { key: 'dueDate', label: 'Fecha de vencimiento', type: 'date', required: true, validateAs: 'date' },
+      { key: 'subtotal', label: 'Subtotal', type: 'number', required: true, min: 0, max: 9999999 },
+      { key: 'taxAmount', label: 'Impuestos', type: 'number', min: 0, max: 9999999 },
+      { key: 'total', label: 'Total', type: 'number', required: true, min: 0, max: 9999999 },
       {
         key: 'status',
         label: 'Estado',
         type: 'select',
         options: ['DRAFT', 'PENDING', 'PAID', 'OVERDUE', 'CANCELLED'],
       },
-      { key: 'notes', label: 'Notas', type: 'text' },
+      { key: 'notes', label: 'Notas', type: 'text', maxLength: 1000 },
     ],
     records: [
       {
@@ -570,16 +568,16 @@ export const OPERATIONAL_MODULES: Readonly<
         options: ['INV-4485', 'INV-4484', 'INV-4481'],
         schemaKey: 'invoiceId',
       },
-      { key: 'amount', label: 'Importe', type: 'number', required: true },
+      { key: 'amount', label: 'Importe', type: 'number', required: true, min: 0.01, max: 9999999 },
       {
         key: 'method',
         label: 'Método',
         type: 'select',
         options: ['CASH', 'BANK_TRANSFER', 'CREDIT_CARD', 'DEBIT_CARD', 'CHECK', 'OTHER'],
       },
-      { key: 'reference', label: 'Referencia', type: 'text' },
-      { key: 'paidAt', label: 'Fecha de pago', type: 'date' },
-      { key: 'notes', label: 'Notas', type: 'text' },
+      { key: 'reference', label: 'Referencia', type: 'text', minLength: 2, maxLength: 100 },
+      { key: 'paidAt', label: 'Fecha de pago', type: 'date', validateAs: 'date' },
+      { key: 'notes', label: 'Notas', type: 'text', maxLength: 1000 },
     ],
     records: [
       {
@@ -634,8 +632,8 @@ export const OPERATIONAL_MODULES: Readonly<
       { key: 'amount', label: 'Importe', type: 'money' },
     ],
     fields: [
-      { key: 'description', label: 'Concepto', type: 'text', required: true },
-      { key: 'vendor', label: 'Proveedor', type: 'text' },
+      { key: 'description', label: 'Concepto', type: 'text', required: true, minLength: 5, maxLength: 255 },
+      { key: 'vendor', label: 'Proveedor', type: 'text', minLength: 2, maxLength: 150 },
       {
         key: 'category',
         label: 'Categoría',
@@ -651,9 +649,9 @@ export const OPERATIONAL_MODULES: Readonly<
           'OTHER',
         ],
       },
-      { key: 'amount', label: 'Importe', type: 'number', required: true },
-      { key: 'date', label: 'Fecha', type: 'date', required: true },
-      { key: 'receiptUrl', label: 'URL del comprobante', type: 'text' },
+      { key: 'amount', label: 'Importe', type: 'number', required: true, min: 0.01, max: 9999999 },
+      { key: 'date', label: 'Fecha', type: 'date', required: true, validateAs: 'date' },
+      { key: 'receiptUrl', label: 'URL del comprobante', type: 'text', validateAs: 'url' },
     ],
     records: [
       {

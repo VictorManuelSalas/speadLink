@@ -533,6 +533,25 @@ table.is-dense td {
   border-color: #93c5fd;
   box-shadow: 0 0 0 3px #dbeafe;
 }
+.record-form input.error,
+.record-form textarea.error {
+  border-color: #ef4444;
+  background-color: rgba(239, 68, 68, 0.05);
+}
+.record-form input.error:focus,
+.record-form textarea.error:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+}
+.record-form label.has-error {
+  color: #dc2626;
+}
+.field-error {
+  color: #ef4444;
+  font-size: 10px;
+  margin-top: 2px;
+  display: block;
+}
 .create-dialog > footer,
 .bulk-dialog > footer {
   padding: 14px 22px 19px;

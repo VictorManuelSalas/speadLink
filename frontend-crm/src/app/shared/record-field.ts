@@ -1,6 +1,7 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, input, output, signal } from '@angular/core';
 import { LanguageService } from '../core/i18n/language.service';
+import { ValidationConfig } from '../core/services/field-validator.service';
 import { RouterLink } from '@angular/router';
 import { GpsLocationPicker } from './gps-location-picker';
 import { InlineEditableDateField } from './inline-editable-date-field';
@@ -41,6 +42,7 @@ export interface RecordFieldConfig {
   readonly auditUser?: RecordAuditUser;
   readonly statusLabel?: string;
   readonly statusTone?: string;
+  readonly validationConfig?: ValidationConfig;
 }
 
 @Component({
