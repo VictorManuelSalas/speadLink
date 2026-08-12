@@ -606,7 +606,7 @@ export const OPERATIONAL_MODULES: Readonly<
       {
         id: 'PAY-74021',
         reference: 'ACH-4421A',
-        client: 'José Luis Hernández',
+        client: 'SL-1040',
         invoice: 'INV-4485',
         paidAt: '2026-07-18T10:24:00-06:00',
         method: 'BANK_TRANSFER',
@@ -615,7 +615,7 @@ export const OPERATIONAL_MODULES: Readonly<
       {
         id: 'PAY-74020',
         reference: 'CASH-1048',
-        client: 'Morgan Díaz',
+        client: 'SL-1041',
         invoice: 'INV-4484',
         paidAt: '2026-07-18T09:02:00-06:00',
         method: 'CASH',
