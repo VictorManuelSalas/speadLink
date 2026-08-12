@@ -588,6 +588,37 @@ table.is-dense td {
   background: var(--color-background);
   color: var(--color-text-primary);
 }
+.error-banner {
+  grid-column: 1/-1;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  background: #fee2e2;
+  color: #991b1b;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.error-banner button {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #991b1b;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.error-banner button:hover {
+  opacity: 0.7;
+}
 @media (max-width: 1000px) {
   .module-stats {
     grid-template-columns: 1fr 1fr;

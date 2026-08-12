@@ -330,6 +330,11 @@ export class OperationalRecordDetailPage {
         .find((record) => text.includes(String(record['name'])));
       return service ? ['/services', service.id] : null;
     }
+
+    const field = this.definition.fields.find((f) => f.key === key);
+    if (field?.options && field?.relatedModule) {
+      return [`/${field.relatedModule}`, text];
+    }
     return null;
   }
   lookupPreview(key: string, value: string | number | boolean): LookupPreview | null {

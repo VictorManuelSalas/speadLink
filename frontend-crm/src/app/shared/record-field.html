@@ -73,23 +73,56 @@
     }
   }
   @case ('lookup') {
-    <div class="field lookup">
-      <span>{{ config().label }}</span
-      ><a [routerLink]="config().route"
-        ><b>{{ config().displayValue || value() || '—' }}</b
-        ><i>↗</i>
-        @if (config().preview; as preview) {
-          <aside>
-            <span>{{ preview.initials }}</span>
-            <div>
-              <small>{{ preview.type }}</small
-              ><b>{{ preview.title }}</b
-              ><em>{{ preview.detail }}</em>
-            </div>
-          </aside>
-        }
-      </a>
-    </div>
+    @if (editing()) {
+      <div class="field">
+        <span>{{ config().label }}</span>
+        <div class="editor">
+          <select #choice [value]="value()">
+            @for (option of config().options ?? []; track option) {
+              <option [value]="option">{{ (config().optionLabels || {})[option] || option }}</option>
+            }</select
+          ><button class="save" type="button" (click)="save(choice.value)">✓</button
+          ><button type="button" (click)="editing.set(false)">×</button>
+        </div>
+      </div>
+    } @else {
+      @if (config().route) {
+        <div class="field lookup">
+          <span>{{ config().label }}</span
+          ><a [routerLink]="config().route"
+            ><b>{{ config().displayValue || value() || '—' }}</b
+            ><i>↗</i>
+            @if (config().preview; as preview) {
+              <aside>
+                <span>{{ preview.initials }}</span>
+                <div>
+                  <small>{{ preview.type }}</small
+                  ><b>{{ preview.title }}</b
+                  ><em>{{ preview.detail }}</em>
+                </div>
+              </aside>
+            }
+          </a>
+          @if (config().editable) {
+            <button class="edit" type="button" (click)="editing.set(true)">
+              {{ editIcon }}
+            </button>
+          }
+        </div>
+      } @else {
+        <div class="field">
+          <span>{{ config().label }}</span>
+          <div class="value">
+            <b>{{ config().displayValue || value() || '—' }}</b>
+            @if (config().editable) {
+              <button class="edit" type="button" (click)="editing.set(true)">
+                {{ editIcon }}
+              </button>
+            }
+          </div>
+        </div>
+      }
+    }
   }
   @case ('audit') {
     <div class="field">

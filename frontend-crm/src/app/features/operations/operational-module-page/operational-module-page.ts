@@ -1,4 +1,4 @@
-import { CurrencyPipe, DatePipe } from '@angular/common';
+import { CurrencyPipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -7,7 +7,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { CRM_DATA } from '../../../core/data-access/crm-data';
 import { LanguageService } from '../../../core/i18n/language.service';
 import { FieldValidatorService } from '../../../core/services/field-validator.service';
@@ -44,10 +44,8 @@ const INTERNET_PERMANENCE_MONTHS = 6;
   selector: 'app-operational-module-page',
   imports: [
     CurrencyPipe,
-    DatePipe,
     InlineEditableDateField,
     RecordList,
-    RouterLink,
     StyledPicklist,
   ],
   templateUrl: './operational-module-page.html',
@@ -74,6 +72,7 @@ export class OperationalModulePage {
   readonly bulkField = signal('status');
   readonly bulkValue = signal('');
   readonly draft = signal<Record<string, string>>({});
+  readonly assignmentValidationError = signal<string>('');
   readonly contractItems = signal<ReadonlyArray<ContractItemDraft>>([]);
   readonly editingContractId = signal<string | null>(null);
   readonly editingContract = signal<{ contractNumber: string; clientName: string } | null>(null);
@@ -130,7 +129,8 @@ export class OperationalModulePage {
       .filter((field) => field.required)
       .every((field) => this.draft()[field.key]?.trim());
     const hasErrors = this.validationErrors().size > 0;
-    return fieldsReady && !hasErrors && (this.moduleKey !== 'contracts' || itemsReady);
+    const hasAssignmentError = this.moduleKey === 'assignments' && this.assignmentValidationError();
+    return fieldsReady && !hasErrors && !hasAssignmentError && (this.moduleKey !== 'contracts' || itemsReady);
   });
 
   constructor() {
@@ -138,6 +138,15 @@ export class OperationalModulePage {
       const searchParam = params.get('search');
       if (searchParam) {
         this.query.set(searchParam);
+      }
+      const equipmentId = params.get('equipment');
+      if (equipmentId && this.moduleKey === 'assignments') {
+        this.openCreate({
+          equipment: equipmentId,
+          assignedAt: new Date().toISOString().slice(0, 10),
+          status: 'ACTIVE',
+        });
+        return;
       }
       if (params.get('create') !== 'true') return;
       const clientId = params.get('clientId') ?? '';
@@ -295,7 +304,9 @@ export class OperationalModulePage {
   openCreate(seed: Record<string, string> = {}): void {
     this.editingContractId.set(null);
     this.editingContract.set(null);
-    this.draft.set(seed);
+    const initialDraft =
+      this.moduleKey === 'leads' ? { status: 'NEW', ...seed } : seed;
+    this.draft.set(initialDraft);
     this.validationErrors.set(new Set());
     this.contractItems.set(
       this.moduleKey === 'contracts'
@@ -344,6 +355,19 @@ export class OperationalModulePage {
   setDraft(key: string, value: string): void {
     this.draft.update((draft) => ({ ...draft, [key]: value }));
     this.validateField(key);
+    if (this.moduleKey === 'assignments' && key === 'equipment' && value) {
+      const assignments = this.store.records()['assignments'] || [];
+      const activeAssignment = assignments.find(
+        (a) => a['equipment'] === value && a['status'] === 'ACTIVE'
+      );
+      if (activeAssignment) {
+        this.assignmentValidationError.set(
+          'No se puede asignar este equipo. Ya existe una asignación activa.'
+        );
+      } else {
+        this.assignmentValidationError.set('');
+      }
+    }
   }
 
   validateField(fieldKey: string): void {
@@ -361,10 +385,21 @@ export class OperationalModulePage {
     };
 
     const result = this.validator.validateField(value, config);
+    let hasError = !result.valid;
+
+    if (this.moduleKey === 'assignments' && fieldKey === 'equipment' && value) {
+      const assignments = this.store.records()['assignments'] || [];
+      const activeAssignment = assignments.find(
+        (a) => a['equipment'] === value && a['status'] === 'ACTIVE'
+      );
+      if (activeAssignment) {
+        hasError = true;
+      }
+    }
 
     this.validationErrors.update((errors) => {
       const next = new Set(errors);
-      if (!result.valid) {
+      if (hasError) {
         next.add(fieldKey);
       } else {
         next.delete(fieldKey);
@@ -495,7 +530,7 @@ export class OperationalModulePage {
   private syncContractTotal(): void {
     this.setDraft('totalMonthly', String(this.contractTotal()));
   }
-  inputType(key: string, type: 'text' | 'number' | 'date' | 'select'): string {
+  inputType(key: string, type: 'text' | 'number' | 'date' | 'select' | 'status' | 'lookup'): string {
     if (type !== 'text') return type;
     if (key.toLowerCase().includes('email')) return 'email';
     if (key.toLowerCase().includes('phone') || key === 'cellphone') return 'tel';
@@ -507,6 +542,21 @@ export class OperationalModulePage {
     if (this.moduleKey === 'contracts' && this.editingContractId()) {
       this.saveContractItemsEdit();
       return;
+    }
+    if (this.moduleKey === 'assignments') {
+      const equipmentId = this.draft()['equipment'];
+      if (equipmentId) {
+        const assignments = this.store.records()['assignments'] || [];
+        const activeAssignment = assignments.find(
+          (a) => a['equipment'] === equipmentId && a['status'] === 'ACTIVE'
+        );
+        if (activeAssignment) {
+          this.assignmentValidationError.set(
+            'No se puede crear una nueva asignación. Existe una asignación activa para este equipo.'
+          );
+          return;
+        }
+      }
     }
     const now = new Date().toISOString();
     const record: OperationalRecord = {
@@ -551,6 +601,23 @@ export class OperationalModulePage {
     if (!record['status'] && this.statusOptions().length)
       record['status'] = this.statusOptions()[0];
     this.store.add(this.moduleKey, record);
+
+    // Si es un equipo con cliente asignado, crear registro de asignación
+    if (this.moduleKey === 'equipment' && record['assignedToId']) {
+      const assignmentRecord: OperationalRecord = {
+        id: `ASG-${this.store.records()['assignments']?.length ?? 0 + 1001}`,
+        clientId: record['assignedToId'],
+        client: record['assignedTo'],
+        equipmentId: record.id,
+        equipment: record['name'],
+        assignedAt: now,
+        status: 'ACTIVE',
+        createdAt: now,
+        updatedAt: now,
+      };
+      this.store.add('assignments', assignmentRecord);
+    }
+
     this.closeCreate();
   }
   private saveContractItemsEdit(): void {

@@ -3,9 +3,10 @@
   "configurations": [
     {
       "name": "frontend-crm",
-      "runtimeExecutable": "docker-compose",
-      "runtimeArgs": ["up", "--build"],
-      "port": 4200
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 4200,
+      "autoPort": true
     }
   ]
 }

@@ -40,6 +40,12 @@
     <button type="button" (click)="closeCreate()">×</button>
   </header>
   <div class="record-form">
+    @if (moduleKey === 'assignments' && assignmentValidationError()) {
+    <div class="error-banner">
+      <span>⚠ {{ assignmentValidationError() }}</span>
+      <button type="button" (click)="assignmentValidationError.set('')">✕</button>
+    </div>
+    }
     @if (!editingContractId()) {
     @for (field of definition.fields; track field.key) {
     @if (!(moduleKey === 'contracts' && field.key === 'totalMonthly')) {

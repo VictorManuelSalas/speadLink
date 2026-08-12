@@ -43,14 +43,14 @@
               (input)="setCustomerDraft('name', customerName.value)"
           /></label>
           <label
-            ><span>Correo electrónico</span
+            ><span>Correo electrónico <b>*</b></span
             ><input
               #customerEmail
               type="email"
               (input)="setCustomerDraft('email', customerEmail.value)"
           /></label>
           <label
-            ><span>Teléfono</span
+            ><span>Teléfono <b>*</b></span
             ><input
               #customerPhone
               type="tel"
@@ -94,7 +94,7 @@
               (input)="setCustomerDraft('longitude', customerLongitude.value)"
           /></label>
           <label
-            ><span>Día de facturación</span
+            ><span>Día de facturación <b>*</b></span
             ><input
               #customerBillingDay
               type="number"

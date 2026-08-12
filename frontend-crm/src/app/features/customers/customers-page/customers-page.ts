@@ -58,7 +58,15 @@ export class CustomersPage {
     { value: 'cancelled', label: 'Cancelado' },
     { value: 'pending', label: 'Prospecto' },
   ];
-  readonly canCreateCustomer = computed(() => Boolean(this.customerDraft()['name']?.trim()));
+  readonly canCreateCustomer = computed(() => {
+    const draft = this.customerDraft();
+    return Boolean(
+      draft['name']?.trim() &&
+      draft['email']?.trim() &&
+      draft['phone']?.trim() &&
+      draft['billingDay']
+    );
+  });
   readonly listColumns = [
     { key: 'name', label: 'Cliente', type: 'identity', secondaryKey: 'phone' },
     { key: 'status', label: 'Estado', type: 'status' },
@@ -72,7 +80,7 @@ export class CustomersPage {
   readonly listFields: ReadonlyArray<RecordListField> = [
     { key: 'name', label: 'Nombre', type: 'text', required: true },
     { key: 'email', label: 'Correo', type: 'email', required: true },
-    { key: 'phone', label: 'Teléfono', type: 'phone' },
+    { key: 'phone', label: 'Teléfono', type: 'phone', required: true },
     {
       key: 'status',
       label: 'Estado',
@@ -81,7 +89,7 @@ export class CustomersPage {
     },
     { key: 'plan', label: 'Plan', type: 'select', options: ['Básico', 'Intermedio', 'Premium'] },
     { key: 'monthlyFee', label: 'Mensualidad', type: 'money' },
-    { key: 'billingDay', label: 'Día de cobro', type: 'number' },
+    { key: 'billingDay', label: 'Día de cobro', type: 'number', required: true },
     { key: 'currentBalance', label: 'Saldo', type: 'money' },
     { key: 'community', label: 'Zona', type: 'text' },
     { key: 'technician', label: 'Técnico', type: 'lookup' },

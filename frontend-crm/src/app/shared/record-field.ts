@@ -35,6 +35,7 @@ export interface RecordFieldConfig {
     | 'audit';
   readonly editable?: boolean;
   readonly options?: ReadonlyArray<string>;
+  readonly optionLabels?: Readonly<Record<string, string>>;
   readonly href?: string;
   readonly displayValue?: string;
   readonly route?: string | readonly unknown[];
@@ -86,5 +87,8 @@ export class RecordField {
       : this.config().kind === 'phone'
         ? `tel:${this.value()}`
         : '';
+  }
+  getOptionLabel(option: string): string {
+    return this.config().optionLabels?.[option] || option;
   }
 }
