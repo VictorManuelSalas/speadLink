@@ -8,7 +8,7 @@ export type OperationalModuleKey =
   | 'payments'
   | 'expenses';
 
-export type ColumnType = 'text' | 'identity' | 'status' | 'money' | 'date';
+export type ColumnType = 'text' | 'identity' | 'status' | 'money' | 'date' | 'lookup';
 
 export interface OperationalRecord {
   id: string;
@@ -18,7 +18,7 @@ export interface OperationalRecord {
 export interface ModuleField {
   key: string;
   label: string;
-  type: 'text' | 'number' | 'date' | 'select';
+  type: 'text' | 'number' | 'date' | 'select' | 'status' | 'lookup';
   options?: ReadonlyArray<string>;
   required?: boolean;
   placeholder?: string;
@@ -29,6 +29,7 @@ export interface ModuleField {
   schemaKey?: string;
   optionLabels?: Readonly<Record<string, string>>;
   validateAs?: 'email' | 'phone' | 'number' | 'date' | 'text' | 'url';
+  lookupModule?: string;
 }
 
 export interface OperationalModuleDefinition {
@@ -72,8 +73,8 @@ export const OPERATIONAL_MODULES: Readonly<
     ],
     fields: [
       { key: 'name', label: 'Nombre', type: 'text', required: true, minLength: 2, maxLength: 150 },
-      { key: 'email', label: 'Correo', type: 'text', validateAs: 'email' },
-      { key: 'phone', label: 'Teléfono', type: 'text', validateAs: 'phone' },
+      { key: 'email', label: 'Correo', type: 'text', required: true, validateAs: 'email' },
+      { key: 'phone', label: 'Teléfono', type: 'text', required: true, validateAs: 'phone' },
       { key: 'cellphone', label: 'Celular', type: 'text', validateAs: 'phone' },
       {
         key: 'prospectType',
@@ -89,12 +90,14 @@ export const OPERATIONAL_MODULES: Readonly<
         key: 'source',
         label: 'Origen',
         type: 'select',
+        required: true,
         options: ['Referido', 'Redes sociales', 'Sitio web', 'Llamada'],
       },
       {
         key: 'status',
         label: 'Estado',
         type: 'select',
+        required: true,
         options: ['NEW', 'CONTACTED', 'QUALIFIED', 'LOST', 'CONVERTED'],
       },
       { key: 'notes', label: 'Notas', type: 'text', maxLength: 1000 },
@@ -237,7 +240,7 @@ export const OPERATIONAL_MODULES: Readonly<
       { key: 'brand', label: 'Marca', type: 'text', minLength: 2, maxLength: 100 },
       { key: 'model', label: 'Modelo', type: 'text', minLength: 2, maxLength: 100 },
       { key: 'serialNumber', label: 'Número de serie', type: 'text', minLength: 2, maxLength: 100 },
-      { key: 'macAddress', label: 'Dirección MAC', type: 'text', validateAs: 'text', minLength: 17, maxLength: 17 },
+      { key: 'macAddress', label: 'Dirección MAC', type: 'text', required: true, validateAs: 'text', minLength: 17, maxLength: 17 },
       {
         key: 'status',
         label: 'Estado',
@@ -246,7 +249,20 @@ export const OPERATIONAL_MODULES: Readonly<
       },
       { key: 'purchaseCost', label: 'Costo', type: 'number', min: 0, max: 9999999 },
       { key: 'purchaseDate', label: 'Fecha de compra', type: 'date' },
-      { key: 'assignedTo', label: 'Asignado a', type: 'text', minLength: 2, maxLength: 150 },
+      {
+        key: 'assignedTo',
+        label: 'Asignado a',
+        type: 'select',
+        options: ['SL-1040', 'SL-1041', 'SL-1042', 'SL-1043', 'SL-1044'],
+        optionLabels: {
+          'SL-1040': 'José Luis Hernández',
+          'SL-1041': 'Morgan Díaz',
+          'SL-1042': 'Consultorio Dental Sonríe',
+          'SL-1043': 'Distribuidora Nova',
+          'SL-1044': 'Arbarrotes La Esperanza',
+        },
+        schemaKey: 'assignedToId',
+      },
       { key: 'notes', label: 'Notas', type: 'text', maxLength: 1000 },
     ],
     records: [
@@ -329,29 +345,36 @@ export const OPERATIONAL_MODULES: Readonly<
       },
       { key: 'assignedAt', label: 'Fecha de asignación', type: 'date', validateAs: 'date' },
       { key: 'returnedAt', label: 'Fecha de devolución', type: 'date', validateAs: 'date' },
+      {
+        key: 'status',
+        label: 'Estado',
+        type: 'select',
+        options: ['ACTIVE', 'RETURNED', 'INACTIVE'],
+        required: true,
+      },
       { key: 'notes', label: 'Notas', type: 'text', maxLength: 1000 },
     ],
     records: [
       {
         id: 'ASG-7831',
-        client: 'José Luis Hernández',
-        equipment: 'Antena CPE · LiteBeam 5AC',
+        client: 'SL-1040',
+        equipment: 'EQ-4092',
         serial: 'LBE5AC-4092',
         assignedAt: '2026-07-18',
         status: 'ACTIVE',
       },
       {
         id: 'ASG-7830',
-        client: 'Morgan Díaz',
-        equipment: 'Router Wi-Fi · Archer C6',
+        client: 'SL-1041',
+        equipment: 'EQ-4091',
         serial: 'ARCHC6-4091',
         assignedAt: '2026-07-17',
         status: 'ACTIVE',
       },
       {
         id: 'ASG-7818',
-        client: 'Consultorio Dental Sonríe',
-        equipment: 'Access Point · cAP ac',
+        client: 'SL-1042',
+        equipment: 'EQ-4088',
         serial: 'CAPAC-4088',
         assignedAt: '2026-07-11',
         returnedAt: '2026-07-16',
@@ -413,7 +436,7 @@ export const OPERATIONAL_MODULES: Readonly<
       {
         id: 'CTR-2026-817',
         contractNumber: 'SL-CTR-0817',
-        client: 'José Luis Hernández',
+        client: 'SL-1044',
         clientId: 'SL-1044',
         status: 'ACTIVE',
         startDate: '2026-01-15',
@@ -424,7 +447,7 @@ export const OPERATIONAL_MODULES: Readonly<
       {
         id: 'CTR-2026-816',
         contractNumber: 'SL-CTR-0816',
-        client: 'Distribuidora Nova',
+        client: 'SL-1043',
         clientId: 'SL-1043',
         status: 'PENDING_SIGNATURE',
         startDate: '2026-07-20',
@@ -435,7 +458,7 @@ export const OPERATIONAL_MODULES: Readonly<
       {
         id: 'CTR-2025-604',
         contractNumber: 'SL-CTR-0604',
-        client: 'Morgan Díaz',
+        client: 'SL-1041',
         clientId: 'SL-1041',
         status: 'EXPIRED',
         startDate: '2025-06-01',
@@ -499,7 +522,7 @@ export const OPERATIONAL_MODULES: Readonly<
       {
         id: 'INV-4485',
         folio: 'INV-4485',
-        client: 'José Luis Hernández',
+        client: 'SL-1040',
         issueDate: '2026-07-01',
         dueDate: '2026-07-10',
         total: 350,
@@ -508,7 +531,7 @@ export const OPERATIONAL_MODULES: Readonly<
       {
         id: 'INV-4484',
         folio: 'INV-4484',
-        client: 'Morgan Díaz',
+        client: 'SL-1041',
         issueDate: '2026-07-01',
         dueDate: '2026-07-10',
         total: 420,
@@ -517,7 +540,7 @@ export const OPERATIONAL_MODULES: Readonly<
       {
         id: 'INV-4481',
         folio: 'INV-4481',
-        client: 'Consultorio Dental Sonríe',
+        client: 'SL-1042',
         issueDate: '2026-06-01',
         dueDate: '2026-06-10',
         total: 700,
@@ -651,7 +674,6 @@ export const OPERATIONAL_MODULES: Readonly<
       },
       { key: 'amount', label: 'Importe', type: 'number', required: true, min: 0.01, max: 9999999 },
       { key: 'date', label: 'Fecha', type: 'date', required: true, validateAs: 'date' },
-      { key: 'receiptUrl', label: 'URL del comprobante', type: 'text', validateAs: 'url' },
     ],
     records: [
       {
@@ -660,7 +682,6 @@ export const OPERATIONAL_MODULES: Readonly<
         vendor: 'TecnoRed MX',
         category: 'EQUIPMENT',
         date: '2026-07-18',
-        receiptUrl: 'comprobante-exp-3104.pdf',
         amount: 18400,
       },
       {
@@ -669,7 +690,6 @@ export const OPERATIONAL_MODULES: Readonly<
         vendor: 'CFE',
         category: 'ELECTRICITY',
         date: '2026-07-16',
-        receiptUrl: 'comprobante-exp-3103.pdf',
         amount: 6280,
       },
       {
@@ -678,7 +698,6 @@ export const OPERATIONAL_MODULES: Readonly<
         vendor: 'Taller San Juan',
         category: 'MAINTENANCE',
         date: '2026-07-15',
-        receiptUrl: 'Pendiente',
         amount: 3850,
       },
     ],
