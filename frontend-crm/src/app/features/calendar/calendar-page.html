@@ -162,8 +162,8 @@
             <div>
               <dt>Responsable</dt>
               <dd>
-                <span class="avatar">{{ initials(event.assignedTo) }}</span
-                >{{ event.assignedTo }}
+                <span class="avatar">{{ initials(getResponsableName(event.assignedTo)) }}</span
+                ><a [routerLink]="getResponsableRoute(event.assignedTo)" class="lookup-link">{{ getResponsableName(event.assignedTo) }} ↗</a>
               </dd>
             </div>
             <div>
@@ -178,6 +178,9 @@
         </div>
         <footer>
           <button type="button" (click)="selectedEvent.set(null)">Cerrar</button
+          ><button type="button" (click)="selectedEvent.set(null); draft.set({type: event.type, title: event.title, client: event.client, assignedTo: event.assignedTo, startsAt: event.startsAt, endsAt: event.endsAt, description: event.description}); createOpen.set(true)">
+            Editar
+          </button
           ><button class="primary" type="button" (click)="completeEvent(event.id)">
             Marcar completado
           </button>
@@ -221,6 +224,12 @@
               [options]="clientOptions"
               [value]="draft()['client'] || ''"
               (valueChange)="setDraft('client', $event)"
+          /></label>
+          <label
+            >Responsable<app-styled-picklist
+              [options]="responsableOptions"
+              [value]="draft()['assignedTo'] || 'USR-001'"
+              (valueChange)="setDraft('assignedTo', $event)"
           /></label>
           <div class="form-date">
             <app-inline-editable-date-field

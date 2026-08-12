@@ -32,6 +32,11 @@ export class CalendarPage {
     { value: 'SL-1041', label: 'Morgan Díaz' },
     { value: 'SL-1042', label: 'Consultorio Dental Sonríe' },
   ];
+  readonly responsableOptions: ReadonlyArray<PicklistOption> = [
+    { value: 'USR-001', label: 'Andrea Torres' },
+    { value: 'USR-002', label: 'Carlos Mendoza' },
+    { value: 'USR-003', label: 'María García' },
+  ];
   readonly days = Array.from({ length: 35 }, (_, index) => {
     const date = new Date(2026, 5, 29 + index);
     return {
@@ -44,7 +49,7 @@ export class CalendarPage {
   readonly activeFilter = signal<string>('ALL');
   readonly selectedEvent = signal<CalendarEvent | null>(null);
   readonly createOpen = signal(false);
-  readonly draft = signal<Record<string, string>>({ type: 'INSTALLATION' });
+  readonly draft = signal<Record<string, string>>({ type: 'INSTALLATION', assignedTo: 'USR-001' });
   readonly monthEvents = computed(() =>
     this.events().filter((event) => event.startsAt.startsWith('2026-07')),
   );
@@ -113,6 +118,17 @@ export class CalendarPage {
   getClientRoute(clientId: string): string | null {
     return clientId ? `/customers/${clientId}` : null;
   }
+  getResponsableName(userId: string): string {
+    const userMap: Record<string, string> = {
+      'USR-001': 'Andrea Torres',
+      'USR-002': 'Carlos Mendoza',
+      'USR-003': 'María García',
+    };
+    return userMap[userId] || userId;
+  }
+  getResponsableRoute(userId: string): string | null {
+    return userId ? `/users/${userId}` : null;
+  }
   setDraft(key: string, value: string): void {
     this.draft.update((draft) => ({ ...draft, [key]: value }));
   }
@@ -138,10 +154,10 @@ export class CalendarPage {
       type: (draft['type'] || 'INSTALLATION') as CalendarEventType,
       status: 'SCHEDULED',
       client: draft['client']?.trim() || 'Sin registro relacionado',
-      assignedTo: 'Andrea Torres',
+      assignedTo: draft['assignedTo'] || 'USR-001',
       allDay: false,
     });
-    this.draft.set({ type: 'INSTALLATION' });
+    this.draft.set({ type: 'INSTALLATION', assignedTo: 'USR-001' });
     this.createOpen.set(false);
     this.selectedEvent.set(event);
   }
