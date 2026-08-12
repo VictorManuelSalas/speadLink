@@ -14,7 +14,7 @@ export const SPEEDLINK_PLANS: ReadonlyArray<SpeedlinkPlan> = [
     name: 'Básico',
     speed: '5 Mbps',
     monthlyPrice: 300,
-    installationPrice: 1000,
+    installationPrice: 900,
     audience: ['Redes sociales', 'Navegación', 'Videos', 'Tareas', 'Uso cotidiano'],
   },
   {
@@ -22,7 +22,7 @@ export const SPEEDLINK_PLANS: ReadonlyArray<SpeedlinkPlan> = [
     name: 'Intermedio',
     speed: '10 Mbps',
     monthlyPrice: 350,
-    installationPrice: 900,
+    installationPrice: 800,
     recommended: true,
     audience: ['Streaming', 'Varios dispositivos', 'Uso familiar', 'Mayor velocidad y estabilidad'],
   },
@@ -31,7 +31,7 @@ export const SPEEDLINK_PLANS: ReadonlyArray<SpeedlinkPlan> = [
     name: 'Custom',
     speed: '15 Mbps',
     monthlyPrice: 400,
-    installationPrice: 800,
+    installationPrice: 650,
     audience: ['Trabajo en línea', 'Negocios', 'Mayor demanda de Internet', 'Varios dispositivos'],
   },
 ];
@@ -104,7 +104,7 @@ export const SPEEDLINK_FAQS: ReadonlyArray<SpeedlinkFaq> = [
   {
     question: '¿Cuánto cuesta la instalación?',
     answer:
-      'El precio depende del plan seleccionado: Básico $1,000 MXN, Intermedio $900 MXN, Custom $800 MXN.',
+      'El precio depende del plan seleccionado: Básico $1,000 MXN, Intermedio $900 MXN, Custom $650 MXN.',
   },
   {
     question: '¿El primer mes es gratis?',

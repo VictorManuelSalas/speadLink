@@ -1,21 +1,10 @@
-FROM node:20-alpine AS builder
+FROM node:20-alpine AS development
 
 WORKDIR /app
 
 COPY package*.json ./
 RUN npm ci
 
-COPY . .
+EXPOSE 4200
 
-RUN npm run build -- --progress=false
-
-
-FROM nginx:1.29-alpine
-
-COPY nginx.conf /etc/nginx/templates/default.conf.template
-
-COPY --from=builder /app/dist/speedlink-crm/browser /usr/share/nginx/html
-
-EXPOSE 80
-
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["npx", "ng", "serve", "--host", "0.0.0.0", "--port", "4200", "--poll", "2000"]

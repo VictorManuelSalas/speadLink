@@ -1,0 +1,194 @@
+.interested-services-card {
+  padding: 0;
+
+  .card-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 24px;
+    border-bottom: 1px solid var(--border-color);
+
+    div {
+      h2 {
+        font-size: 16px;
+        font-weight: 600;
+        margin: 0 0 8px 0;
+      }
+
+      p {
+        font-size: 13px;
+        color: var(--text-secondary);
+        margin: 0;
+      }
+    }
+
+    button {
+      margin-left: auto;
+    }
+  }
+
+  .services-head {
+    display: grid;
+    grid-template-columns: minmax(180px, 1fr) minmax(150px, 1.5fr) 120px 32px;
+    gap: 12px;
+    padding: 16px 24px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 700;
+    font-size: 11px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .service-row {
+    display: grid;
+    grid-template-columns: minmax(180px, 1fr) minmax(150px, 1.5fr) 120px auto;
+    gap: 12px;
+    padding: 12px 24px;
+    align-items: flex-start;
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    margin-bottom: 8px;
+
+    &.editing {
+      .service-input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+
+        .service-select {
+          width: 100%;
+          padding: 8px 12px;
+          border: 1px solid var(--border-color);
+          border-radius: 6px;
+          background: var(--bg-primary);
+          color: var(--text-primary);
+          font-size: 14px;
+          cursor: pointer;
+
+          &:focus {
+            outline: none;
+            border-color: #0066CC;
+            box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.1);
+          }
+
+          &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+          }
+
+          option {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+          }
+        }
+
+        .service-desc {
+          font-size: 12px;
+          color: var(--text-secondary);
+        }
+      }
+
+      .description-input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .description-input {
+        padding: 8px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        font-size: 13px;
+        font-family: inherit;
+
+        &:focus {
+          outline: none;
+          border-color: #0066CC;
+          box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.1);
+        }
+
+        &:read-only {
+          background: var(--bg-secondary);
+          color: var(--text-secondary);
+          cursor: default;
+        }
+
+        &::placeholder {
+          color: var(--text-secondary);
+        }
+      }
+
+      .type-and-action {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        justify-content: flex-end;
+
+        .service-type {
+          display: inline-block;
+          padding: 4px 8px;
+          border-radius: 4px;
+          font-size: 11px;
+          font-weight: 700;
+          white-space: nowrap;
+          text-transform: uppercase;
+          letter-spacing: 0.3px;
+
+          &.type-internet {
+            background: #E8F5FF;
+            color: #0066CC;
+          }
+
+          &.type-streaming {
+            background: #FFF3E0;
+            color: #E65100;
+          }
+        }
+
+        .remove-btn {
+          width: 28px;
+          height: 28px;
+          border: none;
+          border-radius: 6px;
+          background: transparent;
+          cursor: pointer;
+          color: var(--color-danger, #ef4444);
+          font-size: 18px;
+          font-weight: bold;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s;
+
+          &:hover {
+            background: #fef2f2;
+          }
+        }
+      }
+    }
+  }
+
+  .empty-row {
+    padding: 40px 24px;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 14px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .save-section {
+    padding: 16px 24px;
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+
+    button {
+      min-width: 150px;
+    }
+  }
+}

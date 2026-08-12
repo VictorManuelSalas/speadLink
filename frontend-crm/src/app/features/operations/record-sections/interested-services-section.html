@@ -1,0 +1,75 @@
+<article class="card section-card interested-services-card">
+  <div class="card-heading">
+    <div>
+      <h2>Servicios de Interés</h2>
+      <p>Servicios que el cliente desea conocer más.</p>
+    </div>
+    <button class="button" type="button" (click)="addRow()">
+      + Agregar servicio
+    </button>
+  </div>
+
+  @if (services().length > 0) {
+    <div class="services-head">
+      <span>Servicio</span>
+      <span>Descripción</span>
+      <span>Tipo</span>
+      <span></span>
+    </div>
+
+    @for (service of services(); track service.id) {
+      <div class="service-row editing">
+        <div class="service-input-group">
+          <select
+            [(ngModel)]="service.serviceId"
+            (change)="onServiceChange(service, service.serviceId)"
+            class="service-select"
+          >
+            <option value="">Seleccionar servicio...</option>
+            @for (svc of getAvailableServices(service.id); track svc.id) {
+              <option [value]="svc.id">
+                {{ svc.name }}
+              </option>
+            }
+          </select>
+        </div>
+
+        <div class="description-input-group">
+          <input
+            type="text"
+            [(ngModel)]="service.description"
+            placeholder="Descripción (se autocompleta)"
+            class="description-input"
+            readonly
+          />
+        </div>
+
+        <div class="type-and-action">
+          @if (service.serviceId) {
+            <span class="service-type" [class]="'type-' + service.type">
+              {{ service.type === 'internet' ? 'Internet' : 'Streaming' }}
+            </span>
+          }
+          <button
+            type="button"
+            class="remove-btn"
+            (click)="removeService(service.id)"
+            aria-label="Eliminar"
+          >
+            ×
+          </button>
+        </div>
+      </div>
+    }
+
+    <div class="save-section">
+      <button class="button button--primary" type="button" (click)="saveChanges()">
+        Guardar cambios
+      </button>
+    </div>
+  } @else {
+    <div class="empty-row">
+      <span>No hay servicios de interés registrados</span>
+    </div>
+  }
+</article>
