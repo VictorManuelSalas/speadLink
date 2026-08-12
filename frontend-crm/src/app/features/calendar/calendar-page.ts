@@ -1,12 +1,13 @@
 import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { CalendarEvent, CalendarEventType, CalendarStore } from './calendar-store';
 import { InlineEditableDateField } from '../../shared/inline-editable-date-field';
 import { PicklistOption, StyledPicklist } from '../../shared/styled-picklist';
 
 @Component({
   selector: 'app-calendar-page',
-  imports: [DatePipe, InlineEditableDateField, StyledPicklist],
+  imports: [DatePipe, RouterLink, InlineEditableDateField, StyledPicklist],
   templateUrl: './calendar-page.html',
   styleUrl: './calendar-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -100,6 +101,17 @@ export class CalendarPage {
       .map((part) => part[0])
       .join('')
       .toUpperCase();
+  }
+  getClientName(clientId: string): string {
+    const clientMap: Record<string, string> = {
+      'SL-1040': 'José Luis Hernández',
+      'SL-1041': 'Morgan Díaz',
+      'SL-1042': 'Consultorio Dental Sonríe',
+    };
+    return clientMap[clientId] || clientId;
+  }
+  getClientRoute(clientId: string): string | null {
+    return clientId ? `/customers/${clientId}` : null;
   }
   setDraft(key: string, value: string): void {
     this.draft.update((draft) => ({ ...draft, [key]: value }));

@@ -151,7 +151,13 @@
             </div>
             <div>
               <dt>Cliente</dt>
-              <dd>{{ event.client }}</dd>
+              <dd>
+                @if (getClientRoute(event.client); as route) {
+                  <a [routerLink]="route" class="lookup-link">{{ getClientName(event.client) }} ↗</a>
+                } @else {
+                  {{ getClientName(event.client) }}
+                }
+              </dd>
             </div>
             <div>
               <dt>Responsable</dt>
