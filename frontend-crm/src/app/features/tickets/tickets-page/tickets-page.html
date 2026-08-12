@@ -17,52 +17,6 @@
       "
       (recordsImported)="importTickets($event)"
     />
-    <header class="page-heading">
-      <div>
-        <span>{{ i18n.t('Centro de soporte') }}</span>
-        <h1>{{ i18n.t('Gestión de tickets') }}</h1>
-        <p>{{ i18n.t('Solicitudes de soporte, incidencias y seguimiento a clientes.') }}</p>
-      </div>
-      <button class="primary-button" type="button" (click)="composerOpen.set(true)">
-        ＋ {{ i18n.t('Nuevo ticket') }}
-      </button>
-    </header>
-
-    <section class="ticket-stats">
-      <article>
-        <span class="stat-icon stat-icon--blue">◫</span>
-        <div>
-          <small>{{ i18n.t('Abiertos') }}</small
-          ><b>{{ statusCount('open') }}</b
-          ><em>Requieren atención</em>
-        </div>
-      </article>
-      <article>
-        <span class="stat-icon stat-icon--violet">↻</span>
-        <div>
-          <small>{{ i18n.t('En progreso') }}</small
-          ><b>{{ statusCount('in_progress') }}</b
-          ><em>En seguimiento</em>
-        </div>
-      </article>
-      <article>
-        <span class="stat-icon stat-icon--amber">◷</span>
-        <div>
-          <small>{{ i18n.t('En espera') }}</small
-          ><b>{{ statusCount('waiting') }}</b
-          ><em>Respuesta del cliente</em>
-        </div>
-      </article>
-      <article>
-        <span class="stat-icon stat-icon--green">✓</span>
-        <div>
-          <small>{{ i18n.t('Resueltos') }}</small
-          ><b>{{ resolvedCount() }}</b
-          ><em>Este periodo</em>
-        </div>
-      </article>
-    </section>
-
     <section class="card table-card">
       <header class="table-toolbar">
         <label class="search-box"
