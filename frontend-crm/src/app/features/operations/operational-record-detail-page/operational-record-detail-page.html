@@ -139,14 +139,7 @@
                           (valueSaved)="updateLeadCoordinates(item.id, $event)"
                         />
                       }
-                      @for (field of displayFields(item); track field.key) {
-                        <app-record-field
-                          [config]="operationalFieldConfig(field, item)"
-                          [value]="asString(item[field.key] || '')"
-                          (valueSaved)="saveOperationalField(item, field.key, $event)"
-                        />
-                      }
-                      @if (item && false) {
+                      @if (item) {
                         @for (field of displayFields(item); track field.key) {
                           @if (field.type === 'status' && moduleKey === 'leads') {
                             <div
