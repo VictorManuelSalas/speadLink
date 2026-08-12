@@ -31,6 +31,7 @@ import {
   OPERATIONAL_MODULES,
   OperationalModuleKey,
   OperationalRecord,
+  ModuleField,
 } from '../operational-modules.data';
 import { LeadEmailFormValue, LeadEmailModal, LeadEmailSeed } from '../lead-email-modal/lead-email-modal';
 import { RecordEventsSection } from '../lead-events-section/lead-events-section';
@@ -43,7 +44,7 @@ import {
 } from '../record-sections/record-sections';
 import { InterestedServicesSectionComponent } from '../record-sections/interested-services-section';
 
-type DetailTab = 'Resumen' | 'Correos' | 'Eventos' | 'Notas' | 'Actividad' | 'Archivos' | 'Contratos' | 'Equipamiento' | 'Relaciones' | 'Detalles' | 'Conciliación' | 'Comprobante';
+type DetailTab = 'Resumen' | 'Correos' | 'Eventos' | 'Notas' | 'Actividad' | 'Archivos' | 'Contratos' | 'Asignaciones' | 'Relaciones' | 'Detalles' | 'Conciliación' | 'Comprobante';
 
 interface RelatedItem {
   icon: string;
@@ -124,15 +125,15 @@ export class OperationalRecordDetailPage {
       : this.moduleKey === 'services'
         ? ['Resumen', 'Contratos', 'Notas', 'Archivos', 'Actividad']
         : this.moduleKey === 'equipment'
-          ? ['Resumen', 'Equipamiento', 'Notas', 'Archivos', 'Actividad']
+          ? ['Resumen', 'Asignaciones', 'Notas', 'Archivos', 'Actividad']
           : this.moduleKey === 'assignments'
-            ? ['Resumen', 'Relaciones', 'Notas', 'Archivos', 'Actividad']
+            ? ['Resumen', 'Notas', 'Archivos', 'Actividad']
             : this.moduleKey === 'invoices'
-              ? ['Resumen', 'Detalles', 'Notas', 'Archivos', 'Actividad']
+              ? ['Resumen', 'Notas', 'Archivos', 'Actividad']
               : this.moduleKey === 'payments'
-                ? ['Resumen', 'Conciliación', 'Notas', 'Archivos', 'Actividad']
+                ? ['Resumen', 'Notas', 'Archivos', 'Actividad']
                 : this.moduleKey === 'expenses'
-                  ? ['Resumen', 'Comprobante', 'Notas', 'Archivos', 'Actividad']
+                  ? ['Resumen', 'Notas', 'Archivos', 'Actividad']
                   : ['Resumen', 'Notas', 'Archivos', 'Actividad'];
   readonly activeTab = signal<DetailTab>('Resumen');
   readonly contractItems = signal<ReadonlyArray<ContractItemDraft>>([]);
@@ -178,7 +179,7 @@ export class OperationalRecordDetailPage {
               ? this.recordFiles(id).length
               : label === 'Correos'
                 ? this.emails(id).length
-                : label === 'Contratos' && record
+                : (label === 'Contratos' || label === 'Asignaciones') && record
                   ? this.relatedItems(record).length
                   : undefined,
     }));
@@ -286,13 +287,21 @@ export class OperationalRecordDetailPage {
     if (key === 'phone' || key === 'cellphone') return 'tel';
     return 'text';
   }
-  fieldDisplayValue(field: { type: string }, value: string | number | boolean): string {
-    if (field.type !== 'money') return '';
-    return new Intl.NumberFormat(this.i18n.locale(), {
-      style: 'currency',
-      currency: 'MXN',
-      maximumFractionDigits: 2,
-    }).format(this.asNumber(value));
+  fieldDisplayValue(
+    field: { type: string; inputType?: string; optionLabels?: Record<string, string> },
+    value: string | number | boolean,
+  ): string {
+    if (field.type === 'money') {
+      return new Intl.NumberFormat(this.i18n.locale(), {
+        style: 'currency',
+        currency: 'MXN',
+        maximumFractionDigits: 2,
+      }).format(this.asNumber(value));
+    }
+    if (field.inputType === 'select' && field.optionLabels) {
+      return field.optionLabels[String(value)] || '';
+    }
+    return '';
   }
   fieldActionHref(key: string, value: string | number | boolean): string {
     if (!value) return '';
@@ -310,17 +319,10 @@ export class OperationalRecordDetailPage {
     if (key === 'convertedToClientId') return ['/customers', text];
     if (key === 'invoice') return ['/invoices', text];
     if (key === 'client') {
-      const customerIds: Readonly<Record<string, string>> = {
-        'José Luis Hernández': 'SL-1044',
-        'Consultorio Dental Sonríe': 'SL-1047',
-      };
-      return customerIds[text] ? ['/customers', customerIds[text]] : null;
+      return text.startsWith('SL-') ? ['/customers', text] : null;
     }
     if (key === 'equipment') {
-      const equipment = this.store
-        .recordsFor('equipment')
-        .find((record) => text.includes(String(record['name'])));
-      return equipment ? ['/equipment', equipment.id] : null;
+      return text.startsWith('EQ-') ? ['/equipment', text] : null;
     }
     if (key === 'service') {
       const service = this.store
@@ -429,6 +431,7 @@ export class OperationalRecordDetailPage {
                   ? 'select'
                   : 'text',
           options: configured?.options ?? [],
+          optionLabels: configured?.optionLabels ?? {},
         };
       });
   }
@@ -437,37 +440,47 @@ export class OperationalRecordDetailPage {
     record: OperationalRecord,
   ): RecordFieldConfig {
     const value = record[field.key];
+    const isSelectOrLookup = field.inputType === 'select' || field.type === 'lookup';
+    const hasOptions = field.options && field.options.length > 0;
     const route = this.relatedRoute(field.key, value) ?? undefined;
     const preview = route ? (this.lookupPreview(field.key, value) ?? undefined) : undefined;
-    const kind: RecordFieldConfig['kind'] = route
-      ? 'lookup'
-      : field.type === 'status'
+
+    // Los lookups editables deben seguir siendo lookups si tienen route (para el link), pero también editables
+    // Los select puros sin route son campos select normales
+    const kind: RecordFieldConfig['kind'] =
+      field.type === 'status'
         ? 'status'
-        : field.inputType === 'select'
-          ? 'select'
-          : field.type === 'date'
-            ? 'date'
-            : field.type === 'money' && !field.editable
-              ? 'money'
-              : field.inputType === 'number' && field.editable
-                ? 'text'
-                : this.editableInputType(field.key) === 'email'
-                  ? 'email'
-                  : this.editableInputType(field.key) === 'tel'
-                    ? 'phone'
-                    : field.type === 'money'
-                      ? 'money'
-                      : 'text';
+        : isSelectOrLookup && hasOptions && route
+          ? 'lookup'
+          : isSelectOrLookup && hasOptions && !route
+            ? 'select'
+            : route
+              ? 'lookup'
+              : field.type === 'date'
+                ? 'date'
+                : field.type === 'money' && !field.editable
+                  ? 'money'
+                  : field.inputType === 'number' && field.editable
+                    ? 'text'
+                    : this.editableInputType(field.key) === 'email'
+                      ? 'email'
+                      : this.editableInputType(field.key) === 'tel'
+                        ? 'phone'
+                        : field.type === 'money'
+                          ? 'money'
+                          : 'text';
+
     return {
       key: field.key,
       label: field.label,
       kind,
-      editable: field.editable && !route,
+      editable: field.editable || (isSelectOrLookup && hasOptions),
       options: field.type === 'status' ? this.statusOptions() : field.options,
+      optionLabels: field.optionLabels,
       href: this.fieldActionHref(field.key, value),
       displayValue: this.fieldDisplayValue(field, value),
-      route,
-      preview,
+      route: kind === 'lookup' ? route : undefined,
+      preview: kind === 'lookup' ? preview : undefined,
       statusLabel: this.statusLabel(value),
       statusTone: this.statusTone(value),
     };
@@ -504,6 +517,29 @@ export class OperationalRecordDetailPage {
   savePicklist(id: string, key: string, value: string): void {
     this.updateField(id, key, value);
     this.editingPicklistKey.set(null);
+  }
+  getOptionLabel(field: any, value: any): string {
+    const stringValue = String(value);
+    return field?.optionLabels?.[stringValue] || stringValue;
+  }
+
+  getFieldPicklistOptions(field: any): Array<{ value: string; label: string }> {
+    if (!field?.options) return [];
+    return field.options.map((option: string) => ({
+      value: option,
+      label: field?.optionLabels?.[option] || option,
+    }));
+  }
+
+  getLookupOptions(fieldKey: string): { options: ReadonlyArray<string>; optionLabels: Record<string, string> } {
+    const configured = this.definition.fields.find((f) => f.key === fieldKey);
+    if (!configured?.options) {
+      return { options: [], optionLabels: {} };
+    }
+    return {
+      options: configured.options,
+      optionLabels: configured.optionLabels ?? {},
+    };
   }
   leadCoordinates(record: OperationalRecord): string {
     return `${record['latitude'] ?? 19.432608}, ${record['longitude'] ?? -99.133209}`;
@@ -830,6 +866,32 @@ export class OperationalRecordDetailPage {
       } as Record<OperationalModuleKey, string>
     )[this.moduleKey];
   }
+  equipmentAssignments(record: OperationalRecord): ReadonlyArray<RelatedItem> {
+    const assignments = this.store.recordsFor('assignments');
+    const equipmentAssignments = assignments.filter((a) => a['equipment'] === record.id);
+    const clientNames: Record<string, string> = {
+      'SL-1040': 'José Luis Hernández',
+      'SL-1041': 'Morgan Díaz',
+      'SL-1042': 'Consultorio Dental Sonríe',
+      'SL-1043': 'Distribuidora Nova',
+    };
+    return equipmentAssignments.map((assignment) => {
+      const clientId = String(assignment['client'] ?? '');
+      const clientName = clientNames[clientId] || clientId;
+      const statusTone = (status: string): string =>
+        status === 'ACTIVE' ? 'green' : status === 'RETURNED' ? 'orange' : 'red';
+      const statusLabel = (status: string): string =>
+        status === 'ACTIVE' ? 'Activo' : status === 'RETURNED' ? 'Devuelto' : 'Inactivo';
+      return {
+        icon: '⌂',
+        title: clientName,
+        detail: String(assignment['assignedAt'] ?? 'Sin fecha'),
+        meta: statusLabel(String(assignment['status'] ?? 'INACTIVE')),
+        tone: statusTone(String(assignment['status'] ?? 'INACTIVE')),
+        route: ['/assignments', assignment.id],
+      };
+    });
+  }
   relatedItems(record: OperationalRecord): ReadonlyArray<RelatedItem> {
     const clientId = String(
       record['clientId'] ??
@@ -888,23 +950,7 @@ export class OperationalRecordDetailPage {
           route: ['/contracts', `CTR-2026-${client.id}`],
         }));
       })(),
-      equipment: [
-        {
-          icon: '⌂',
-          title: 'Asignación actual',
-          detail: 'José Luis Hernández · Sitio principal',
-          meta: 'Desde 18 jul',
-          tone: 'green',
-          route: ['/assignments', record.id === 'EQ-4091' ? 'ASG-7830' : 'ASG-7831'],
-        },
-        {
-          icon: '⌁',
-          title: 'Último diagnóstico',
-          detail: 'Señal -58 dBm · latencia 18 ms',
-          meta: 'En línea',
-          tone: 'violet',
-        },
-      ],
+      equipment: this.equipmentAssignments(record),
       assignments: [
         {
           icon: '♙',
@@ -1132,5 +1178,18 @@ export class OperationalRecordDetailPage {
       ),
     });
     this.contractItemsDirty.set(false);
+  }
+  canCreateNewAssignment(equipmentId: string): boolean {
+    if (this.moduleKey !== 'equipment') return true;
+    const assignments = this.store.recordsFor('assignments');
+    const activeAssignment = assignments.find(
+      (a) => a['equipment'] === equipmentId && a['status'] === 'ACTIVE'
+    );
+    return !activeAssignment;
+  }
+  openNewAssignmentForm(equipmentId: string): void {
+    this.router.navigate(['/assignments'], {
+      queryParams: { equipment: equipmentId }
+    });
   }
 }

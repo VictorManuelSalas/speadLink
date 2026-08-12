@@ -221,7 +221,7 @@
                                 <div class="status-editor">
                                   <select #picklist [value]="item[field.key]">
                                     @for (option of field.options; track option) {
-                                      <option [value]="option">{{ option }}</option>
+                                      <option [value]="option">{{ getOptionLabel(field, option) || option }}</option>
                                     }
                                   </select>
                                   <button
@@ -242,7 +242,7 @@
                                 </div>
                               } @else {
                                 <div class="status-value picklist-value">
-                                  <b>{{ item[field.key] || '—' }}</b>
+                                  <b>{{ getOptionLabel(field, item[field.key]) || item[field.key] || '—' }}</b>
                                   <button
                                     type="button"
                                     [attr.aria-label]="'Editar ' + field.label"
@@ -263,6 +263,52 @@
                               [value]="asString(item[field.key] || '')"
                               (valueSaved)="updateField(item.id, field.key, $event)"
                             />
+                          } @else if ((moduleKey === 'assignments' && (field.key === 'client' || field.key === 'equipment') || moduleKey === 'invoices' && field.key === 'client' || moduleKey === 'payments' && (field.key === 'client' || field.key === 'invoice')) && field.options) {
+                            <div
+                              class="record-field editable-status-field"
+                              [class.is-editing]="editingPicklistKey() === field.key"
+                            >
+                              <span>{{ field.label }}</span>
+                              @if (editingPicklistKey() === field.key) {
+                                <div class="status-editor" style="display: flex; gap: 8px; align-items: center;">
+                                  <app-styled-picklist
+                                    [options]="getFieldPicklistOptions(field)"
+                                    [value]="item[field.key] || ''"
+                                    (valueChange)="savePicklist(item.id, field.key, $event)"
+                                    style="flex: 1;"
+                                  />
+                                  <button
+                                    type="button"
+                                    aria-label="Cancelar"
+                                    (click)="editingPicklistKey.set(null)"
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                              } @else {
+                                <div class="status-value picklist-value">
+                                  @if (relatedRoute(field.key, item[field.key]); as route) {
+                                    <a class="lookup-link" [routerLink]="route">
+                                      <b>{{ getOptionLabel(field, item[field.key]) || item[field.key] || '—' }}</b>
+                                      <span>↗</span>
+                                    </a>
+                                  } @else {
+                                    <b>{{ getOptionLabel(field, item[field.key]) || item[field.key] || '—' }}</b>
+                                  }
+                                  <button
+                                    type="button"
+                                    [attr.aria-label]="'Editar ' + field.label"
+                                    (click)="editingPicklistKey.set(field.key)"
+                                  >
+                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                      <path
+                                        d="m4 20 4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20ZM14 7l3 3"
+                                      />
+                                    </svg>
+                                  </button>
+                                </div>
+                              }
+                            </div>
                           } @else if (relatedRoute(field.key, item[field.key]); as route) {
                             <div class="record-field lookup-field">
                               <span>{{ field.label }}</span
@@ -525,6 +571,51 @@
                       [routerLink]="['/contracts']"
                       [queryParams]="{ search: primaryValue(item) }"
                     >Ver todos</a>
+                  </header>
+                  <article class="card section-card related-card">
+                    @for (related of relatedItems(item); track related.title) {
+                      @if (related.route) {
+                        <a class="related-row related-row--link" [routerLink]="related.route">
+                          <span class="related-icon related-icon--{{ related.tone }}">{{
+                            related.icon
+                          }}</span
+                          ><span
+                            ><b>{{ related.title }}</b
+                            ><small>{{ related.detail }}</small></span
+                          ><em>{{ related.meta }} <i>↗</i></em>
+                        </a>
+                      } @else {
+                        <div class="related-row">
+                          <span class="related-icon related-icon--{{ related.tone }}">{{
+                            related.icon
+                          }}</span
+                          ><span
+                            ><b>{{ related.title }}</b
+                            ><small>{{ related.detail }}</small></span
+                          ><em>{{ related.meta }}</em>
+                        </div>
+                      }
+                    }
+                  </article>
+                </section>
+              }
+            }
+            @case ('Asignaciones') {
+              @if (relatedItems(item).length) {
+                <section class="contracts-section">
+                  <header class="contracts-heading">
+                    <div>
+                      <h2>{{ relatedTitle() }}</h2>
+                      <p>{{ relatedSubtitle() }}</p>
+                    </div>
+                    <button
+                      class="button button--primary"
+                      type="button"
+                      [disabled]="!canCreateNewAssignment(item.id)"
+                      [class.is-disabled]="!canCreateNewAssignment(item.id)"
+                      (click)="openNewAssignmentForm(item.id)"
+                      [title]="!canCreateNewAssignment(item.id) ? 'No se puede crear una nueva asignación. Existe una asignación activa.' : ''"
+                    >＋ Nueva asignación</button>
                   </header>
                   <article class="card section-card related-card">
                     @for (related of relatedItems(item); track related.title) {
