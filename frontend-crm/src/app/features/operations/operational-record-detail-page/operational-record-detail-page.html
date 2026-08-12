@@ -199,7 +199,7 @@
                                 </div>
                               }
                             </div>
-                          } @else if ((moduleKey === 'assignments' && (field.key === 'client' || field.key === 'equipment') || moduleKey === 'invoices' && field.key === 'client' || moduleKey === 'payments' && (field.key === 'client' || field.key === 'invoice')) && field.options) {
+                          } @else if (((moduleKey === 'assignments' && (field.key === 'client' || field.key === 'equipment')) || (moduleKey === 'invoices' && field.key === 'client') || (moduleKey === 'payments' && (field.key === 'client' || field.key === 'invoice'))) && field.options) {
                             <div
                               class="record-field editable-status-field"
                               [class.is-editing]="editingPicklistKey() === field.key"
