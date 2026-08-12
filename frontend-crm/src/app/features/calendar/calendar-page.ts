@@ -49,6 +49,7 @@ export class CalendarPage {
   readonly activeFilter = signal<string>('ALL');
   readonly selectedEvent = signal<CalendarEvent | null>(null);
   readonly createOpen = signal(false);
+  readonly editingEventId = signal<string | null>(null);
   readonly draft = signal<Record<string, string>>({ type: 'INSTALLATION', assignedTo: 'USR-001' });
   readonly monthEvents = computed(() =>
     this.events().filter((event) => event.startsAt.startsWith('2026-07')),
@@ -146,20 +147,38 @@ export class CalendarPage {
   createEvent(): void {
     if (!this.canCreate()) return;
     const draft = this.draft();
-    const event = this.calendarStore.add({
-      title: draft['title'],
-      description: draft['description'] || 'Sin descripción.',
-      startsAt: draft['startsAt'],
-      endsAt: draft['endsAt'],
-      type: (draft['type'] || 'INSTALLATION') as CalendarEventType,
-      status: 'SCHEDULED',
-      client: draft['client']?.trim() || 'Sin registro relacionado',
-      assignedTo: draft['assignedTo'] || 'USR-001',
-      allDay: false,
-    });
-    this.draft.set({ type: 'INSTALLATION', assignedTo: 'USR-001' });
-    this.createOpen.set(false);
-    this.selectedEvent.set(event);
+    const eventId = this.editingEventId();
+
+    if (eventId) {
+      const event = this.calendarStore.update(eventId, {
+        title: draft['title'],
+        description: draft['description'] || 'Sin descripción.',
+        startsAt: draft['startsAt'],
+        endsAt: draft['endsAt'],
+        type: (draft['type'] || 'INSTALLATION') as CalendarEventType,
+        client: draft['client']?.trim() || 'Sin registro relacionado',
+        assignedTo: draft['assignedTo'] || 'USR-001',
+      });
+      this.editingEventId.set(null);
+      this.draft.set({ type: 'INSTALLATION', assignedTo: 'USR-001' });
+      this.createOpen.set(false);
+      if (event) this.selectedEvent.set(event);
+    } else {
+      const event = this.calendarStore.add({
+        title: draft['title'],
+        description: draft['description'] || 'Sin descripción.',
+        startsAt: draft['startsAt'],
+        endsAt: draft['endsAt'],
+        type: (draft['type'] || 'INSTALLATION') as CalendarEventType,
+        status: 'SCHEDULED',
+        client: draft['client']?.trim() || 'Sin registro relacionado',
+        assignedTo: draft['assignedTo'] || 'USR-001',
+        allDay: false,
+      });
+      this.draft.set({ type: 'INSTALLATION', assignedTo: 'USR-001' });
+      this.createOpen.set(false);
+      this.selectedEvent.set(event);
+    }
   }
   completeEvent(id: string): void {
     this.calendarStore.complete(id);

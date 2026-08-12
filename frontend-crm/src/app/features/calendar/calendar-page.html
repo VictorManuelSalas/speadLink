@@ -178,7 +178,7 @@
         </div>
         <footer>
           <button type="button" (click)="selectedEvent.set(null)">Cerrar</button
-          ><button type="button" (click)="selectedEvent.set(null); draft.set({type: event.type, title: event.title, client: event.client, assignedTo: event.assignedTo, startsAt: event.startsAt, endsAt: event.endsAt, description: event.description}); createOpen.set(true)">
+          ><button type="button" (click)="selectedEvent.set(null); editingEventId.set(event.id); draft.set({type: event.type, title: event.title, client: event.client, assignedTo: event.assignedTo, startsAt: event.startsAt, endsAt: event.endsAt, description: event.description}); createOpen.set(true)">
             Editar
           </button
           ><button class="primary" type="button" (click)="completeEvent(event.id)">
@@ -197,13 +197,13 @@
       ></button>
       <section class="event-modal create-modal" role="dialog" aria-modal="true">
         <header>
-          <span class="event-symbol event-symbol--blue">＋</span>
+          <span class="event-symbol event-symbol--blue">@if (editingEventId()) { ✎ } @else { ＋ }</span>
           <div>
             <small>CALENDARIO</small>
-            <h2>Nuevo evento</h2>
-            <p>Programa una actividad para el equipo.</p>
+            <h2>@if (editingEventId()) { Editar evento } @else { Nuevo evento }</h2>
+            <p>@if (editingEventId()) { Actualiza los detalles del evento. } @else { Programa una actividad para el equipo. }</p>
           </div>
-          <button type="button" (click)="createOpen.set(false)">×</button>
+          <button type="button" (click)="createOpen.set(false); editingEventId.set(null)">×</button>
         </header>
         <div class="event-form">
           <label class="full"
@@ -262,9 +262,9 @@
           </label>
         </div>
         <footer>
-          <button type="button" (click)="createOpen.set(false)">Cancelar</button
+          <button type="button" (click)="createOpen.set(false); editingEventId.set(null)">Cancelar</button
           ><button class="primary" type="button" [disabled]="!canCreate()" (click)="createEvent()">
-            Crear evento
+            @if (editingEventId()) { Guardar cambios } @else { Crear evento }
           </button>
         </footer>
       </section>
