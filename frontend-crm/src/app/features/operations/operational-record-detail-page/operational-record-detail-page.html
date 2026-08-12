@@ -192,7 +192,7 @@
                                 </div>
                               }
                             </div>
-                          } @else if (field.options) {
+                          } @else if (field.options && (field.optionLabels || moduleKey)) {
                             <div
                               class="record-field editable-status-field"
                               [class.is-editing]="editingPicklistKey() === field.key"
@@ -250,7 +250,7 @@
                                 >
                               </div>
                             </div>
-                          } @else if (field.inputType === 'select') {
+                          } @else if (field.inputType === 'select' && field.options) {
                             <div
                               class="record-field editable-status-field"
                               [class.is-editing]="editingPicklistKey() === field.key"
@@ -259,7 +259,7 @@
                               @if (editingPicklistKey() === field.key) {
                                 <div class="status-editor">
                                   <select #picklist [value]="item[field.key]">
-                                    @for (option of field.options; track option) {
+                                    @for (option of field.options ?? []; track option) {
                                       <option [value]="option">{{ getOptionLabel(field, option) || option }}</option>
                                     }
                                   </select>

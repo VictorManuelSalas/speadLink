@@ -332,8 +332,8 @@ export class OperationalRecordDetailPage {
     }
 
     const field = this.definition.fields.find((f) => f.key === key);
-    if (field?.options && field?.relatedModule) {
-      return [`/${field.relatedModule}`, text];
+    if (field?.options && field?.lookupModule) {
+      return [`/${field.lookupModule}`, text];
     }
     return null;
   }
