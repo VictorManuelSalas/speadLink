@@ -205,13 +205,16 @@
               (input)="setDraft('title', titleInput.value)"
           /></label>
           <label
-            >Tipo<app-styled-picklist
+            >Tipo *<app-styled-picklist
               [options]="eventTypeOptions"
               [value]="draft()['type'] || 'INSTALLATION'"
               (valueChange)="setDraft('type', $event)"
           /></label>
           <label
-            >Cliente<input #clientInput type="text" (input)="setDraft('client', clientInput.value)"
+            >Cliente *<app-styled-picklist
+              [options]="clientOptions"
+              [value]="draft()['client'] || ''"
+              (valueChange)="setDraft('client', $event)"
           /></label>
           <div class="form-date">
             <app-inline-editable-date-field

@@ -26,6 +26,11 @@ export class CalendarPage {
     { value: 'PAYMENT', label: 'Pago' },
     { value: 'MAINTENANCE', label: 'Mantenimiento' },
   ];
+  readonly clientOptions: ReadonlyArray<PicklistOption> = [
+    { value: 'SL-1040', label: 'José Luis Hernández' },
+    { value: 'SL-1041', label: 'Morgan Díaz' },
+    { value: 'SL-1042', label: 'Consultorio Dental Sonríe' },
+  ];
   readonly days = Array.from({ length: 35 }, (_, index) => {
     const date = new Date(2026, 5, 29 + index);
     return {
@@ -105,6 +110,8 @@ export class CalendarPage {
       draft['title']?.trim() &&
       draft['startsAt'] &&
       draft['endsAt'] &&
+      draft['type'] &&
+      draft['client'] &&
       new Date(draft['endsAt']).getTime() >= new Date(draft['startsAt']).getTime(),
     );
   }
