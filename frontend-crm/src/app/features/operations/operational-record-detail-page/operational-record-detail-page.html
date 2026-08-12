@@ -192,7 +192,7 @@
                                 </div>
                               }
                             </div>
-                          } @else if (field.options && (field.optionLabels || moduleKey)) {
+                          } @else if (field.options && field.optionLabels) {
                             <div
                               class="record-field editable-status-field"
                               [class.is-editing]="editingPicklistKey() === field.key"
