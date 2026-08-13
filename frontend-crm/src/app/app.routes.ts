@@ -62,6 +62,15 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'customers/:customerId/invoices/:invoiceId',
+        canActivate: [permissionGuard('customers.read')],
+        title: 'Detalle de factura | SpeedLink CRM',
+        loadComponent: () =>
+          import('./features/customers/invoice-detail-page/invoice-detail-page').then(
+            (m) => m.InvoiceDetailPage,
+          ),
+      },
+      {
         path: 'tickets',
         canActivate: [permissionGuard('tickets.read')],
         title: 'Tickets | SpeedLink CRM',

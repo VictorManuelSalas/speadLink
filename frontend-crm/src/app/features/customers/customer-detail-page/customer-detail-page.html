@@ -334,7 +334,7 @@
                       @for (invoice of c.invoices; track invoice.id) {
                         <tr>
                           <td>
-                            <a class="billing-id-link" [routerLink]="['/invoices', invoice.id]">{{
+                            <a class="billing-id-link" [routerLink]="['/customers', c.id, 'invoices', invoice.id]">{{
                               invoice.id
                             }}</a>
                           </td>
@@ -383,7 +383,7 @@
                                 [style.left.px]="billingMenuPosition()?.left"
                                 (click)="$event.stopPropagation()"
                               >
-                                <a [routerLink]="['/invoices', invoice.id]"
+                                <a [routerLink]="['/customers', c.id, 'invoices', invoice.id]"
                                   ><span>↗</span>Ver</a
                                 >
                                 <button type="button" (click)="downloadInvoice(invoice, c)">

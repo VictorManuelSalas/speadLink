@@ -44,6 +44,15 @@ const detail = (id: string, offset: number) => ({
       dueAt: '2026-07-10',
       total: 350,
       status: offset === 3 ? ('overdue' as const) : ('paid' as const),
+      payments: offset === 3 ? [] : [
+        {
+          id: `PAG-${6100 + offset}-1`,
+          date: '2026-07-08',
+          amount: 350,
+          method: offset % 2 ? ('Transferencia' as const) : ('Efectivo' as const),
+          reference: `SL${74018 + offset}`,
+        },
+      ],
     },
     {
       id: `FAC-${id}-06`,
@@ -51,6 +60,22 @@ const detail = (id: string, offset: number) => ({
       dueAt: '2026-06-10',
       total: 350,
       status: 'paid' as const,
+      payments: [
+        {
+          id: `PAG-${6000 + offset}-1`,
+          date: '2026-06-08',
+          amount: 175,
+          method: 'Tarjeta' as const,
+          reference: `SL${74000 + offset}`,
+        },
+        {
+          id: `PAG-${6000 + offset}-2`,
+          date: '2026-06-15',
+          amount: 175,
+          method: 'Transferencia' as const,
+          reference: `SL${74001 + offset}`,
+        },
+      ],
     },
   ],
   payments: [

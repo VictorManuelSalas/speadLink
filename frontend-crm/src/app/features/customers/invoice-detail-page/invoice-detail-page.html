@@ -1,0 +1,202 @@
+@if (invoice(); as invoice) {
+  <app-record-header
+    [rootLabel]="i18n.t('Clientes')"
+    rootRoute="/customers"
+    [secondLabel]="customer()?.name"
+    [secondRoute]="['/customers', customer()?.id]"
+    [recordId]="invoice.id"
+    [title]="'Factura ' + invoice.id"
+    initials="FC"
+    accent="#3b82f6"
+    [statusLabel]="statusLabel(invoice.status)"
+    [statusTone]="statusTone(invoice.status)"
+    [subtitle]="'Monto: ' + (invoice.total | currency: 'MXN' : 'symbol-narrow' : '1.0-2' : i18n.locale())"
+  ></app-record-header>
+
+  <app-record-summary [columns]="5">
+    <div class="record-summary-item">
+      <small>{{ i18n.t('Estado') }}</small
+      ><span class="status status--{{ invoice.status }}">{{ statusLabel(invoice.status) }}</span>
+    </div>
+    <div class="record-summary-item">
+      <small>Monto Total</small
+      ><b>{{ invoice.total | currency: 'MXN' : 'symbol-narrow' : '1.0-2' : i18n.locale() }}</b>
+    </div>
+    <div class="record-summary-item">
+      <small>Pagado</small
+      ><b class="success">{{ paidAmount() | currency: 'MXN' : 'symbol-narrow' : '1.0-2' : i18n.locale() }}</b>
+    </div>
+    <div class="record-summary-item">
+      <small>Por Pagar</small
+      ><b class="warning">{{ remainingAmount() | currency: 'MXN' : 'symbol-narrow' : '1.0-2' : i18n.locale() }}</b>
+    </div>
+    <div class="record-summary-item">
+      <small>Vencimiento</small
+      ><b>{{ invoice.dueAt | date: 'dd MMM y' : '' : i18n.locale() }}</b>
+    </div>
+  </app-record-summary>
+
+  <div class="payment-progress-card">
+    <div class="progress-header">
+      <h3>Progreso de Pago</h3>
+      <span class="percentage">{{ paymentProgress() | number: '1.0-0' }}%</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" [style.width.%]="paymentProgress()"></div>
+    </div>
+    <div class="progress-details">
+      <div class="detail-item">
+        <span class="label">Pagado:</span>
+        <span class="value paid">{{ paidAmount() | currency: 'MXN' : 'symbol-narrow' : '1.0-2' : i18n.locale() }}</span>
+      </div>
+      <div class="detail-item">
+        <span class="label">Total:</span>
+        <span class="value">{{ invoice.total | currency: 'MXN' : 'symbol-narrow' : '1.0-2' : i18n.locale() }}</span>
+      </div>
+    </div>
+  </div>
+
+  <app-record-detail-layout>
+    <div record-main>
+      <article class="card tabs-card">
+        <header class="tabs-header">
+          <button
+            type="button"
+            [class.is-active]="activeTab() === 'details'"
+            (click)="activeTab.set('details')"
+            class="tab-button"
+          >
+            Detalles
+          </button>
+          <button
+            type="button"
+            [class.is-active]="activeTab() === 'payments'"
+            (click)="activeTab.set('payments')"
+            class="tab-button"
+          >
+            Pagos <span class="badge">{{ linkedPayments().length }}</span>
+          </button>
+        </header>
+
+        <div class="tabs-content">
+          @if (activeTab() === 'details') {
+            <app-record-information-card
+              [title]="i18n.t('Información de la Factura')"
+              description="Detalles principales del documento fiscal."
+            >
+              <div class="invoice-details">
+                <div class="detail-row">
+                  <span class="label">ID Factura:</span>
+                  <span class="value">{{ invoice.id }}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="label">Fecha de Emisión:</span>
+                  <span class="value">{{ invoice.issuedAt | date: 'dd/MM/yyyy' : '' : i18n.locale() }}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="label">Fecha de Vencimiento:</span>
+                  <span class="value">{{ invoice.dueAt | date: 'dd/MM/yyyy' : '' : i18n.locale() }}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="label">Monto Total:</span>
+                  <span class="value font-bold">{{ invoice.total | currency: 'MXN' : 'symbol-narrow' : '1.0-2' : i18n.locale() }}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="label">Estado:</span>
+                  <span class="status-badge" [class]="'status-' + invoice.status">
+                    {{ statusLabel(invoice.status) }}
+                  </span>
+                </div>
+              </div>
+            </app-record-information-card>
+          } @else if (activeTab() === 'payments') {
+            <article class="payments-section">
+              <header class="payments-header">
+                <h2>Pagos Registrados</h2>
+                <p>{{ linkedPayments().length }} {{ linkedPayments().length === 1 ? 'pago' : 'pagos' }} enlazados a esta factura</p>
+              </header>
+
+              @if (linkedPayments().length > 0) {
+                <div class="payments-list">
+                  @for (payment of linkedPayments(); track payment.id) {
+                    <div class="payment-card">
+                      <div class="payment-icon">{{ paymentMethodIcon(payment.method) }}</div>
+                      <div class="payment-info">
+                        <div class="payment-header">
+                          <span class="amount">{{ payment.amount | currency: 'MXN' : 'symbol-narrow' : '1.0-2' : i18n.locale() }}</span>
+                          <span class="date">{{ payment.date | date: 'dd MMM yyyy' : '' : i18n.locale() }}</span>
+                        </div>
+                        <div class="payment-details">
+                          <span class="method">{{ payment.method }}</span>
+                          <span class="reference">Ref: {{ payment.reference }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  }
+                </div>
+
+                <div class="payment-summary">
+                  <div class="summary-row">
+                    <span class="label">Total Pagado:</span>
+                    <span class="value paid">{{ paidAmount() | currency: 'MXN' : 'symbol-narrow' : '1.0-2' : i18n.locale() }}</span>
+                  </div>
+                  <div class="summary-row">
+                    <span class="label">Saldo Pendiente:</span>
+                    <span class="value pending">{{ remainingAmount() | currency: 'MXN' : 'symbol-narrow' : '1.0-2' : i18n.locale() }}</span>
+                  </div>
+                </div>
+              } @else {
+                <div class="empty-state">
+                  <div class="empty-icon">💸</div>
+                  <h3>Sin pagos registrados</h3>
+                  <p>No hay pagos enlazados a esta factura aún. El monto total sigue pendiente.</p>
+                </div>
+              }
+            </article>
+          }
+        </div>
+      </article>
+    </div>
+
+    <div record-aside>
+      <article class="card info-card">
+        <h2>{{ i18n.t('Información del Cliente') }}</h2>
+        @if (customer(); as customer) {
+          <div class="customer-info">
+            <div class="customer-identity">
+              <span class="initials">{{ initials(customer.name) }}</span>
+              <div>
+                <b>{{ customer.name }}</b>
+                <small>{{ customer.id }}</small>
+              </div>
+            </div>
+            <a [routerLink]="['/customers', customer.id]" class="view-link">Ver cliente →</a>
+          </div>
+        }
+      </article>
+
+      <article class="card status-card">
+        <h2>Estado de Pago</h2>
+        <div class="status-content">
+          <div class="status-item">
+            <span class="status-label">Facturado:</span>
+            <span class="status-value">{{ invoice.total | currency: 'MXN' : 'symbol-narrow' : '1.0-2' : i18n.locale() }}</span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">Pagado:</span>
+            <span class="status-value paid">{{ paidAmount() | currency: 'MXN' : 'symbol-narrow' : '1.0-2' : i18n.locale() }}</span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">Pendiente:</span>
+            <span class="status-value pending">{{ remainingAmount() | currency: 'MXN' : 'symbol-narrow' : '1.0-2' : i18n.locale() }}</span>
+          </div>
+        </div>
+      </article>
+    </div>
+  </app-record-detail-layout>
+} @else {
+  <section class="not-found">
+    <h1>Factura no encontrada</h1>
+    <a class="primary-button" routerLink="/customers">{{ i18n.t('Volver a Clientes') }}</a>
+  </section>
+}

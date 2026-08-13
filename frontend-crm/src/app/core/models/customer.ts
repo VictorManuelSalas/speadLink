@@ -60,6 +60,7 @@ export interface CustomerInvoice {
   dueAt: string;
   total: number;
   status: 'paid' | 'pending' | 'overdue';
+  payments?: ReadonlyArray<CustomerPayment>;
 }
 export interface CustomerPayment {
   id: string;
