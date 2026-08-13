@@ -228,10 +228,12 @@
                                     type="button"
                                     [attr.aria-label]="'Editar ' + field.label"
                                     (click)="editingPicklistKey.set(field.key)"
+                                    style="width: 24px; height: 24px; padding: 4px; cursor: pointer; border: none; background: none;"
                                   >
-                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true" style="width: 100%; height: 100%;">
                                       <path
                                         d="m4 20 4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20ZM14 7l3 3"
+                                        stroke="currentColor" stroke-width="2" fill="none"
                                       />
                                     </svg>
                                   </button>
