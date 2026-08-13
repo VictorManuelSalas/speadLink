@@ -44,31 +44,24 @@
         </div>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; padding: 16px;">
           <app-record-field
-            [config]="ticketFieldConfig('status', i18n.t('Estado'), 'status')"
+            [config]="ticketFieldConfig('status', i18n.t('Estado'))"
             [value]="item.status"
             (valueSaved)="updateTicketField(item.id, 'status', $event)"
           />
           <app-record-field
-            [config]="ticketFieldConfig('priority', i18n.t('Prioridad'), 'select')"
+            [config]="ticketFieldConfig('priority', i18n.t('Prioridad'))"
             [value]="item.priority"
             (valueSaved)="updateTicketField(item.id, 'priority', $event)"
           />
           <app-record-field
-            [config]="ticketFieldConfig('assignedTo', i18n.t('Responsable'), 'text')"
+            [config]="ticketFieldConfig('assignedTo', i18n.t('Responsable'))"
             [value]="item.assignedTo"
             (valueSaved)="updateTicketField(item.id, 'assignedTo', $event)"
           />
           <app-record-field
-            [config]="ticketFieldConfig('category', i18n.t('Categoría'), 'text')"
+            [config]="ticketFieldConfig('category', i18n.t('Categoría'))"
             [value]="item.category"
             (valueSaved)="updateTicketField(item.id, 'category', $event)"
-          />
-        </div>
-        <div style="padding: 0 16px 16px 16px;">
-          <app-record-field
-            [config]="ticketFieldConfig('description', i18n.t('Descripción'), 'text')"
-            [value]="item.description"
-            (valueSaved)="updateTicketField(item.id, 'description', $event)"
           />
         </div>
       </section>
@@ -79,7 +72,13 @@
             [title]="i18n.t('Detalles del ticket')"
             description="Información proporcionada al abrir la solicitud."
           >
-            <p class="record-info-full ticket-description">{{ item.description }}</p>
+            <div style="width: 100%;">
+              <app-record-field
+                [config]="ticketFieldConfig('description', i18n.t('Descripción'))"
+                [value]="item.description"
+                (valueSaved)="updateTicketField(item.id, 'description', $event)"
+              />
+            </div>
             @if (item.customFields) {
               <div class="custom-fields record-info-full">
                 @for (field of customFields(item); track field[0]) {
@@ -129,11 +128,11 @@
                         comment.createdAt | date: 'dd MMM y, HH:mm' : '' : i18n.locale()
                       }}</time>
                     </header>
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
                       <p style="margin: 0; flex: 1;">{{ comment.message }}</p>
                       <button
                         type="button"
-                        style="padding: 4px 8px; font-size: 12px; opacity: 0; cursor: pointer;"
+                        class="comment-delete-btn"
                         (click)="deleteComment(item.id, comment.id)"
                         title="Eliminar comentario"
                       >

@@ -42,6 +42,33 @@ export class TicketDetailPage {
   readonly commentReset = signal(0);
   readonly ticketFiles = signal<ReadonlyArray<CrmAttachment>>([]);
   readonly fileReset = signal(0);
+
+  // Picklist options
+  readonly statusOptions = [
+    { value: 'open', label: 'Abierto' },
+    { value: 'in_progress', label: 'En progreso' },
+    { value: 'waiting', label: 'En espera' },
+    { value: 'resolved', label: 'Resuelto' },
+    { value: 'closed', label: 'Cerrado' },
+  ];
+  readonly priorityOptions = [
+    { value: 'low', label: 'Baja' },
+    { value: 'medium', label: 'Media' },
+    { value: 'high', label: 'Alta' },
+    { value: 'urgent', label: 'Urgente' },
+  ];
+  readonly categoryOptions = [
+    { value: 'Conectividad', label: 'Conectividad' },
+    { value: 'Facturación', label: 'Facturación' },
+    { value: 'Equipo', label: 'Equipo' },
+    { value: 'Instalación', label: 'Instalación' },
+    { value: 'Otro', label: 'Otro' },
+  ];
+  readonly responsableOptions = [
+    { value: 'USR-001', label: 'Andrea Torres' },
+    { value: 'USR-002', label: 'Carlos Mendoza' },
+    { value: 'USR-003', label: 'María García' },
+  ];
   constructor() {
     this.route.paramMap.subscribe((params) => this.ticketId.set(params.get('id') ?? ''));
   }
@@ -129,8 +156,42 @@ export class TicketDetailPage {
       : `${(size / 1024 / 1024).toFixed(1)} MB`;
   }
   ticketFieldConfig(key: string, label: string, kind: RecordFieldConfig['kind'] = 'text'): RecordFieldConfig {
-    return { key, label, kind, editable: true };
+    const baseConfig: RecordFieldConfig = { key, label, kind, editable: true };
+
+    if (key === 'status') {
+      return {
+        ...baseConfig,
+        kind: 'status',
+        options: this.statusOptions.map((o) => o.value),
+      };
+    } else if (key === 'priority') {
+      return {
+        ...baseConfig,
+        kind: 'select',
+        options: this.priorityOptions.map((o) => o.value),
+        optionLabels: Object.fromEntries(this.priorityOptions.map((o) => [o.value, o.label])),
+      };
+    } else if (key === 'assignedTo') {
+      return {
+        ...baseConfig,
+        kind: 'lookup',
+        options: this.responsableOptions.map((o) => o.value),
+        optionLabels: Object.fromEntries(this.responsableOptions.map((o) => [o.value, o.label])),
+        route: ['/', 'users', baseConfig.key],
+      };
+    } else if (key === 'category') {
+      return {
+        ...baseConfig,
+        kind: 'select',
+        options: this.categoryOptions.map((o) => o.value),
+        optionLabels: Object.fromEntries(this.categoryOptions.map((o) => [o.value, o.label])),
+      };
+    } else if (key === 'description') {
+      return { ...baseConfig, kind: 'text' };
+    }
+    return baseConfig;
   }
+
   updateTicketField(ticketId: string, key: string, value: string): void {
     const update: Partial<CustomerTicket> = {};
     if (key === 'status') {
@@ -146,7 +207,12 @@ export class TicketDetailPage {
     }
     this.store.update(ticketId, update);
   }
+
   deleteComment(ticketId: string, commentId: string): void {
     this.store.deleteComment(ticketId, commentId);
+  }
+
+  getOptionLabel(options: ReadonlyArray<{ value: string; label: string }>, value: string): string {
+    return options.find((o) => o.value === value)?.label || value;
   }
 }
