@@ -72,13 +72,14 @@
             [title]="i18n.t('Detalles del ticket')"
             description="Información proporcionada al abrir la solicitud."
           >
-            <div style="width: 100%;">
-              <app-record-field
-                [config]="ticketFieldConfig('description', i18n.t('Descripción'))"
+            <p class="record-info-full ticket-description" style="width: 100%;">
+              <app-inline-editable-field
+                [type]="'textarea'"
                 [value]="item.description"
+                [displayValue]="item.description"
                 (valueSaved)="updateTicketField(item.id, 'description', $event)"
               />
-            </div>
+            </p>
             @if (item.customFields) {
               <div class="custom-fields record-info-full">
                 @for (field of customFields(item); track field[0]) {
