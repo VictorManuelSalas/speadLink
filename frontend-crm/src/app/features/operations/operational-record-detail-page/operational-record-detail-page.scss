@@ -1539,3 +1539,149 @@
         font-size: 13px;
         color: var(--color-text-secondary);
       }
+      .billing-payments-container {
+        display: flex;
+        flex-direction: column;
+        gap: 32px;
+        padding: 20px;
+      }
+      .summary-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 16px;
+      }
+      .summary-card {
+        background: var(--color-background);
+        border: 1px solid var(--color-border);
+        border-radius: 11px;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .card-label {
+        font-size: 12px;
+        color: var(--color-text-secondary);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .card-value {
+        font-size: 32px;
+        font-weight: 700;
+        color: #10b981;
+      }
+      .card-detail {
+        font-size: 12px;
+        color: var(--color-text-secondary);
+      }
+      .invoices-section,
+      .payments-history-section {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+      .section-header h3 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--color-text);
+      }
+      .count {
+        font-size: 12px;
+        color: var(--color-text-secondary);
+      }
+      .invoices-table,
+      .payments-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--color-background);
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      .invoices-table thead,
+      .payments-table thead {
+        background: var(--color-muted);
+      }
+      .invoices-table th,
+      .payments-table th {
+        padding: 12px 16px;
+        text-align: left;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--color-text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 1px solid var(--color-border);
+      }
+      .invoices-table td,
+      .payments-table td {
+        padding: 14px 16px;
+        font-size: 13px;
+        color: var(--color-text);
+        border-bottom: 1px solid var(--color-border);
+      }
+      .invoices-table tbody tr:last-child td,
+      .payments-table tbody tr:last-child td {
+        border-bottom: none;
+      }
+      .invoice-id {
+        color: #2563eb;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .invoice-id:hover {
+        text-decoration: underline;
+      }
+      .description {
+        color: var(--color-text-secondary);
+      }
+      .date {
+        color: var(--color-text-secondary);
+        font-size: 12px;
+      }
+      .amount {
+        font-weight: 600;
+        color: var(--color-text);
+      }
+      .reference {
+        font-family: monospace;
+        font-size: 12px;
+        color: var(--color-text-secondary);
+      }
+      .method {
+        font-size: 13px;
+        color: var(--color-text);
+      }
+      .status-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 16px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .status-paid {
+        background: #d1fae5;
+        color: #065f46;
+      }
+      .status-pending {
+        background: #fef3c7;
+        color: #92400e;
+      }
+      .status-overdue {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+      .status-confirmed {
+        background: #d1fae5;
+        color: #065f46;
+      }

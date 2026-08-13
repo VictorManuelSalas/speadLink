@@ -1203,32 +1203,36 @@ export class OperationalRecordDetailPage {
   }
 
   // Métodos para el módulo de facturas - Tab de Pagos
+  readonly allInvoices = computed(() => {
+    if (this.moduleKey !== 'invoices') return [];
+    return this.store.records()['invoices'] ?? [];
+  });
+
+  readonly allPayments = computed(() => {
+    if (this.moduleKey !== 'invoices') return [];
+    return this.store.records()['payments'] ?? [];
+  });
+
+  readonly totalPaidAllTime = computed(() => {
+    return this.allPayments().reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
+  });
+
+  readonly totalPendingAmount = computed(() => {
+    return this.allInvoices().reduce((sum: number, inv: any) => {
+      const status = inv.status?.toUpperCase?.() || inv.status;
+      if (status === 'PAID' || status === 'PAID') return sum;
+      const invPayments = this.allPayments().filter((p: any) => p.invoice === inv.id);
+      const invPaid = invPayments.reduce((s: number, p: any) => s + (p.amount || 0), 0);
+      return sum + Math.max(0, (inv.total || 0) - invPaid);
+    }, 0);
+  });
+
   readonly invoicePayments = computed(() => {
     if (this.moduleKey !== 'invoices') return [];
     const record = this.record();
     if (!record) return [];
     const invoiceId = record.id;
-    const allPayments = this.store.records()['payments'] ?? [];
-    return allPayments.filter((p: any) => p.invoice === invoiceId) as any[];
-  });
-
-  readonly totalPaid = computed(() => {
-    return this.invoicePayments().reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
-  });
-
-  readonly remainingAmount = computed(() => {
-    if (this.moduleKey !== 'invoices') return 0;
-    const record = this.record() as any;
-    const total = record?.total ?? 0;
-    return Math.max(0, total - this.totalPaid());
-  });
-
-  readonly paymentProgress = computed(() => {
-    if (this.moduleKey !== 'invoices') return 0;
-    const record = this.record() as any;
-    const total = record?.total ?? 0;
-    if (total === 0) return 0;
-    return (this.totalPaid() / total) * 100;
+    return this.allPayments().filter((p: any) => p.invoice === invoiceId) as any[];
   });
 
   paymentMethodIcon(method: string): string {
