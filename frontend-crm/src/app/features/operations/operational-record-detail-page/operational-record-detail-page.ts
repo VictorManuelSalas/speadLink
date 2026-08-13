@@ -509,7 +509,36 @@ export class OperationalRecordDetailPage {
     this.updateField(record.id, key, value);
   }
   updateField(id: string, key: string, value: string): void {
-    this.store.update(this.moduleKey, id, { [key]: value });
+    const record = this.record();
+    if (!record) return;
+
+    const field = this.definition.fields.find((f) => f.key === key);
+    if (!field) {
+      this.store.update(this.moduleKey, id, { [key]: value });
+      return;
+    }
+
+    let finalValue: any = value;
+
+    // Validate and convert numeric fields
+    if (field.type === 'number') {
+      const numValue = Number(value);
+      if (isNaN(numValue)) {
+        console.warn(`Invalid number for field ${key}: "${value}"`);
+        return;
+      }
+      if (field.min !== undefined && numValue < field.min) {
+        console.warn(`Value ${numValue} is below minimum ${field.min} for field ${key}`);
+        return;
+      }
+      if (field.max !== undefined && numValue > field.max) {
+        console.warn(`Value ${numValue} is above maximum ${field.max} for field ${key}`);
+        return;
+      }
+      finalValue = numValue;
+    }
+
+    this.store.update(this.moduleKey, id, { [key]: finalValue });
   }
 
   getLookupOptions(fieldKey: string): { options: ReadonlyArray<string>; optionLabels: Record<string, string> } {
