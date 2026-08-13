@@ -499,6 +499,14 @@ dd {
   min-width: 100%;
   flex: 1 1 100%;
 }
+.ticket-description {
+  display: block;
+  width: 100%;
+  min-height: 100px;
+  padding: 12px;
+  background: var(--color-muted);
+  border-radius: 8px;
+}
 .edit-desc-btn {
   margin-left: 10px;
   padding: 4px 8px;
