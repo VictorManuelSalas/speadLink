@@ -72,7 +72,7 @@
             [title]="i18n.t('Detalles del ticket')"
             description="Información proporcionada al abrir la solicitud."
           >
-            <div class="description-editable" style="width: 100%;">
+            <div class="description-editable" style="width: 100% !important;">
               @if (descriptionEditMode()) {
                 <textarea
                   #descInput
@@ -98,7 +98,9 @@
               }
             </div>
             @if (item.customFields) {
-              <div class="custom-fields record-info-full">
+              <div class="custom-fields record-info-full" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px;
+              width: 100%
+              ">
                 @for (field of customFields(item); track field[0]) {
                   <span
                     ><small>{{ field[0] }}</small

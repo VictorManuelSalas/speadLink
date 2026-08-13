@@ -47,17 +47,17 @@ export class TicketDetailPage {
 
   // Picklist options
   readonly statusOptions = [
-    { value: 'open', label: 'Abierto' },
-    { value: 'in_progress', label: 'En progreso' },
-    { value: 'waiting', label: 'En espera' },
-    { value: 'resolved', label: 'Resuelto' },
-    { value: 'closed', label: 'Cerrado' },
+    { value: 'Open', label: 'Abierto' },
+    { value: 'In Progress', label: 'En progreso' },
+    { value: 'Waiting', label: 'En espera' },
+    { value: 'Resolved', label: 'Resuelto' },
+    { value: 'Closed', label: 'Cerrado' },
   ];
   readonly priorityOptions = [
-    { value: 'low', label: 'Baja' },
-    { value: 'medium', label: 'Media' },
-    { value: 'high', label: 'Alta' },
-    { value: 'urgent', label: 'Urgente' },
+    { value: 'Low', label: 'Baja' },
+    { value: 'Medium', label: 'Media' },
+    { value: 'High', label: 'Alta' },
+    { value: 'Urgent', label: 'Urgente' },
   ];
   readonly categoryOptions = [
     { value: 'Conectividad', label: 'Conectividad' },
