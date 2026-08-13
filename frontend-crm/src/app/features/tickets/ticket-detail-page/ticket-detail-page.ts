@@ -142,7 +142,7 @@ export class TicketDetailPage {
     } else if (key === 'description') {
       update.description = value;
     } else if (key === 'category') {
-      update.category = value;
+      update.category = value as CustomerTicket['category'];
     }
     this.store.update(ticketId, update);
   }

@@ -14,7 +14,6 @@ import { CrmAttachment, Customer } from '../../../core/models/customer';
 import { AttachmentPicker } from '../../../shared/attachment-picker';
 import { FileUploadModal } from '../../../shared/file-upload-modal';
 import { InlineEditableDateField } from '../../../shared/inline-editable-date-field';
-import { InlineEditableField } from '../../../shared/inline-editable-field';
 import { RecordField, RecordFieldConfig } from '../../../shared/record-field';
 import { PicklistOption, StyledPicklist } from '../../../shared/styled-picklist';
 import {
@@ -80,7 +79,6 @@ const INTERNET_PERMANENCE_MONTHS = 6;
     DatePipe,
     FileUploadModal,
     InlineEditableDateField,
-    InlineEditableField,
     LeadEmailModal,
     RecordDetailLayout,
     RecordField,
