@@ -43,7 +43,7 @@ import {
 } from '../record-sections/record-sections';
 import { InterestedServicesSectionComponent } from '../record-sections/interested-services-section';
 
-type DetailTab = 'Resumen' | 'Correos' | 'Eventos' | 'Notas' | 'Actividad' | 'Archivos' | 'Contratos' | 'Asignaciones' | 'Relaciones' | 'Detalles' | 'Conciliación' | 'Comprobante';
+type DetailTab = 'Resumen' | 'Correos' | 'Eventos' | 'Notas' | 'Actividad' | 'Archivos' | 'Contratos' | 'Asignaciones' | 'Relaciones' | 'Detalles' | 'Conciliación' | 'Comprobante' | 'Pagos';
 
 interface RelatedItem {
   icon: string;
@@ -127,7 +127,7 @@ export class OperationalRecordDetailPage {
           : this.moduleKey === 'assignments'
             ? ['Resumen', 'Notas', 'Archivos', 'Actividad']
             : this.moduleKey === 'invoices'
-              ? ['Resumen', 'Notas', 'Archivos', 'Actividad']
+              ? ['Resumen', 'Pagos', 'Notas', 'Archivos', 'Actividad']
               : this.moduleKey === 'payments'
                 ? ['Resumen', 'Notas', 'Archivos', 'Actividad']
                 : this.moduleKey === 'expenses'
@@ -1199,5 +1199,44 @@ export class OperationalRecordDetailPage {
     this.router.navigate(['/assignments'], {
       queryParams: { equipment: equipmentId }
     });
+  }
+
+  // Métodos para el módulo de facturas - Tab de Pagos
+  readonly invoicePayments = computed(() => {
+    if (this.moduleKey !== 'invoices') return [];
+    const record = this.record() as any;
+    return record?.payments ?? [];
+  });
+
+  readonly totalPaid = computed(() => {
+    return this.invoicePayments().reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
+  });
+
+  readonly remainingAmount = computed(() => {
+    if (this.moduleKey !== 'invoices') return 0;
+    const record = this.record() as any;
+    const total = record?.total ?? 0;
+    return Math.max(0, total - this.totalPaid());
+  });
+
+  readonly paymentProgress = computed(() => {
+    if (this.moduleKey !== 'invoices') return 0;
+    const record = this.record() as any;
+    const total = record?.total ?? 0;
+    if (total === 0) return 0;
+    return (this.totalPaid() / total) * 100;
+  });
+
+  paymentMethodIcon(method: string): string {
+    switch (method) {
+      case 'Transferencia':
+        return '🏦';
+      case 'Efectivo':
+        return '💵';
+      case 'Tarjeta':
+        return '💳';
+      default:
+        return '💰';
+    }
   }
 }

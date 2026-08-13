@@ -435,6 +435,55 @@
                 </section>
               }
             }
+            @case ('Pagos') {
+              @if (moduleKey === 'invoices' && invoicePayments().length) {
+                <div class="payments-container">
+                  <div class="payment-summary">
+                    <div class="summary-card">
+                      <h3>Progreso de pago</h3>
+                      <div class="progress-bar">
+                        <div class="progress-fill" [style.width.%]="paymentProgress()"></div>
+                      </div>
+                      <div class="summary-row">
+                        <span>Pagado:</span>
+                        <strong>${{ totalPaid() | number: '1.2-2' }} MXN</strong>
+                      </div>
+                      <div class="summary-row">
+                        <span>Pendiente:</span>
+                        <strong>${{ remainingAmount() | number: '1.2-2' }} MXN</strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="payments-list">
+                    <h3>Pagos registrados</h3>
+                    <div class="payments-grid">
+                      @for (payment of invoicePayments(); track payment.id) {
+                        <div class="payment-item">
+                          <div class="payment-method">
+                            <span class="method-icon">{{ paymentMethodIcon(payment.method) }}</span>
+                            <div class="method-info">
+                              <span class="method-name">{{ payment.method }}</span>
+                              <span class="method-ref">Ref: {{ payment.reference }}</span>
+                            </div>
+                          </div>
+                          <div class="payment-details">
+                            <span class="payment-date">{{ payment.date | date: 'dd MMM yyyy' }}</span>
+                            <span class="payment-amount">${{ payment.amount | number: '1.2-2' }} MXN</span>
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                </div>
+              } @else if (moduleKey === 'invoices') {
+                <div class="empty-state">
+                  <div class="empty-state-icon">💰</div>
+                  <h3>Sin pagos registrados</h3>
+                  <p>Esta factura no tiene pagos asociados aún.</p>
+                </div>
+              }
+            }
             @case ('Notas') {
               <section class="notes-section">
                 <header class="notes-heading">
