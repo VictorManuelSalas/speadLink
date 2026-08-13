@@ -23,7 +23,7 @@
         <div class="editor">
           <select #choice [value]="value()">
             @for (option of config().options ?? []; track option) {
-              <option [value]="option">{{ option }}</option>
+              <option [value]="option">{{ getOptionLabel(option) }}</option>
             }</select
           ><button class="save" type="button" (click)="save(choice.value)">✓</button
           ><button type="button" (click)="editing.set(false)">×</button>
@@ -33,7 +33,7 @@
       <div class="field">
         <span>{{ config().label }}</span>
         <div class="value">
-          <b>{{ config().displayValue || value() || '—' }}</b>
+          <b>{{ config().displayValue || getOptionLabel(value()) || '—' }}</b>
           @if (config().editable) {
             <button class="edit" type="button" (click)="editing.set(true)">
               {{ editIcon }}

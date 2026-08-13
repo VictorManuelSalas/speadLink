@@ -296,7 +296,7 @@ export class OperationalRecordDetailPage {
         maximumFractionDigits: 2,
       }).format(this.asNumber(value));
     }
-    if (field.inputType === 'select' && field.optionLabels) {
+    if ((field.inputType === 'select' || field.type === 'lookup') && field.optionLabels) {
       return field.optionLabels[String(value)] || '';
     }
     return '';
@@ -315,9 +315,25 @@ export class OperationalRecordDetailPage {
     const text = String(value ?? '');
     if (!text) return null;
     if (key === 'convertedToClientId') return ['/customers', text];
-    if (key === 'invoice') return ['/invoices', text];
+    if (key === 'invoice') {
+      // If value is an ID (like INV-4520), use it directly
+      // If it's a folio (like FAC-SL-1040-0), find the invoice by folio
+      if (text.startsWith('INV-')) {
+        return ['/invoices', text];
+      } else {
+        const invoice = this.store.recordsFor('invoices').find((r) => r['folio'] === text);
+        return invoice ? ['/invoices', invoice.id] : null;
+      }
+    }
     if (key === 'client') {
-      return text.startsWith('SL-') ? ['/customers', text] : null;
+      // If value is a customer ID (like SL-1040), use it directly
+      // If it's a customer name (like "José Luis..."), find the customer by name
+      if (text.startsWith('SL-')) {
+        return ['/customers', text];
+      } else {
+        const customer = this.store.recordsFor('customers').find((r) => r['name'] === text);
+        return customer ? ['/customers', customer.id] : null;
+      }
     }
     if (key === 'equipment') {
       return text.startsWith('EQ-') ? ['/equipment', text] : null;
@@ -432,7 +448,9 @@ export class OperationalRecordDetailPage {
                 ? 'date'
                 : configured?.type === 'select'
                   ? 'select'
-                  : 'text',
+                  : configured?.type === 'lookup'
+                    ? 'lookup'
+                    : 'text',
           options: configured?.options ?? [],
           optionLabels: configured?.optionLabels ?? {},
         };
@@ -1048,6 +1066,29 @@ export class OperationalRecordDetailPage {
           detail: String(record['vendor'] ?? 'Proveedor no indicado'),
           meta: 'Clasificación',
           tone: 'amber',
+        },
+      ],
+      customers: [
+        {
+          icon: '▤',
+          title: String(record['name'] ?? 'Cliente'),
+          detail: String(record['type'] ?? 'Tipo no indicado'),
+          meta: String(record['status'] ?? 'ACTIVE'),
+          tone: 'green',
+        },
+        {
+          icon: '✉',
+          title: String(record['email'] ?? 'Sin correo'),
+          detail: 'Contacto principal',
+          meta: 'Enviar',
+          tone: 'blue',
+        },
+        {
+          icon: '☎',
+          title: String(record['phone'] ?? 'Sin teléfono'),
+          detail: 'Teléfono de contacto',
+          meta: 'Llamar',
+          tone: 'violet',
         },
       ],
     };
