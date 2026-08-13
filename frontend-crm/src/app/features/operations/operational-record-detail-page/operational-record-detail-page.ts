@@ -187,8 +187,6 @@ export class OperationalRecordDetailPage {
   setActiveTab(value: string): void {
     if (this.tabs.includes(value as DetailTab)) this.activeTab.set(value as DetailTab);
   }
-  readonly editingStatus = signal(false);
-  readonly editingPicklistKey = signal<string | null>(null);
   readonly emailComposerOpen = signal(false);
   readonly emailPreview = signal<OperationalEmail | null>(null);
   readonly emailComposeSeed = signal<LeadEmailSeed>({});
@@ -512,32 +510,6 @@ export class OperationalRecordDetailPage {
   }
   updateField(id: string, key: string, value: string): void {
     this.store.update(this.moduleKey, id, { [key]: value });
-  }
-  saveLeadStatus(id: string, key: string, value: string): void {
-    const lead = this.store.find('leads', id);
-    if (value === 'CONVERTED' && lead) this.convertLead(lead);
-    else this.updateField(id, key, value);
-    this.editingStatus.set(false);
-  }
-  savePicklist(id: string, key: string, value: string): void {
-    this.updateField(id, key, value);
-    this.editingPicklistKey.set(null);
-  }
-  getOptionLabel(field: any, value: any): string {
-    const stringValue = String(value);
-    return field?.optionLabels?.[stringValue] || stringValue;
-  }
-
-  getFieldPicklistOptions(field: any): Array<{ value: string; label: string }> {
-    if (!field?.options) return [];
-    return field.options.map((option: string) => ({
-      value: option,
-      label: field?.optionLabels?.[option] || option,
-    }));
-  }
-
-  fieldValueAsString(value: any): string {
-    return value ? String(value) : '';
   }
 
   getLookupOptions(fieldKey: string): { options: ReadonlyArray<string>; optionLabels: Record<string, string> } {
