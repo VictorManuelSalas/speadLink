@@ -64,41 +64,83 @@
         </app-record-header>
 
         <app-record-summary>
-          @for (column of summaryColumns(); track column.key) {
+          @if (moduleKey === 'invoices') {
+            <!-- Pending amount for invoices -->
             <div class="record-summary-item">
-              <span>{{ column.label }}</span>
-              @if (column.type === 'status') {
-                <span class="record-status record-status--{{ statusTone(item[column.key]) }}"
-                  ><i></i>{{ statusLabel(item[column.key]) }}</span
-                >
-              } @else if (column.type === 'money') {
-                <b>{{
-                  asNumber(item[column.key])
-                    | currency: 'MXN' : 'symbol-narrow' : '1.0-2' : i18n.locale()
-                }}</b>
-              } @else if (column.type === 'date') {
-                <b>{{ asString(item[column.key]) | date: 'dd MMM y' : '' : i18n.locale() }}</b>
-              } @else if (moduleKey === 'leads' && column.key === 'phone') {
-                <a
-                  class="whatsapp-value"
-                  [href]="whatsappUrl(item[column.key])"
-                  target="_blank"
-                  rel="noopener"
-                  aria-label="Abrir conversación en WhatsApp"
-                >
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M20 11.6a8 8 0 0 1-11.8 7l-4.2 1 1.1-4A8 8 0 1 1 20 11.6Z" />
-                    <path
-                      d="M8.5 7.8c.3-.4.6-.3.9-.1l1.1 2c.1.3 0 .5-.2.7l-.6.6c.7 1.5 1.8 2.6 3.3 3.2l.6-.7c.2-.2.5-.3.7-.2l2 1c.3.2.4.5.3.8-.3 1-1.2 1.7-2.3 1.7-3.5-.3-7.4-4.2-7.7-7.7 0-.5.3-1 .6-1.3Z"
-                    />
-                  </svg>
-                  <b>{{ item[column.key] || '—' }}</b>
-                </a>
-              } @else {
-                <b>{{ item[column.key] || '—' }}</b>
-              }
-              <small>{{ statHelper(column.key) }}</small>
+              <span>Monto pendiente a pagar</span>
+              <b>{{
+                getInvoicePendingAmount(item)
+                  | currency: 'MXN' : 'symbol-narrow' : '1.0-0' : i18n.locale()
+              }}</b>
+              <small>Información principal</small>
             </div>
+            <!-- Invoice amount -->
+            <div class="record-summary-item">
+              <span>Monto de la factura</span>
+              <b>{{
+                asNumber(item['total'] || 0)
+                  | currency: 'MXN' : 'symbol-narrow' : '1.0-0' : i18n.locale()
+              }}</b>
+              <small>Información principal</small>
+            </div>
+            <!-- Other columns except the first and second one (invoice ID and Emisión) -->
+            @for (column of summaryColumns().slice(2); track column.key) {
+              <div class="record-summary-item">
+                <span>{{ column.label }}</span>
+                @if (column.type === 'status') {
+                  <span class="record-status record-status--{{ statusTone(item[column.key]) }}"
+                    ><i></i>{{ statusLabel(item[column.key]) }}</span
+                  >
+                } @else if (column.type === 'money') {
+                  <b>{{
+                    asNumber(item[column.key])
+                      | currency: 'MXN' : 'symbol-narrow' : '1.0-2' : i18n.locale()
+                  }}</b>
+                } @else if (column.type === 'date') {
+                  <b>{{ asString(item[column.key]) | date: 'dd MMM y' : '' : i18n.locale() }}</b>
+                } @else {
+                  <b>{{ item[column.key] || '—' }}</b>
+                }
+                <small>{{ statHelper(column.key) }}</small>
+              </div>
+            }
+          } @else {
+            @for (column of summaryColumns(); track column.key) {
+              <div class="record-summary-item">
+                <span>{{ column.label }}</span>
+                @if (column.type === 'status') {
+                  <span class="record-status record-status--{{ statusTone(item[column.key]) }}"
+                    ><i></i>{{ statusLabel(item[column.key]) }}</span
+                  >
+                } @else if (column.type === 'money') {
+                  <b>{{
+                    asNumber(item[column.key])
+                      | currency: 'MXN' : 'symbol-narrow' : '1.0-2' : i18n.locale()
+                  }}</b>
+                } @else if (column.type === 'date') {
+                  <b>{{ asString(item[column.key]) | date: 'dd MMM y' : '' : i18n.locale() }}</b>
+                } @else if (moduleKey === 'leads' && column.key === 'phone') {
+                  <a
+                    class="whatsapp-value"
+                    [href]="whatsappUrl(item[column.key])"
+                    target="_blank"
+                    rel="noopener"
+                    aria-label="Abrir conversación en WhatsApp"
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M20 11.6a8 8 0 0 1-11.8 7l-4.2 1 1.1-4A8 8 0 1 1 20 11.6Z" />
+                      <path
+                        d="M8.5 7.8c.3-.4.6-.3.9-.1l1.1 2c.1.3 0 .5-.2.7l-.6.6c.7 1.5 1.8 2.6 3.3 3.2l.6-.7c.2-.2.5-.3.7-.2l2 1c.3.2.4.5.3.8-.3 1-1.2 1.7-2.3 1.7-3.5-.3-7.4-4.2-7.7-7.7 0-.5.3-1 .6-1.3Z"
+                      />
+                    </svg>
+                    <b>{{ item[column.key] || '—' }}</b>
+                  </a>
+                } @else {
+                  <b>{{ item[column.key] || '—' }}</b>
+                }
+                <small>{{ statHelper(column.key) }}</small>
+              </div>
+            }
           }
         </app-record-summary>
 
@@ -438,63 +480,27 @@
             @case ('Pagos') {
               @if (moduleKey === 'invoices') {
                 <div class="billing-payments-container">
-                  <!-- Summary Cards -->
-                  <div class="summary-cards">
-                    <div class="summary-card">
-                      <span class="card-label">Total pagado</span>
-                      <div class="card-value">${{ totalPaidAllTime() | number: '1.0-0' }}</div>
-                      <span class="card-detail">{{ allPayments().length }} pago{{ allPayments().length !== 1 ? 's' : '' }}</span>
+                  <!-- Header Section -->
+                  <div class="billing-header">
+                    <div class="billing-header-content">
+                      <h1>Billing & payments</h1>
+                      <p>${{ totalPaidAllTime() | number: '1.0-0' }} pagados históricamente · {{ allPayments().length }} pago{{ allPayments().length !== 1 ? 's' : '' }}</p>
                     </div>
-                    <div class="summary-card">
-                      <span class="card-label">Saldo pendiente</span>
-                      <div class="card-value">${{ totalPendingAmount() | number: '1.0-0' }}</div>
-                      <span class="card-detail">{{ pendingInvoicesCount() }} factura{{ pendingInvoicesCount() !== 1 ? 's' : '' }}</span>
+                    <div class="billing-header-actions">
+                      <button class="button button--primary" type="button" (click)="createNewPayment()">
+                        ＋ New Payment
+                      </button>
                     </div>
                   </div>
 
-                  <!-- Invoices Table -->
-                  <div class="invoices-section">
-                    <div class="section-header">
-                      <h3>Facturas</h3>
-                      <span class="count">{{ allInvoices().length }} en total</span>
-                    </div>
-                    <table class="invoices-table">
-                      <thead>
-                        <tr>
-                          <th>Factura</th>
-                          <th>Descripción</th>
-                          <th>Emisión</th>
-                          <th>Vencimiento</th>
-                          <th>Total</th>
-                          <th>Estado</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        @for (invoice of allInvoices(); track invoice.id) {
-                          <tr>
-                            <td class="invoice-id">{{ invoice['folio'] || invoice.id }}</td>
-                            <td class="description">-</td>
-                            <td class="date">{{ getInvoiceIssueDate(invoice) | date: 'dd MMM, yyyy' }}</td>
-                            <td class="date">{{ getInvoiceDueDate(invoice) | date: 'dd MMM, yyyy' }}</td>
-                            <td class="amount">${{ getInvoiceTotal(invoice) | number: '1.0-0' }}</td>
-                            <td class="status">
-                              <span class="status-badge" [class]="'status-' + (getInvoiceStatus(invoice).toLowerCase())">
-                                {{ getInvoiceStatus(invoice) === 'PAID' ? 'Pagada' : getInvoiceStatus(invoice) === 'PENDING' ? 'Pendiente' : 'Vencida' }}
-                              </span>
-                            </td>
-                          </tr>
-                        }
-                      </tbody>
-                    </table>
-                  </div>
 
-                  <!-- Payment History -->
-                  @if (allPayments().length) {
-                    <div class="payments-history-section">
-                      <div class="section-header">
-                        <h3>Historial de pagos</h3>
-                        <span class="count">{{ allPayments().length }} registro{{ allPayments().length !== 1 ? 's' : '' }}</span>
-                      </div>
+                  <!-- Payment History Card -->
+                  <article class="card billing-table-card">
+                    <header>
+                      <h2>Historial de pagos</h2>
+                      <span class="payments-count">{{ allPayments().length }} registro{{ allPayments().length !== 1 ? 's' : '' }}</span>
+                    </header>
+                    <div class="table-scroll">
                       <table class="payments-table">
                         <thead>
                           <tr>
@@ -503,22 +509,42 @@
                             <th>Método</th>
                             <th>Monto</th>
                             <th>Estado</th>
+                            <th aria-label="Acciones"></th>
                           </tr>
                         </thead>
                         <tbody>
                           @for (payment of allPayments(); track payment.id) {
                             <tr>
                               <td class="date">{{ getPaymentDate(payment) | date: 'dd MMM, yyyy' }}</td>
-                              <td class="reference">{{ payment['reference'] }}</td>
+                              <td class="reference">
+                                <a [routerLink]="['/payments', payment.id]"><code><b>{{ payment['reference'] }}</b></code></a>
+                              </td>
                               <td class="method">{{ payment['method'] }}</td>
-                              <td class="amount">${{ getPaymentAmount(payment) | number: '1.0-0' }}</td>
-                              <td class="status"><span class="status-badge status-confirmed">Confirmado</span></td>
+                              <td class="amount"><b>${{ getPaymentAmount(payment) | number: '1.0-0' }}</b></td>
+                              <td class="status"><span class="status status--paid"><i></i>Confirmado</span></td>
+                              <td class="menu-cell">
+                                <button
+                                  class="icon-button"
+                                  [class.is-active]="paymentMenuId() === payment.id"
+                                  (click)="togglePaymentMenu($event, payment.id)"
+                                  aria-label="Acciones del pago">
+                                  •••
+                                </button>
+                                @if (paymentMenuId() === payment.id) {
+                                  <div class="payment-action-menu" (click)="$event.stopPropagation()">
+                                    <a [routerLink]="['/payments', payment.id]"><span>↗</span>Ver</a>
+                                    <button type="button"><span>⇩</span>Descargar</button>
+                                    <button type="button"><span>✎</span>Editar</button>
+                                    <button type="button" class="danger"><span>⊘</span>Eliminar</button>
+                                  </div>
+                                }
+                              </td>
                             </tr>
                           }
                         </tbody>
                       </table>
                     </div>
-                  }
+                  </article>
                 </div>
               }
             }

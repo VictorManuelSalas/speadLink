@@ -1551,7 +1551,7 @@
         gap: 16px;
       }
       .summary-card {
-        background: var(--color-background);
+        background: white;
         border: 1px solid var(--color-border);
         border-radius: 11px;
         padding: 24px;
@@ -1684,4 +1684,163 @@
       .status-confirmed {
         background: #d1fae5;
         color: #065f46;
+      }
+      .billing-table-card {
+        header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 21px;
+          gap: 16px;
+          h2 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 700;
+          }
+        }
+      }
+      .payments-count {
+        font-size: 12px;
+        color: var(--color-text-secondary);
+      }
+      .table-scroll {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      .payments-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--color-background);
+      }
+      .payments-table thead {
+        background: var(--color-muted);
+      }
+      .payments-table th {
+        padding: 12px 16px;
+        text-align: left;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--color-text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 1px solid var(--color-border);
+      }
+      .payments-table td {
+        padding: 14px 16px;
+        font-size: 13px;
+        color: var(--color-text);
+        border-bottom: 1px solid var(--color-border);
+      }
+      .payments-table tbody tr:last-child td {
+        border-bottom: none;
+      }
+      .menu-cell {
+        position: relative;
+        width: 44px;
+        text-align: center;
+        vertical-align: middle;
+      }
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        border-radius: 16px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        i {
+          display: inline-block;
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: currentColor;
+        }
+      }
+      .status--paid {
+        background: #d1fae5;
+        color: #065f46;
+      }
+      .billing-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 24px;
+        margin-bottom: 32px;
+        flex-wrap: wrap;
+      }
+      .billing-header-content {
+        flex: 1;
+        min-width: 300px;
+        h1 {
+          margin: 0;
+          font-size: 28px;
+          font-weight: 700;
+          margin-bottom: 8px;
+        }
+        p {
+          margin: 0;
+          font-size: 14px;
+          color: var(--color-text-secondary);
+        }
+      }
+      .billing-header-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .payment-action-menu {
+        position: absolute;
+        z-index: 1300;
+        width: 160px;
+        padding: 7px;
+        border: 1px solid var(--color-border);
+        border-radius: 10px;
+        background: var(--color-surface);
+        box-shadow: 0 14px 35px rgba(15, 23, 42, 0.18);
+        top: 100%;
+        right: 0;
+        margin-top: 4px;
+      }
+      .payment-action-menu a,
+      .payment-action-menu button {
+        width: 100%;
+        min-height: 37px;
+        padding: 0 10px;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        border: 0;
+        border-radius: 7px;
+        background: transparent;
+        color: var(--color-text-primary);
+        text-align: left;
+        text-decoration: none;
+        font: inherit;
+        font-weight: 600;
+        font-size: 11px;
+      }
+      .payment-action-menu a:hover,
+      .payment-action-menu button:hover {
+        background: var(--color-muted);
+      }
+      .payment-action-menu button.danger {
+        color: var(--color-danger);
+      }
+      .payment-action-menu button.danger:hover {
+        background: #fef2f2;
+      }
+      .reference {
+        a {
+          color: #2563eb;
+          text-decoration: none;
+          code {
+            font-family: monospace;
+            font-size: 12px;
+          }
+        }
+        a:hover {
+          text-decoration: underline;
+        }
       }

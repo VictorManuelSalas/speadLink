@@ -150,6 +150,7 @@ export class OperationalModulePage {
       }
       if (params.get('create') !== 'true') return;
       const clientId = params.get('clientId') ?? '';
+      const invoiceId = params.get('invoice') ?? '';
       if (this.moduleKey === 'contracts') {
         this.openCreate({
           client: clientId,
@@ -163,6 +164,11 @@ export class OperationalModulePage {
           client: clientId,
           assignedAt: new Date().toISOString().slice(0, 10),
           status: 'ACTIVE',
+        });
+      } else if (this.moduleKey === 'payments') {
+        this.openCreate({
+          client: clientId,
+          invoice: invoiceId,
         });
       }
     });

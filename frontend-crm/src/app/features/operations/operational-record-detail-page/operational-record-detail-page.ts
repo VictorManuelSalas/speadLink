@@ -202,6 +202,7 @@ export class OperationalRecordDetailPage {
   readonly attachmentReset = signal(0);
   readonly uploadModalOpen = signal(false);
   readonly fileMenuId = signal<string | null>(null);
+  readonly paymentMenuId = signal<string | null>(null);
   readonly activityModule = signal('');
   readonly activityType = signal<'' | 'CREATE' | 'EDIT' | 'DELETE'>('');
   readonly activityDate = signal('');
@@ -777,6 +778,10 @@ export class OperationalRecordDetailPage {
     event.stopPropagation();
     this.fileMenuId.set(this.fileMenuId() === fileId ? null : fileId);
   }
+  togglePaymentMenu(event: MouseEvent, paymentId: string): void {
+    event.stopPropagation();
+    this.paymentMenuId.set(this.paymentMenuId() === paymentId ? null : paymentId);
+  }
   deleteRecordFile(recordId: string, fileId: string): void {
     this.store.deleteAttachment(recordId, fileId);
     this.fileMenuId.set(null);
@@ -1280,5 +1285,29 @@ export class OperationalRecordDetailPage {
 
   getPaymentAmount(payment: any): number {
     return payment?.amount ?? 0;
+  }
+
+  getInvoicePendingAmount(invoice: any): number {
+    if (!invoice) return 0;
+    const invoiceTotal = invoice.total || 0;
+    const payments = this.allPayments().filter((p: any) => p.invoice === invoice.id);
+    const paidAmount = payments.reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
+    return Math.max(0, invoiceTotal - paidAmount);
+  }
+
+  createNewPayment(): void {
+    const currentRecord = this.record();
+    if (!currentRecord) return;
+
+    const invoiceId = currentRecord.id;
+    const clientId = currentRecord['customer'] || currentRecord['client'] || '';
+
+    this.router.navigate(['/payments'], {
+      queryParams: {
+        invoice: invoiceId,
+        clientId: clientId,
+        create: 'true'
+      }
+    });
   }
 }
