@@ -474,12 +474,12 @@
                           <tr>
                             <td class="invoice-id">{{ invoice['folio'] || invoice.id }}</td>
                             <td class="description">-</td>
-                            <td class="date">{{ (invoice['issueDate'] as string) | date: 'dd MMM, yyyy' }}</td>
-                            <td class="date">{{ (invoice['dueDate'] as string) | date: 'dd MMM, yyyy' }}</td>
-                            <td class="amount">${{ (invoice['total'] as number) | number: '1.0-0' }}</td>
+                            <td class="date">{{ getInvoiceIssueDate(invoice) | date: 'dd MMM, yyyy' }}</td>
+                            <td class="date">{{ getInvoiceDueDate(invoice) | date: 'dd MMM, yyyy' }}</td>
+                            <td class="amount">${{ getInvoiceTotal(invoice) | number: '1.0-0' }}</td>
                             <td class="status">
-                              <span class="status-badge" [class]="'status-' + ((invoice['status'] as string).toLowerCase())">
-                                {{ invoice['status'] === 'PAID' ? 'Pagada' : invoice['status'] === 'PENDING' ? 'Pendiente' : 'Vencida' }}
+                              <span class="status-badge" [class]="'status-' + (getInvoiceStatus(invoice).toLowerCase())">
+                                {{ getInvoiceStatus(invoice) === 'PAID' ? 'Pagada' : getInvoiceStatus(invoice) === 'PENDING' ? 'Pendiente' : 'Vencida' }}
                               </span>
                             </td>
                           </tr>
@@ -508,10 +508,10 @@
                         <tbody>
                           @for (payment of allPayments(); track payment.id) {
                             <tr>
-                              <td class="date">{{ (payment['paidAt'] as string) | date: 'dd MMM, yyyy' }}</td>
+                              <td class="date">{{ getPaymentDate(payment) | date: 'dd MMM, yyyy' }}</td>
                               <td class="reference">{{ payment['reference'] }}</td>
                               <td class="method">{{ payment['method'] }}</td>
-                              <td class="amount">${{ (payment['amount'] as number) | number: '1.0-0' }}</td>
+                              <td class="amount">${{ getPaymentAmount(payment) | number: '1.0-0' }}</td>
                               <td class="status"><span class="status-badge status-confirmed">Confirmado</span></td>
                             </tr>
                           }

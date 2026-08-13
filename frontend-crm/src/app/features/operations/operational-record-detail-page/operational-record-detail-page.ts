@@ -1257,4 +1257,28 @@ export class OperationalRecordDetailPage {
         return '💰';
     }
   }
+
+  getInvoiceIssueDate(invoice: any): string | null {
+    return invoice?.issueDate ?? invoice?.issuedAt ?? null;
+  }
+
+  getInvoiceDueDate(invoice: any): string | null {
+    return invoice?.dueDate ?? invoice?.dueAt ?? null;
+  }
+
+  getInvoiceTotal(invoice: any): number {
+    return invoice?.total ?? 0;
+  }
+
+  getInvoiceStatus(invoice: any): string {
+    return invoice?.status ?? '';
+  }
+
+  getPaymentDate(payment: any): string | null {
+    return payment?.paidAt ?? payment?.date ?? null;
+  }
+
+  getPaymentAmount(payment: any): number {
+    return payment?.amount ?? 0;
+  }
 }
