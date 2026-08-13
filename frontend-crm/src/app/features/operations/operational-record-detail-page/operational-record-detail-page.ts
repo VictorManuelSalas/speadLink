@@ -1219,12 +1219,22 @@ export class OperationalRecordDetailPage {
 
   readonly totalPendingAmount = computed(() => {
     return this.allInvoices().reduce((sum: number, inv: any) => {
-      const status = inv.status?.toUpperCase?.() || inv.status;
-      if (status === 'PAID' || status === 'PAID') return sum;
+      const status = (inv.status?.toUpperCase?.() || inv.status).toUpperCase();
+      if (status === 'PAID') return sum;
       const invPayments = this.allPayments().filter((p: any) => p.invoice === inv.id);
       const invPaid = invPayments.reduce((s: number, p: any) => s + (p.amount || 0), 0);
       return sum + Math.max(0, (inv.total || 0) - invPaid);
     }, 0);
+  });
+
+  readonly pendingInvoicesCount = computed(() => {
+    return this.allInvoices().filter((inv: any) => {
+      const status = (inv.status?.toUpperCase?.() || inv.status).toUpperCase();
+      if (status === 'PAID') return false;
+      const invPayments = this.allPayments().filter((p: any) => p.invoice === inv.id);
+      const invPaid = invPayments.reduce((s: number, p: any) => s + (p.amount || 0), 0);
+      return invPaid < (inv.total || 0);
+    }).length;
   });
 
   readonly invoicePayments = computed(() => {

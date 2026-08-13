@@ -448,19 +448,7 @@
                     <div class="summary-card">
                       <span class="card-label">Saldo pendiente</span>
                       <div class="card-value">${{ totalPendingAmount() | number: '1.0-0' }}</div>
-                      <span class="card-detail">{{ allInvoices().filter((inv: any) => {
-                        const status = inv.status?.toUpperCase?.() || inv.status;
-                        if (status === 'PAID') return false;
-                        const invPayments = allPayments().filter((p: any) => p.invoice === inv.id);
-                        const invPaid = invPayments.reduce((s: number, p: any) => s + (p.amount || 0), 0);
-                        return invPaid < (inv.total || 0);
-                      }).length }} factura{{ allInvoices().filter((inv: any) => {
-                        const status = inv.status?.toUpperCase?.() || inv.status;
-                        if (status === 'PAID') return false;
-                        const invPayments = allPayments().filter((p: any) => p.invoice === inv.id);
-                        const invPaid = invPayments.reduce((s: number, p: any) => s + (p.amount || 0), 0);
-                        return invPaid < (inv.total || 0);
-                      }).length !== 1 ? 's' : '' }}</span>
+                      <span class="card-detail">{{ pendingInvoicesCount() }} factura{{ pendingInvoicesCount() !== 1 ? 's' : '' }}</span>
                     </div>
                   </div>
 
