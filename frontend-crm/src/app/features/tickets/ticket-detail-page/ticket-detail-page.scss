@@ -315,6 +315,9 @@ dt {
   font-size: 10.5px;
   line-height: 1.55;
 }
+.comment:hover button {
+  opacity: 1;
+}
 .comment-attachments {
   margin-top: 9px;
   display: flex;

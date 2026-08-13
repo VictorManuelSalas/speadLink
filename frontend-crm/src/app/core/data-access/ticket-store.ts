@@ -121,6 +121,16 @@ export class TicketStore {
       });
   }
 
+  deleteComment(ticketId: string, commentId: string): void {
+    this.tickets.update((tickets) =>
+      tickets.map((ticket) =>
+        ticket.id === ticketId
+          ? { ...ticket, comments: ticket.comments.filter((c) => c.id !== commentId), updatedAt: new Date().toISOString() }
+          : ticket,
+      ),
+    );
+  }
+
   addAttachments(ticketId: string, attachments: ReadonlyArray<CrmAttachment>): void {
     // Attachments are still client-side blob previews (no upload endpoint wired
     // up yet), so this stays local-only even in API mode.

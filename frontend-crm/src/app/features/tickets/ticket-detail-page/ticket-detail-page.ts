@@ -5,6 +5,7 @@ import { TicketStore } from '../../../core/data-access/ticket-store';
 import { LanguageService } from '../../../core/i18n/language.service';
 import { CrmAttachment, CustomerTicket, TicketComment } from '../../../core/models/customer';
 import { AttachmentPicker } from '../../../shared/attachment-picker';
+import { RecordField, RecordFieldConfig } from '../../../shared/record-field';
 import {
   RecordDetailLayout,
   RecordHeader,
@@ -18,6 +19,7 @@ import {
     AttachmentPicker,
     DatePipe,
     RecordDetailLayout,
+    RecordField,
     RecordHeader,
     RecordInformationCard,
     RecordSummary,
@@ -125,5 +127,26 @@ export class TicketDetailPage {
     return size < 1024 * 1024
       ? `${Math.ceil(size / 1024)} KB`
       : `${(size / 1024 / 1024).toFixed(1)} MB`;
+  }
+  ticketFieldConfig(key: string, label: string, kind: RecordFieldConfig['kind'] = 'text'): RecordFieldConfig {
+    return { key, label, kind, editable: true };
+  }
+  updateTicketField(ticketId: string, key: string, value: string): void {
+    const update: Partial<CustomerTicket> = {};
+    if (key === 'status') {
+      update.status = value as CustomerTicket['status'];
+    } else if (key === 'priority') {
+      update.priority = value as CustomerTicket['priority'];
+    } else if (key === 'assignedTo') {
+      update.assignedTo = value;
+    } else if (key === 'description') {
+      update.description = value;
+    } else if (key === 'category') {
+      update.category = value;
+    }
+    this.store.update(ticketId, update);
+  }
+  deleteComment(ticketId: string, commentId: string): void {
+    this.store.deleteComment(ticketId, commentId);
   }
 }

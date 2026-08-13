@@ -9,21 +9,7 @@
         [statusLabel]="statusLabel(item.status)"
         [statusTone]="ticketStatusTone(item.status)"
         [subtitle]="item.id + ' · ' + item.clientName + ' · ' + item.category"
-      >
-        <div record-actions>
-          <select
-            #statusSelect
-            [value]="item.status"
-            (change)="changeStatus(item, statusSelect.value)"
-          >
-            <option value="open">{{ i18n.t('Abierto') }}</option>
-            <option value="in_progress">{{ i18n.t('En progreso') }}</option>
-            <option value="waiting">{{ i18n.t('En espera') }}</option>
-            <option value="resolved">{{ i18n.t('Resuelto') }}</option>
-            <option value="closed">{{ i18n.t('Cerrados') }}</option></select
-          ><button type="button">✉ Enviar mensaje</button>
-        </div>
-      </app-record-header>
+      ></app-record-header>
 
       <app-record-summary [columns]="5">
         <div class="record-summary-item">
@@ -51,6 +37,41 @@
           ><b>{{ item.createdAt | date: 'dd MMM y, HH:mm' : '' : i18n.locale() }}</b>
         </div>
       </app-record-summary>
+
+      <section class="card" style="margin-bottom: 20px;">
+        <div style="padding: 16px; border-bottom: 1px solid var(--color-border);">
+          <h2 style="margin: 0; font-size: 14px; font-weight: 600;">{{ i18n.t('Editar detalles del ticket') }}</h2>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; padding: 16px;">
+          <app-record-field
+            [config]="ticketFieldConfig('status', i18n.t('Estado'), 'status')"
+            [value]="item.status"
+            (valueSaved)="updateTicketField(item.id, 'status', $event)"
+          />
+          <app-record-field
+            [config]="ticketFieldConfig('priority', i18n.t('Prioridad'), 'select')"
+            [value]="item.priority"
+            (valueSaved)="updateTicketField(item.id, 'priority', $event)"
+          />
+          <app-record-field
+            [config]="ticketFieldConfig('assignedTo', i18n.t('Responsable'), 'text')"
+            [value]="item.assignedTo"
+            (valueSaved)="updateTicketField(item.id, 'assignedTo', $event)"
+          />
+          <app-record-field
+            [config]="ticketFieldConfig('category', i18n.t('Categoría'), 'text')"
+            [value]="item.category"
+            (valueSaved)="updateTicketField(item.id, 'category', $event)"
+          />
+        </div>
+        <div style="padding: 0 16px 16px 16px;">
+          <app-record-field
+            [config]="ticketFieldConfig('description', i18n.t('Descripción'), 'text')"
+            [value]="item.description"
+            (valueSaved)="updateTicketField(item.id, 'description', $event)"
+          />
+        </div>
+      </section>
 
       <app-record-detail-layout>
         <div record-main>
@@ -108,7 +129,17 @@
                         comment.createdAt | date: 'dd MMM y, HH:mm' : '' : i18n.locale()
                       }}</time>
                     </header>
-                    <p>{{ comment.message }}</p>
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                      <p style="margin: 0; flex: 1;">{{ comment.message }}</p>
+                      <button
+                        type="button"
+                        style="padding: 4px 8px; font-size: 12px; opacity: 0; cursor: pointer;"
+                        (click)="deleteComment(item.id, comment.id)"
+                        title="Eliminar comentario"
+                      >
+                        ✕ Eliminar
+                      </button>
+                    </div>
                     @if (comment.attachments.length) {
                       <div class="comment-attachments">
                         @for (file of comment.attachments; track file.id) {
