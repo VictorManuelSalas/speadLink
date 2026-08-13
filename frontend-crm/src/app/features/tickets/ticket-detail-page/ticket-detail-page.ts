@@ -42,6 +42,8 @@ export class TicketDetailPage {
   readonly commentReset = signal(0);
   readonly ticketFiles = signal<ReadonlyArray<CrmAttachment>>([]);
   readonly fileReset = signal(0);
+  readonly descriptionEditMode = signal(false);
+  readonly descriptionEditDraft = signal('');
 
   // Picklist options
   readonly statusOptions = [
@@ -210,6 +212,19 @@ export class TicketDetailPage {
 
   deleteComment(ticketId: string, commentId: string): void {
     this.store.deleteComment(ticketId, commentId);
+  }
+
+  startDescriptionEdit(currentValue: string): void {
+    this.descriptionEditDraft.set(currentValue);
+    this.descriptionEditMode.set(true);
+  }
+
+  saveDescription(ticketId: string): void {
+    const newValue = this.descriptionEditDraft().trim();
+    this.descriptionEditMode.set(false);
+    if (newValue && newValue !== this.ticket()?.description) {
+      this.updateTicketField(ticketId, 'description', newValue);
+    }
   }
 
   getOptionLabel(options: ReadonlyArray<{ value: string; label: string }>, value: string): string {

@@ -72,14 +72,31 @@
             [title]="i18n.t('Detalles del ticket')"
             description="Información proporcionada al abrir la solicitud."
           >
-            <p class="record-info-full ticket-description" style="width: 100%;">
-              <app-inline-editable-field
-                [type]="'textarea'"
-                [value]="item.description"
-                [displayValue]="item.description"
-                (valueSaved)="updateTicketField(item.id, 'description', $event)"
-              />
-            </p>
+            <div class="description-editable" style="width: 100%;">
+              @if (descriptionEditMode()) {
+                <textarea
+                  #descInput
+                  [value]="descriptionEditDraft()"
+                  (input)="descriptionEditDraft.set(descInput.value)"
+                  (blur)="saveDescription(item.id)"
+                  (keydown.escape)="descriptionEditMode.set(false)"
+                  autofocus
+                  style="width: 100%; min-height: 120px; padding: 10px; border: 1px solid var(--color-border); border-radius: 8px;"
+                ></textarea>
+              } @else {
+                <p class="record-info-full ticket-description" style="margin: 0; white-space: pre-wrap;">
+                  {{ item.description }}
+                  <button
+                    type="button"
+                    class="edit-desc-btn"
+                    (click)="startDescriptionEdit(item.description)"
+                    title="Editar descripción"
+                  >
+                    ✎
+                  </button>
+                </p>
+              }
+            </div>
             @if (item.customFields) {
               <div class="custom-fields record-info-full">
                 @for (field of customFields(item); track field[0]) {

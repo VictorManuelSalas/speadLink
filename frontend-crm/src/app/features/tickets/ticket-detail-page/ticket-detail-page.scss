@@ -493,6 +493,25 @@ dd {
   color: #fff;
   font-weight: 700;
 }
+.description-editable {
+  position: relative;
+}
+.edit-desc-btn {
+  margin-left: 10px;
+  padding: 4px 8px;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.ticket-description:hover .edit-desc-btn {
+  opacity: 1;
+}
+.edit-desc-btn:hover {
+  color: var(--color-primary);
+}
 .not-found {
   padding: 100px;
   text-align: center;
