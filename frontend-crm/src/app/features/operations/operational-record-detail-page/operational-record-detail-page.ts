@@ -1205,8 +1205,11 @@ export class OperationalRecordDetailPage {
   // Métodos para el módulo de facturas - Tab de Pagos
   readonly invoicePayments = computed(() => {
     if (this.moduleKey !== 'invoices') return [];
-    const record = this.record() as any;
-    return record?.payments ?? [];
+    const record = this.record();
+    if (!record) return [];
+    const invoiceId = record.id;
+    const allPayments = this.store.records()['payments'] ?? [];
+    return allPayments.filter((p: any) => p.invoice === invoiceId) as any[];
   });
 
   readonly totalPaid = computed(() => {
