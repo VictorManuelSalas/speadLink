@@ -1,4 +1,4 @@
-import { CurrencyPipe, DatePipe } from '@angular/common';
+import { CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -77,6 +77,7 @@ const INTERNET_PERMANENCE_MONTHS = 6;
     AttachmentPicker,
     CurrencyPipe,
     DatePipe,
+    DecimalPipe,
     FileUploadModal,
     InlineEditableDateField,
     LeadEmailModal,
