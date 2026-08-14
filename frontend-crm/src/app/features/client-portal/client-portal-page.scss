@@ -38,10 +38,26 @@
   line-height: 1.6;
 }
 .portal-login {
+  position: relative;
   min-height: 100vh;
   display: grid;
   grid-template-columns: minmax(420px, 1fr) minmax(480px, 0.85fr);
   background: #fff;
+}
+.portal-back {
+  position: absolute;
+  right: 34px;
+  top: 30px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #2563eb;
+  font-size: 12.5px;
+  font-weight: 700;
+  z-index: 10;
+}
+.portal-back:hover {
+  color: #1d4ed8;
 }
 .portal-login__visual {
   position: relative;
@@ -93,7 +109,7 @@
   z-index: 1;
 }
 .portal-brand--light > span {
-  background: #fff;
+  background: var(--portal-color);
 }
 .portal-login__visual > div:nth-child(2) {
   position: relative;

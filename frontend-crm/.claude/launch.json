@@ -4,7 +4,7 @@
     {
       "name": "frontend-crm",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeArgs": ["start"],
       "port": 4200,
       "autoPort": true
     }
