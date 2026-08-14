@@ -3,7 +3,6 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { SessionContext } from '../../core/auth/session-context';
 import { LanguageService } from '../../core/i18n/language.service';
-import { ApiService } from '../../shared/services/api.service';
 
 @Component({
   selector: 'app-login-page',
@@ -16,27 +15,13 @@ export class LoginPage {
   private readonly session = inject(SessionContext);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
-  private readonly apiService = inject(ApiService);
   readonly i18n = inject(LanguageService);
   readonly loading = signal(false);
   readonly showPassword = signal(false);
   readonly error = signal('');
-  readonly supportEmail = signal('soporte@speedlink.mx');
   email = '';
   password = '';
   remember = true;
-
-  constructor() {
-    this.loadContactInfo();
-  }
-
-  private loadContactInfo(): void {
-    this.apiService.getContactInfo().subscribe((response: any) => {
-      if (response?.data?.contact?.email) {
-        this.supportEmail.set(response.data.contact.email);
-      }
-    });
-  }
 
   useDemoCredentials(): void {
     this.email = 'andrea.torres@speedlink.mx';

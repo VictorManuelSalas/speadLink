@@ -61,21 +61,14 @@
   gap: 12px;
   color: inherit;
 }
-.login-brand > span {
-  width: 39px;
-  height: 39px;
-  display: grid;
-  place-items: center;
-  border-radius: 11px;
-  background: #fff;
-}
+.login-brand > span,
 .login-mobile-brand > span {
   width: 39px;
   height: 39px;
   display: grid;
   place-items: center;
   border-radius: 11px;
-  background: #2563eb;
+  background: #fff;
 }
 .login-brand img,
 .login-mobile-brand img {

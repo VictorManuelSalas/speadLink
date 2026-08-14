@@ -14,7 +14,6 @@
     </p>
   </main>
 } @else if (!store.authenticated()) {
-  <a class="portal-back" routerLink="/"><span aria-hidden="true">←</span> Volver al inicio</a>
   <main class="portal-login" [style.--portal-color]="store.config().primaryColor">
     <section class="portal-login__visual">
       <div class="portal-brand portal-brand--light">

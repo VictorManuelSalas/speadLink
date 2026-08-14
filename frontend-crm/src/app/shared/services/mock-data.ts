@@ -214,7 +214,7 @@ export const MOCK_CONTACT = {
     contact: {
       phone: '+52 871 615 6932',
       whatsapp: '8716156932',
-      email: 'speadinternetmd@gmail.com',
+      email: 'contacto@speedlink.mx',
       address: 'Ejido Martha, Mapimi Dgo. 35200, México',
       facebook: 'facebook.com/speedlink',
       instagram: '@speedlink_mx',

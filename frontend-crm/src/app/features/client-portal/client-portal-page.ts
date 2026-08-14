@@ -8,7 +8,7 @@ import {
   signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import {
   ClientPortalStore,
   PortalAttachment,
@@ -19,7 +19,7 @@ type PortalTab = 'Resumen' | 'Mi perfil' | 'Facturación' | 'Tickets' | 'Archivo
 
 @Component({
   selector: 'app-client-portal-page',
-  imports: [FormsModule, RouterLink, CurrencyPipe, DatePipe, DecimalPipe],
+  imports: [FormsModule, CurrencyPipe, DatePipe, DecimalPipe],
   templateUrl: './client-portal-page.html',
   styleUrl: './client-portal-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

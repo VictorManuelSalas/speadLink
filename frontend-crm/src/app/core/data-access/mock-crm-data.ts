@@ -453,11 +453,7 @@ const DASHBOARD: DashboardSummary = {
 @Injectable()
 export class MockCrmDataAccess implements CrmDataAccess {
   private readonly customers = [...CUSTOMERS];
-
   getDashboard(): Observable<DashboardSummary> {
-    // Retornar datos estáticos por ahora
-    // En una implementación más avanzada, esto podría conectarse con OperationalStore
-    // a través de un servicio de intermediario para evitar problemas de inyección circular
     return of(DASHBOARD).pipe(delay(250));
   }
   getCustomers(): Observable<ReadonlyArray<Customer>> {

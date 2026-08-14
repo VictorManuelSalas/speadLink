@@ -1,12 +1,11 @@
 import { CurrencyPipe, DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, HostListener, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostListener, inject, signal } from '@angular/core';
 import { Meta } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import { OperationalRecord } from '../../operations/operational-modules.data';
 import { OperationalStore } from '../../operations/operational-store';
 import { ApiService } from '../../../shared/services/api.service';
 import { LeadsService } from '../../../shared/services/leads.service';
-import { ClientPortalStore } from '../../../core/portal/client-portal.store';
 import {
   SPEEDLINK_CONTACT,
 } from '../public-home.data';
@@ -60,9 +59,6 @@ export class PublicHomePage {
   private readonly store = inject(OperationalStore);
   private readonly apiService = inject(ApiService);
   private readonly leadsService = inject(LeadsService);
-  private readonly portalStore = inject(ClientPortalStore);
-
-  readonly portalUrl = computed(() => `/portal/${this.portalStore.config().slug}`);
 
   // Datos cargados dinámicamente desde la API
   readonly plans = signal<any[]>([]);
