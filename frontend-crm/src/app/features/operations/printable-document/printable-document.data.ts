@@ -1,0 +1,236 @@
+/**
+ * Documentos imprimibles de los registros operativos.
+ *
+ * Un "reporte" genérico por registro no significa nada; lo que sí es un
+ * entregable real es el documento del registro: la factura que recibe el
+ * cliente, el acuse que firma en la instalación. Aquí se define qué módulos
+ * tienen documento y cómo se arma.
+ */
+
+import { OperationalModuleKey, OperationalRecord } from '../operational-modules.data';
+
+export interface DocumentRow {
+  readonly label: string;
+  readonly value: string;
+  /** Resalta el renglón (totales, folio). */
+  readonly strong?: boolean;
+}
+
+export interface DocumentSection {
+  readonly title: string;
+  readonly rows: ReadonlyArray<DocumentRow>;
+}
+
+/** Tabla del documento: para listados (facturas de un periodo, pagos aplicados). */
+export interface DocumentTable {
+  readonly title: string;
+  readonly columns: ReadonlyArray<{ label: string; align?: 'left' | 'right' }>;
+  readonly rows: ReadonlyArray<ReadonlyArray<string>>;
+  /** Texto cuando no hay renglones. */
+  readonly empty?: string;
+}
+
+export interface PrintableDocument {
+  /** Encabezado grande del documento. */
+  readonly title: string;
+  /** Folio o identificador visible. */
+  readonly reference: string;
+  readonly issuedAt: string;
+  readonly sections: ReadonlyArray<DocumentSection>;
+  /** Listados que van debajo de las secciones. */
+  readonly tables?: ReadonlyArray<DocumentTable>;
+  /** Renglón de total destacado; sólo documentos con importe. */
+  readonly total?: DocumentRow;
+  readonly notes?: string;
+  /** Pie con línea de firma (acuses de entrega). */
+  readonly signatureLabel?: string;
+  readonly disclaimer?: string;
+}
+
+/** Módulos que hoy tienen documento imprimible. */
+export const MODULES_WITH_DOCUMENT: ReadonlyArray<OperationalModuleKey> = [
+  'invoices',
+  'assignments',
+  'payments',
+];
+
+export const DOCUMENT_ACTION_LABEL: Partial<Record<OperationalModuleKey, string>> = {
+  invoices: '⇩ Descargar factura',
+  assignments: '⇩ Descargar acuse de entrega',
+  payments: '⇩ Descargar comprobante',
+};
+
+export const ORGANIZATION = {
+  name: 'SpeedLink Telecom',
+  code: 'SL-MX-01',
+  email: 'contacto@speedlink.mx',
+  phone: '+52 55 4100 2200',
+  address: 'Zumpango, Estado de México',
+} as const;
+
+export interface DocumentContext {
+  readonly record: OperationalRecord;
+  readonly formatMoney: (value: unknown) => string;
+  readonly formatDate: (value: unknown) => string;
+  readonly statusLabel: (value: unknown) => string;
+  /** Pagos aplicados a la factura, si el módulo los tiene. */
+  readonly payments?: ReadonlyArray<OperationalRecord>;
+}
+
+function text(value: unknown, fallback = '—'): string {
+  const raw = String(value ?? '').trim();
+  return raw || fallback;
+}
+
+function buildInvoice(context: DocumentContext): PrintableDocument {
+  const { record, formatMoney, formatDate, statusLabel } = context;
+  const payments = context.payments ?? [];
+  const paid = payments.reduce((sum, payment) => sum + (Number(payment['amount']) || 0), 0);
+  const total = Number(record['total']) || 0;
+  const balance = Math.max(0, total - paid);
+
+  return {
+    title: 'Factura',
+    reference: text(record['folio'] ?? record.id),
+    issuedAt: formatDate(record['issueDate'] ?? record['issuedAt']),
+    sections: [
+      {
+        title: 'Cliente',
+        rows: [
+          { label: 'Nombre', value: text(record['client']) },
+          { label: 'Clave de cliente', value: text(record['clientId']) },
+        ],
+      },
+      {
+        title: 'Periodo',
+        rows: [
+          { label: 'Fecha de emisión', value: formatDate(record['issueDate'] ?? record['issuedAt']) },
+          { label: 'Fecha de vencimiento', value: formatDate(record['dueDate'] ?? record['dueAt']) },
+          { label: 'Estado', value: statusLabel(record['status']) },
+        ],
+      },
+      {
+        title: 'Importes',
+        rows: [
+          // Subtotal e impuestos sólo si el registro los desglosa; si no,
+          // mostrarlos en cero daría una lectura falsa del documento.
+          ...(record['subtotal'] != null
+            ? ([{ label: 'Subtotal', value: formatMoney(record['subtotal']) }] as DocumentRow[])
+            : []),
+          ...(record['taxAmount'] != null
+            ? ([{ label: 'Impuestos', value: formatMoney(record['taxAmount']) }] as DocumentRow[])
+            : []),
+          { label: 'Total', value: formatMoney(total), strong: true },
+          ...(payments.length
+            ? ([
+                { label: 'Pagos aplicados', value: formatMoney(paid) },
+              ] as DocumentRow[])
+            : []),
+        ],
+      },
+    ],
+    total: {
+      label: balance > 0 ? 'Saldo pendiente' : 'Saldo',
+      value: formatMoney(balance),
+      strong: true,
+    },
+    notes: text(record['notes'], ''),
+    disclaimer:
+      'Documento informativo emitido por el CRM. No es un comprobante fiscal digital (CFDI).',
+  };
+}
+
+function buildAssignment(context: DocumentContext): PrintableDocument {
+  const { record, formatDate, statusLabel } = context;
+
+  return {
+    title: 'Acuse de entrega de equipo',
+    reference: text(record['name'] ?? record.id),
+    issuedAt: formatDate(record['assignedAt']),
+    sections: [
+      {
+        title: 'Cliente',
+        rows: [
+          { label: 'Nombre', value: text(record['client']) },
+          { label: 'Clave de cliente', value: text(record['clientId']) },
+        ],
+      },
+      {
+        title: 'Equipo entregado',
+        rows: [
+          { label: 'Equipo', value: text(record['equipment']), strong: true },
+          { label: 'Número de serie', value: text(record['serial']) },
+          { label: 'Clave de inventario', value: text(record['equipmentId']) },
+        ],
+      },
+      {
+        title: 'Instalación',
+        rows: [
+          { label: 'Fecha de asignación', value: formatDate(record['assignedAt']) },
+          { label: 'Fecha de devolución', value: formatDate(record['returnedAt']) },
+          { label: 'Estado', value: statusLabel(record['status']) },
+        ],
+      },
+    ],
+    notes: text(record['description'], ''),
+    signatureLabel: 'Nombre y firma de quien recibe',
+    disclaimer:
+      'El equipo descrito es propiedad de ' +
+      ORGANIZATION.name +
+      ' y deberá ser devuelto al término del servicio.',
+  };
+}
+
+function buildPayment(context: DocumentContext): PrintableDocument {
+  const { record, formatMoney, formatDate } = context;
+
+  return {
+    title: 'Comprobante de pago',
+    reference: text(record['reference'] ?? record.id),
+    issuedAt: formatDate(record['paidAt'] ?? record['date']),
+    sections: [
+      {
+        title: 'Cliente',
+        rows: [
+          { label: 'Nombre', value: text(record['client']) },
+          { label: 'Clave de cliente', value: text(record['clientId']) },
+        ],
+      },
+      {
+        title: 'Pago',
+        rows: [
+          { label: 'Fecha de pago', value: formatDate(record['paidAt'] ?? record['date']) },
+          { label: 'Método', value: text(record['method']) },
+          { label: 'Referencia', value: text(record['reference']) },
+        ],
+      },
+      {
+        title: 'Factura',
+        rows: [
+          { label: 'Folio', value: text(record['invoice'] ?? record['invoiceId']) },
+          { label: 'Registro', value: text(record.id) },
+        ],
+      },
+    ],
+    total: { label: 'Importe recibido', value: formatMoney(record['amount']), strong: true },
+    notes: text(record['notes'], ''),
+    disclaimer:
+      'Comprobante de recepción de pago emitido por ' +
+      ORGANIZATION.name +
+      '. No es un comprobante fiscal digital (CFDI).',
+  };
+}
+
+const BUILDERS: Partial<Record<OperationalModuleKey, (context: DocumentContext) => PrintableDocument>> =
+  {
+    invoices: buildInvoice,
+    assignments: buildAssignment,
+    payments: buildPayment,
+  };
+
+export function buildPrintableDocument(
+  module: OperationalModuleKey,
+  context: DocumentContext,
+): PrintableDocument | null {
+  return BUILDERS[module]?.(context) ?? null;
+}

@@ -30,6 +30,9 @@ export class StyledPicklist {
   readonly value = input('');
   readonly placeholder = input('Seleccionar…');
   readonly disabled = input(false);
+  /** Fuerza el buscador aunque haya pocas opciones (lookups a otros módulos). */
+  readonly alwaysSearchable = input(false);
+  readonly showSearch = computed(() => this.alwaysSearchable() || this.options().length > 6);
   readonly valueChange = output<string>();
   readonly open = signal(false);
   readonly openUpward = signal(false);

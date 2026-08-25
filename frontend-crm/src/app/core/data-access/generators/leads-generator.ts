@@ -7,6 +7,12 @@ import { BaseGenerator } from './base-generator';
 import type { LeadRecord } from '../models/operational-records';
 import { IdGenerator } from '../utils/id-generator';
 import { FakerHelpers } from '../utils/faker-helpers';
+import { SYSTEM_USERS } from '../system-users';
+
+/** Los leads se reparten entre el equipo comercial y la administradora. */
+const SALES_OWNER_IDS = SYSTEM_USERS.filter((user) =>
+  ['Ventas', 'Administrador'].includes(user.role),
+).map((user) => user.id);
 
 export class LeadsGenerator extends BaseGenerator<LeadRecord> {
   private baseIds = ['SL-1050', 'SL-1051', 'SL-1052', 'SL-1053', 'SL-1054'];
@@ -41,7 +47,8 @@ export class LeadsGenerator extends BaseGenerator<LeadRecord> {
       longitude: Math.round(longitude * 10000) / 10000,
       source,
       status,
-      notes:
+      owner: FakerHelpers.randomElement(SALES_OWNER_IDS),
+      description:
         status === 'LOST'
           ? 'Lead no mostró interés en el producto'
           : `Prospecto de ${type.toLowerCase()} interesado en Internet`,

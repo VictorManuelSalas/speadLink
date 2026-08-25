@@ -262,11 +262,12 @@ export class PublicHomePage {
       id: `LD-${nextNumber}`,
       name: form.name.trim(),
       phone: form.phone.trim(),
-      prospectType: form.prospectType,
+      type: form.prospectType,
       address,
       source: 'Sitio web',
       status: 'NEW',
-      notes,
+      owner: '',
+      description: notes,
       updatedAt: new Date().toISOString(),
     };
     if (form.latitude != null && form.longitude != null) {

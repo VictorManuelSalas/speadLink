@@ -97,7 +97,16 @@ export class DataGenerator {
     const leads = this.leadsGen.generateMultiple(config.leads);
     const services = this.servicesGen.generateStandard(); // Always generate standard services
     const equipment = this.equipmentGen.generateMultiple(config.equipment);
+    // Las asignaciones referencian equipo real del inventario recién generado.
+    this.assignmentsGen.setEquipmentPool(equipment);
     const assignments = this.assignmentsGen.generateMultiple(config.assignments);
+    // El equipo asignado deja de estar disponible.
+    const assignedIds = new Set(assignments.filter((a) => a.status === 'ACTIVE').map((a) => a.equipmentId));
+    equipment.forEach((unit) => {
+      if (assignedIds.has(unit.id) && unit.status === 'AVAILABLE') unit.status = 'ASSIGNED';
+    });
+    // Los contratos referencian servicios reales del catálogo recién generado.
+    this.contractsGen.setServiceCatalog(services);
     const contracts = this.contractsGen.generateMultiple(config.contracts);
     const invoices = this.invoicesGen.generateMultiple(config.invoices);
     const payments = this.paymentsGen.generateBatch(config.payments);

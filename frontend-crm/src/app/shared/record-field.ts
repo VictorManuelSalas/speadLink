@@ -6,6 +6,7 @@ import { RouterLink } from '@angular/router';
 import { GpsLocationPicker } from './gps-location-picker';
 import { InlineEditableDateField } from './inline-editable-date-field';
 import { InlineEditableField } from './inline-editable-field';
+import { PicklistOption, StyledPicklist } from './styled-picklist';
 
 export interface RecordLookupPreview {
   readonly type: string;
@@ -35,6 +36,12 @@ export interface RecordFieldConfig {
     | 'audit';
   readonly editable?: boolean;
   readonly options?: ReadonlyArray<string>;
+  /**
+   * Opciones enriquecidas para editar un lookup con el picklist buscable
+   * (mismo control que usa Tickets). Si se omite, el lookup usa un <select> simple.
+   */
+  readonly picklistOptions?: ReadonlyArray<PicklistOption>;
+  readonly placeholder?: string;
   readonly optionLabels?: Readonly<Record<string, string>>;
   readonly href?: string;
   readonly displayValue?: string;
@@ -55,6 +62,7 @@ export interface RecordFieldConfig {
     InlineEditableDateField,
     InlineEditableField,
     RouterLink,
+    StyledPicklist,
   ],
   templateUrl: './record-field.html',
   styleUrl: './record-field.scss',

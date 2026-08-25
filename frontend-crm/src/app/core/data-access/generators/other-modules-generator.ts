@@ -5,6 +5,7 @@
 
 import { BaseGenerator } from './base-generator';
 import type { ContractRecord, ContractItem, AssignmentRecord, ExpenseRecord } from '../models/operational-records';
+import { assignmentFolio } from '../models/operational-records';
 import { IdGenerator } from '../utils/id-generator';
 import { FakerHelpers } from '../utils/faker-helpers';
 import { LookupMapper } from '../utils/lookup-mapper';
@@ -15,27 +16,48 @@ import { LookupMapper } from '../utils/lookup-mapper';
 
 export class ContractsGenerator extends BaseGenerator<ContractRecord> {
   private customerIds = ['SL-1040', 'SL-1041', 'SL-1042', 'SL-1043', 'SL-1044'];
+  /** Catálogo real de servicios; se inyecta antes de generar. */
+  private internetPlans: ReadonlyArray<{ id: string; price: number }> = [];
+  private addOns: ReadonlyArray<{ id: string; price: number }> = [];
+
+  /**
+   * Los contratos deben referenciar servicios que existen. Sin este catálogo,
+   * `IdGenerator` (contador compartido por prefijo) inventaría ids `SRV-*`
+   * fuera del catálogo y ningún servicio mostraría sus contratos.
+   */
+  setServiceCatalog(
+    services: ReadonlyArray<{ id: string; type: string; price: number }>,
+  ): void {
+    this.internetPlans = services.filter((service) => service.type === 'Internet');
+    this.addOns = services.filter((service) => service.type !== 'Internet');
+  }
 
   generate(index: number = 0): ContractRecord {
     const customerId = this.customerIds[index % this.customerIds.length];
     const startDate = FakerHelpers.randomDate(120);
 
     // Contract items: 1 internet service + optional add-ons
+    const plan = this.internetPlans.length
+      ? this.internetPlans[index % this.internetPlans.length]
+      : null;
     const items: ContractItem[] = [
       {
-        serviceId: IdGenerator.generate('SRV', 5000 + (index % 5)), // Internet service
+        serviceId: plan?.id ?? IdGenerator.generate('SRV', 5000 + (index % 5)),
         quantity: 1,
-        unitPrice: FakerHelpers.randomAmount(399, 1599),
+        unitPrice: plan?.price ?? FakerHelpers.randomAmount(399, 1599),
         locked: true, // Internet services are locked
       },
     ];
 
     // 50% chance to add an add-on service
     if (Math.random() > 0.5) {
+      const addOn = this.addOns.length
+        ? this.addOns[Math.floor(Math.random() * this.addOns.length)]
+        : null;
       items.push({
-        serviceId: IdGenerator.generate('SRV', 5100 + Math.floor(Math.random() * 4)), // Add-on service
+        serviceId: addOn?.id ?? IdGenerator.generate('SRV', 5100),
         quantity: 1,
-        unitPrice: FakerHelpers.randomAmount(49, 149),
+        unitPrice: addOn?.price ?? FakerHelpers.randomAmount(49, 149),
       } as ContractItem);
     }
 
@@ -122,10 +144,26 @@ export class ContractsGenerator extends BaseGenerator<ContractRecord> {
 
 export class AssignmentsGenerator extends BaseGenerator<AssignmentRecord> {
   private customerIds = ['SL-1040', 'SL-1041', 'SL-1042', 'SL-1043', 'SL-1044'];
+  /** Equipo real del inventario; se inyecta antes de generar. */
+  private equipmentPool: ReadonlyArray<{ id: string; name: string; serialNumber?: string }> = [];
+
+  /**
+   * Las asignaciones deben apuntar a equipo que existe. Sin este pool,
+   * `IdGenerator` (contador compartido por prefijo) inventaría ids nuevos.
+   */
+  setEquipmentPool(
+    equipment: ReadonlyArray<{ id: string; name: string; serialNumber?: string }>,
+  ): void {
+    this.equipmentPool = equipment;
+  }
 
   generate(index: number = 0): AssignmentRecord {
     const customerId = this.customerIds[index % this.customerIds.length];
-    const equipmentId = IdGenerator.generate('EQ', 1000 + index);
+    const unit = this.equipmentPool.length
+      ? this.equipmentPool[index % this.equipmentPool.length]
+      : null;
+    const equipmentId = unit?.id ?? IdGenerator.generate('EQ', 1000 + index);
+    const equipmentLabel = unit?.name ?? LookupMapper.getEquipmentName(equipmentId);
     const assignedAt = FakerHelpers.randomDate(90);
 
     // 70% active, 30% returned
@@ -139,14 +177,16 @@ export class AssignmentsGenerator extends BaseGenerator<AssignmentRecord> {
     return this.createBaseRecord<AssignmentRecord>(
       IdGenerator.generate('ASG', 2000 + index),
       {
+        name: assignmentFolio(index + 1, new Date(assignedAt).getFullYear()),
         clientId: customerId,
         client: LookupMapper.getCustomerName(customerId),
         equipmentId: equipmentId,
-        equipment: LookupMapper.getEquipmentName(equipmentId),
+        equipment: equipmentLabel,
+        serial: unit?.serialNumber,
         assignedAt: assignedAt,
         returnedAt: returnedAt,
         status: status,
-        notes: `Asignación de equipo a cliente ${customerId}`,
+        description: `Asignación de equipo a cliente ${customerId}`,
       },
     );
   }
@@ -163,13 +203,14 @@ export class AssignmentsGenerator extends BaseGenerator<AssignmentRecord> {
     return this.createBaseRecord<AssignmentRecord>(
       IdGenerator.generate('ASG', 2000),
       {
+        name: assignmentFolio(1, new Date(assignedAt).getFullYear()),
         clientId: customerId,
         client: LookupMapper.getCustomerName(customerId),
         equipmentId: equipmentId,
         equipment: LookupMapper.getEquipmentName(equipmentId),
         assignedAt: assignedAt,
         status: 'ACTIVE' as const,
-        notes: `Asignación de ${equipmentId} a ${customerId}`,
+        description: `Asignación de ${equipmentId} a ${customerId}`,
       },
     );
   }

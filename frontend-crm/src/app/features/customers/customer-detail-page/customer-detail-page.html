@@ -18,8 +18,10 @@
         [subtitle]="customerSubtitle(c)"
       >
         <div record-actions>
-          <button class="button" (click)="activeTab.set('Correos')">✉ Enviar mensaje</button
-          ><button class="button button--primary">＋ Registrar pago</button>
+          <button class="button" (click)="composeMessage()">✉ Enviar mensaje</button
+          ><button class="button button--primary" (click)="registerPayment(c)">
+            ＋ Registrar pago
+          </button>
         </div>
       </app-record-header>
       <app-record-summary>
@@ -52,7 +54,11 @@
       @if (activeTab() === 'Notas') {
         <app-record-notes-section [recordId]="c.id" />
       } @else if (activeTab() === 'Correos') {
-        <app-record-emails-section [recordId]="c.id" [recipientEmail]="c.email" />
+        <app-record-emails-section
+          [recordId]="c.id"
+          [recipientEmail]="c.email"
+          [autoOpen]="composeEmail()"
+        />
       } @else if (activeTab() === 'Archivos') {
         <app-record-attachments-section [recordId]="c.id" />
       } @else if (activeTab() === 'Actividad') {
@@ -113,6 +119,11 @@
               <div record-main>
                 <app-record-information-card title="Información del cliente">
                   <div class="info-grid">
+                    <app-record-field
+                      [config]="customerStatusField(c)"
+                      [value]="c.status"
+                      (valueSaved)="updateCustomerField(c, 'status', $event)"
+                    />
                     <app-record-field
                       [config]="customerField('email', 'Correo electrónico', 'email')"
                       [value]="c.email"
@@ -259,9 +270,10 @@
               </div>
               <div record-aside>
                 <app-record-quick-actions>
-                  <button>＋ Registrar pago</button><button>▤ Crear factura</button
+                  <button (click)="registerPayment(c)">＋ Registrar pago</button
+                  ><button (click)="createInvoice(c)">▤ Crear factura</button
                   ><button (click)="changePlanConfirmOpen.set(true)">⌁ Cambiar plan</button
-                  ><button>⌂ Programar visita</button>
+                  ><button (click)="activeTab.set('Eventos')">⌂ Programar visita</button>
                 </app-record-quick-actions>
                 <app-record-recent-activity [recordId]="c.id" />
               </div>
@@ -278,8 +290,13 @@
                   </p>
                 </div>
                 <div>
-                  <button class="button">⇩ Exportar</button
-                  ><button class="button button--primary">＋ Nueva factura</button>
+                  <button class="button" type="button" (click)="downloadAccountStatement(c)">
+                    ▤ Estado de cuenta</button
+                  ><button class="button" type="button" (click)="exportBilling(c)">
+                    ⇩ Exportar</button
+                  ><button class="button button--primary" type="button" (click)="createInvoice(c)">
+                    ＋ Nueva factura
+                  </button>
                 </div>
               </header>
               <div class="billing-summary">
@@ -383,14 +400,11 @@
                                 [style.left.px]="billingMenuPosition()?.left"
                                 (click)="$event.stopPropagation()"
                               >
-                                <a [routerLink]="['/customers', c.id, 'invoices', invoice.id]"
-                                  ><span>↗</span>Ver</a
-                                >
-                                <button type="button" (click)="downloadInvoice(invoice, c)">
-                                  <span>⇩</span>Descargar
+                                <button type="button" (click)="openInvoiceRecord(invoice)">
+                                  <span>↗</span>Ver
                                 </button>
-                                <button type="button" (click)="invoiceMenuId.set(null)">
-                                  <span>✎</span>Editar
+                                <button type="button" (click)="downloadInvoice(invoice, c)">
+                                  <span>⇩</span>Descargar PDF
                                 </button>
                                 <button
                                   class="danger"
@@ -463,14 +477,11 @@
                                 [style.left.px]="billingMenuPosition()?.left"
                                 (click)="$event.stopPropagation()"
                               >
-                                <a [routerLink]="['/payments', payment.id]"
-                                  ><span>↗</span>Ver</a
-                                >
-                                <button type="button" (click)="downloadPayment(payment, c)">
-                                  <span>⇩</span>Descargar
+                                <button type="button" (click)="openPaymentRecord(payment)">
+                                  <span>↗</span>Ver
                                 </button>
-                                <button type="button" (click)="paymentMenuId.set(null)">
-                                  <span>✎</span>Editar
+                                <button type="button" (click)="downloadPayment(payment, c)">
+                                  <span>⇩</span>Descargar PDF
                                 </button>
                                 <button
                                   class="danger"

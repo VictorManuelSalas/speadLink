@@ -200,6 +200,8 @@ export class RecordActivitySection {
 export class RecordEmailsSection {
   readonly recordId = input.required<string>();
   readonly recipientEmail = input('');
+  /** Abre el redactor al entrar, para las acciones "Enviar mensaje". */
+  readonly autoOpen = input(false);
   readonly store = inject(OperationalStore);
   readonly composer = signal(false);
   readonly preview = signal<OperationalEmail | null>(null);
@@ -207,6 +209,11 @@ export class RecordEmailsSection {
   readonly composeKey = signal(0);
   readonly editingId = signal<string | null>(null);
   readonly menuId = signal<string | null>(null);
+  constructor() {
+    effect(() => {
+      if (this.autoOpen()) this.compose();
+    });
+  }
   emails() {
     return this.store.emailsFor(this.recordId());
   }

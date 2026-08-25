@@ -56,8 +56,9 @@
         <b aria-label="Obligatorio">*</b>
         }
       </span>
-      @if (field.type === 'select') {
+      @if (field.type === 'select' || field.type === 'user' || field.type === 'lookup') {
       <app-styled-picklist [options]="fieldPicklistOptions(field)" [value]="draft()[field.key] || ''"
+        [alwaysSearchable]="field.type === 'lookup' || field.type === 'user'"
         (valueChange)="setDraft(field.key, $event)" />
       } @else if (field.type === 'date') {
       <div class="form-date">
@@ -155,7 +156,7 @@
     <label>Campo<select #bulkFieldSelect [value]="bulkField()" (change)="setBulkField(bulkFieldSelect.value)">
         <option value="status">Estado</option>
         <option value="source">Origen</option>
-        <option value="prospectType">Tipo de prospecto</option>
+        <option value="type">Tipo de prospecto</option>
       </select></label><label>Nuevo valor<select #bulkValueSelect [value]="bulkValue()"
         (change)="bulkValue.set(bulkValueSelect.value)">
         <option value="">Seleccionar…</option>

@@ -58,13 +58,15 @@ export interface LeadRecord extends BaseOperationalRecord {
   email: string;
   phone: string;
   cellphone?: string;
-  type: ProspectType; // Maps from prospectType field
+  type: ProspectType; // Tipo de prospecto (Hogar | Negocio)
   address: string;
   latitude?: number;
   longitude?: number;
   source: LeadSource;
   status: LeadStatus;
-  notes?: string;
+  /** Id del usuario del sistema responsable del lead (ver SYSTEM_USERS). */
+  owner?: string;
+  description?: string;
 }
 
 // ============================================================================
@@ -102,14 +104,29 @@ export interface EquipmentRecord extends BaseOperationalRecord {
 // ============================================================================
 
 export interface AssignmentRecord extends BaseOperationalRecord {
+  /** Folio del registro, asignado al crearlo. Ver `assignmentFolio`. */
+  name: string;
   clientId: string;
   client?: string; // Lookup: Customer name
   equipmentId: string;
   equipment?: string; // Lookup: Equipment name/model
+  /** Serie de la unidad instalada; se copia del equipo al asignarlo. */
+  serial?: string;
   assignedAt: string;
   returnedAt?: string;
   status: AssignmentStatus;
-  notes?: string;
+  description?: string;
+}
+
+/**
+ * Folio de una asignación: `ASG-<año>-<consecutivo>`.
+ *
+ * Se calcula UNA sola vez al crear el registro y no vuelve a tocarse. No se
+ * deriva del cliente ni del equipo justamente porque ésos pueden cambiar y el
+ * folio debe seguir identificando al mismo registro.
+ */
+export function assignmentFolio(sequence: number, year: number): string {
+  return `ASG-${year}-${String(sequence).padStart(4, '0')}`;
 }
 
 // ============================================================================

@@ -10,6 +10,7 @@ import {
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { LanguageService } from '../../../core/i18n/language.service';
 import { CRM_DATA } from '../../../core/data-access/crm-data';
+import { findSystemUser } from '../../../core/data-access/system-users';
 import { CrmAttachment, Customer } from '../../../core/models/customer';
 import { AttachmentPicker } from '../../../shared/attachment-picker';
 import { FileUploadModal } from '../../../shared/file-upload-modal';
@@ -27,6 +28,7 @@ import {
   RecordTabs,
 } from '../../../shared/record-detail-shell';
 import {
+  ColumnType,
   OPERATIONAL_MODULES,
   OperationalModuleKey,
   OperationalRecord,
@@ -35,6 +37,12 @@ import {
 import { LeadEmailFormValue, LeadEmailModal, LeadEmailSeed } from '../lead-email-modal/lead-email-modal';
 import { RecordEventsSection } from '../lead-events-section/lead-events-section';
 import { OperationalEmail, OperationalStore } from '../operational-store';
+import { lookupDisplayLabel, lookupPicklistOptions } from '../lookup-options';
+import {
+  DOCUMENT_ACTION_LABEL,
+  buildPrintableDocument,
+} from '../printable-document/printable-document.data';
+import { DocumentPdfService } from '../printable-document/document-pdf.service';
 import {
   RecordActivitySection,
   RecordAttachmentsSection,
@@ -70,6 +78,14 @@ interface ContractItemDraft {
 }
 
 const INTERNET_PERMANENCE_MONTHS = 6;
+
+/**
+ * Campos calculados en la capa de datos: no están en `columns` ni en `fields`,
+ * así que sin esto la ficha los rotularía a partir de la clave ("Monthlyrevenue").
+ */
+const DERIVED_FIELDS: Readonly<Record<string, { label: string; type: ColumnType }>> = {
+  monthlyRevenue: { label: 'Ingreso mensual', type: 'money' },
+};
 
 @Component({
   selector: 'app-operational-record-detail-page',
@@ -107,6 +123,7 @@ export class OperationalRecordDetailPage {
   private readonly router = inject(Router);
   private readonly crmData = inject(CRM_DATA);
   readonly store = inject(OperationalStore);
+  private readonly pdf = inject(DocumentPdfService);
   readonly i18n = inject(LanguageService);
   readonly moduleKey = this.route.snapshot.data['moduleKey'] as OperationalModuleKey;
   readonly definition = OPERATIONAL_MODULES[this.moduleKey];
@@ -186,6 +203,8 @@ export class OperationalRecordDetailPage {
   setActiveTab(value: string): void {
     if (this.tabs.includes(value as DetailTab)) this.activeTab.set(value as DetailTab);
   }
+  readonly shareMenuOpen = signal(false);
+  readonly shareCopied = signal(false);
   readonly emailComposerOpen = signal(false);
   readonly emailPreview = signal<OperationalEmail | null>(null);
   readonly emailComposeSeed = signal<LeadEmailSeed>({});
@@ -244,12 +263,28 @@ export class OperationalRecordDetailPage {
   readonly summaryColumns = computed(() =>
     this.moduleKey === 'leads'
       ? [
-          { key: 'prospectType', label: 'Tipo de prospecto', type: 'text' as const },
+          { key: 'type', label: 'Tipo de prospecto', type: 'text' as const },
           { key: 'source', label: 'Origen', type: 'text' as const },
           { key: 'status', label: 'Estado', type: 'status' as const },
           { key: 'phone', label: 'WhatsApp', type: 'text' as const },
         ]
-      : this.definition.columns.slice(0, 4),
+      : this.moduleKey === 'assignments'
+        ? [
+            { key: 'client', label: 'Cliente', type: 'text' as const },
+            { key: 'equipment', label: 'Equipo', type: 'text' as const },
+            { key: 'status', label: 'Estado', type: 'status' as const },
+            { key: 'assignedAt', label: 'Fecha de asignación', type: 'date' as const },
+          ]
+        : this.moduleKey === 'services'
+          ? [
+              // El nombre del servicio ya es el título de la ficha; ese espacio
+              // rinde más mostrando cuánto factura el plan.
+              { key: 'type', label: 'Tipo', type: 'text' as const },
+              { key: 'price', label: 'Precio de lista', type: 'money' as const },
+              { key: 'contracts', label: 'Contratos', type: 'text' as const },
+              { key: 'monthlyRevenue', label: 'Ingreso mensual', type: 'money' as const },
+            ]
+          : this.definition.columns.slice(0, 4),
   );
   readonly statusOptions = computed(() =>
     this.definition.fields.find((field) => field.key === 'status')?.options?.length
@@ -314,6 +349,15 @@ export class OperationalRecordDetailPage {
   relatedRoute(key: string, value: string | number | boolean): ReadonlyArray<string> | null {
     const text = String(value ?? '');
     if (!text) return null;
+    if (key === 'owner') return findSystemUser(text) ? ['/users', text] : null;
+
+    // Los lookups guardan la etiqueta visible y el id en su `schemaKey`:
+    // resolver por ahí es exacto, sin depender del formato del texto.
+    const configured = this.definition.fields.find((item) => item.key === key);
+    if (configured?.lookupModule && configured.schemaKey) {
+      const id = String(this.record()?.[configured.schemaKey] ?? '');
+      if (id) return [`/${configured.lookupModule}`, id];
+    }
     if (key === 'convertedToClientId') return ['/customers', text];
     if (key === 'invoice') {
       // If value is an ID (like INV-4520), use it directly
@@ -352,6 +396,17 @@ export class OperationalRecordDetailPage {
     return null;
   }
   lookupPreview(key: string, value: string | number | boolean): LookupPreview | null {
+    if (key === 'owner') {
+      const user = findSystemUser(String(value ?? ''));
+      return user
+        ? {
+            type: 'Responsable del registro',
+            title: user.fullName,
+            detail: `${user.role} · ${user.email}`,
+            initials: user.initials,
+          }
+        : null;
+    }
     const route = this.relatedRoute(key, value);
     if (!route) return null;
     const text = String(value);
@@ -414,6 +469,8 @@ export class OperationalRecordDetailPage {
         {
           status: 'Estado actual',
           price: 'Precio vigente',
+          contracts: 'Clientes con el plan',
+          monthlyRevenue: 'De contratos activos',
           total: 'Importe registrado',
           amount: 'Importe registrado',
           client: 'Cuenta relacionada',
@@ -423,12 +480,22 @@ export class OperationalRecordDetailPage {
       )[key] ?? 'Información principal'
     );
   }
+  /**
+   * Ids sombra de los lookups (`schemaKey`): el registro guarda `clientId`
+   * junto a `client`, pero sólo el campo con etiqueta debe verse.
+   */
+  private readonly shadowIdKeys = new Set(
+    this.definition.fields.map((field) => field.schemaKey).filter(Boolean) as string[],
+  );
   displayFields(record: OperationalRecord) {
     return Object.keys(record)
       .filter(
         (key) =>
           key !== 'id' &&
           key !== 'updatedAt' &&
+          !this.shadowIdKeys.has(key) &&
+          // El conteo de contratos ya está en los widgets y tiene su pestaña.
+          !(this.moduleKey === 'services' && key === 'contracts') &&
           !(this.moduleKey === 'leads' && (key === 'latitude' || key === 'longitude')) &&
           !(this.moduleKey === 'contracts' && key === 'items') &&
           !(this.moduleKey === 'services' && key === 'updatedAt'),
@@ -436,10 +503,14 @@ export class OperationalRecordDetailPage {
       .map((key) => {
         const column = this.definition.columns.find((item) => item.key === key);
         const configured = this.definition.fields.find((item) => item.key === key);
+        const derived = DERIVED_FIELDS[key];
         return {
           key,
-          label: column?.label ?? configured?.label ?? this.statusLabel(key),
-          type: column?.type ?? (configured?.type === 'date' ? 'date' : 'text'),
+          label: column?.label ?? configured?.label ?? derived?.label ?? this.statusLabel(key),
+          type:
+            column?.type ??
+            derived?.type ??
+            (configured?.type === 'date' ? 'date' : 'text'),
           editable: Boolean(configured),
           inputType:
             configured?.type === 'number'
@@ -450,9 +521,12 @@ export class OperationalRecordDetailPage {
                   ? 'select'
                   : configured?.type === 'lookup'
                     ? 'lookup'
-                    : 'text',
+                    : configured?.type === 'user'
+                      ? 'user'
+                      : 'text',
           options: configured?.options ?? [],
           optionLabels: configured?.optionLabels ?? {},
+          configured,
         };
       });
   }
@@ -468,8 +542,11 @@ export class OperationalRecordDetailPage {
 
     // Los lookups editables deben seguir siendo lookups si tienen route (para el link), pero también editables
     // Los select puros sin route son campos select normales
+    const isUser = field.inputType === 'user';
     const kind: RecordFieldConfig['kind'] =
-      field.type === 'status'
+      isUser
+        ? 'lookup'
+        : field.type === 'status'
         ? 'status'
         : isSelectOrLookup && hasOptions && route
           ? 'lookup'
@@ -497,9 +574,22 @@ export class OperationalRecordDetailPage {
       kind,
       editable: field.editable || (isSelectOrLookup && hasOptions),
       options: field.type === 'status' ? this.statusOptions() : field.options,
+      // Sólo los lookups que apuntan a un módulo (o a usuarios) usan el picklist
+      // buscable; los demás conservan su <select> simple.
+      picklistOptions:
+        field.configured && (isUser || field.configured.lookupModule)
+          ? lookupPicklistOptions(this.store, field.configured, {
+              currentValue: String(value ?? ''),
+            })
+          : undefined,
+      placeholder: isUser ? 'Sin asignar' : undefined,
       optionLabels: field.optionLabels,
       href: this.fieldActionHref(field.key, value),
-      displayValue: this.fieldDisplayValue(field, value),
+      displayValue: isUser
+        ? (findSystemUser(String(value ?? ''))?.fullName ?? 'Sin asignar')
+        : field.configured?.lookupModule
+          ? lookupDisplayLabel(this.store, field.configured, String(value ?? ''))
+          : this.fieldDisplayValue(field, value),
       route: kind === 'lookup' ? route : undefined,
       preview: kind === 'lookup' ? preview : undefined,
       statusLabel: this.statusLabel(value),
@@ -556,7 +646,21 @@ export class OperationalRecordDetailPage {
       finalValue = numValue;
     }
 
-    this.store.update(this.moduleKey, id, { [key]: finalValue });
+    const changes: Partial<OperationalRecord> = { [key]: finalValue };
+
+    // Los lookups guardan la etiqueta visible y el id en su `schemaKey`.
+    if (field.lookupModule && field.schemaKey) {
+      changes[field.schemaKey] = finalValue;
+      changes[key] = lookupDisplayLabel(this.store, field, String(finalValue)) || finalValue;
+    }
+
+    // La serie pertenece a la unidad instalada: sigue al equipo.
+    if (this.moduleKey === 'assignments' && key === 'equipment') {
+      const unit = this.store.find('equipment', String(finalValue));
+      changes['serial'] = unit ? String(unit['serialNumber'] ?? '') : '';
+    }
+
+    this.store.update(this.moduleKey, id, changes);
   }
 
   getLookupOptions(fieldKey: string): { options: ReadonlyArray<string>; optionLabels: Record<string, string> } {
@@ -576,6 +680,131 @@ export class OperationalRecordDetailPage {
     const [latitude, longitude] = coordinates.split(',').map((value) => Number(value.trim()));
     if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return;
     this.store.update('leads', id, { latitude, longitude });
+  }
+  /** Abre el alta de contrato con este servicio ya cargado como partida. */
+  sellService(record: OperationalRecord): void {
+    void this.router.navigate(['/contracts'], {
+      queryParams: { create: 'true', serviceId: record.id },
+    });
+  }
+  /** Abre el alta de servicio copiando los datos de éste. */
+  duplicateService(record: OperationalRecord): void {
+    void this.router.navigate(['/services'], {
+      queryParams: { create: 'true', duplicate: record.id },
+    });
+  }
+  serviceIsActive(record: OperationalRecord): boolean {
+    return String(record['status'] ?? '') === 'ACTIVE';
+  }
+  /** Retira el plan del catálogo comercial, o lo vuelve a poner a la venta. */
+  toggleServiceStatus(record: OperationalRecord): void {
+    this.store.update('services', record.id, {
+      status: this.serviceIsActive(record) ? 'INACTIVE' : 'ACTIVE',
+    });
+  }
+  /** Etiqueta de la acción de documento, o null si el módulo no tiene uno. */
+  documentActionLabel(): string | null {
+    return DOCUMENT_ACTION_LABEL[this.moduleKey] ?? null;
+  }
+  /** Genera el PDF del registro y lo descarga. */
+  openDocument(record: OperationalRecord): void {
+    const document = buildPrintableDocument(this.moduleKey, {
+      record,
+      formatMoney: (value) =>
+        new Intl.NumberFormat(this.i18n.locale(), {
+          style: 'currency',
+          currency: 'MXN',
+          maximumFractionDigits: 2,
+        }).format(Number(value) || 0),
+      formatDate: (value) => {
+        const date = new Date(String(value ?? ''));
+        return Number.isNaN(date.getTime())
+          ? '—'
+          : new Intl.DateTimeFormat(this.i18n.locale(), {
+              day: '2-digit',
+              month: 'long',
+              year: 'numeric',
+            }).format(date);
+      },
+      statusLabel: (value) => this.statusLabel(value as string),
+      // `invoiceId` es el enlace estable: `invoice` guarda a veces el folio
+      // y a veces el id, según cómo se haya generado el pago.
+      payments:
+        this.moduleKey === 'invoices'
+          ? this.store
+              .recordsFor('payments')
+              .filter(
+                (payment) =>
+                  payment['invoiceId'] === record.id ||
+                  payment['invoice'] === record.id ||
+                  (!!record['folio'] && payment['invoice'] === record['folio']),
+              )
+          : undefined,
+    });
+    if (document) this.pdf.download(document);
+  }
+  toggleShareMenu(event: MouseEvent): void {
+    event.stopPropagation();
+    this.shareCopied.set(false);
+    this.shareMenuOpen.update((open) => !open);
+  }
+  /** URL absoluta del registro, para copiar o pegar en cualquier conversación. */
+  recordLink(): string {
+    return `${window.location.origin}/${this.moduleKey}/${this.recordId}`;
+  }
+  async copyRecordLink(): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(this.recordLink());
+    } catch {
+      // Navegadores sin permiso de portapapeles: selección manual como respaldo.
+      const helper = document.createElement('textarea');
+      helper.value = this.recordLink();
+      document.body.appendChild(helper);
+      helper.select();
+      document.execCommand('copy');
+      helper.remove();
+    }
+    this.shareCopied.set(true);
+    window.setTimeout(() => {
+      this.shareCopied.set(false);
+      this.shareMenuOpen.set(false);
+    }, 1400);
+  }
+  /** Ficha en texto plano lista para mandar al equipo por WhatsApp. */
+  shareMessage(record: OperationalRecord): string {
+    const lines: string[] = [];
+    if (this.moduleKey === 'leads') {
+      lines.push(`*Lead ${record.id}* · ${this.primaryValue(record)}`);
+      if (record['type']) lines.push(`Tipo: ${record['type']}`);
+      if (record['phone']) lines.push(`Teléfono: ${record['phone']}`);
+      if (record['email']) lines.push(`Correo: ${record['email']}`);
+      if (record['address']) lines.push(`Dirección: ${record['address']}`);
+      if (record['latitude'] != null && record['longitude'] != null) {
+        lines.push(
+          `Ubicación: https://www.google.com/maps/search/?api=1&query=${record['latitude']},${record['longitude']}`,
+        );
+      }
+      const services = this.interestedServicesSummary(record);
+      if (services) lines.push(`Servicios de interés: ${services}`);
+      lines.push(`Estado: ${this.statusLabel(record['status'])}`);
+      const owner = findSystemUser(String(record['owner'] ?? ''));
+      lines.push(`Responsable: ${owner ? `${owner.fullName} (${owner.role})` : 'Sin asignar'}`);
+    } else {
+      lines.push(`*${this.definition.singular.toUpperCase()} ${record.id}*`);
+      lines.push(this.primaryValue(record));
+      if (record['status']) lines.push(`Estado: ${this.statusLabel(record['status'])}`);
+    }
+    lines.push('', `Ver en el CRM: ${this.recordLink()}`);
+    return lines.join('\n');
+  }
+  whatsappShareUrl(record: OperationalRecord): string {
+    return `https://wa.me/?text=${encodeURIComponent(this.shareMessage(record))}`;
+  }
+  private interestedServicesSummary(record: OperationalRecord): string {
+    const plan = String(record['plan'] ?? '');
+    const streaming = record['streamingServices'];
+    const streamingNames = Array.isArray(streaming) ? streaming.join(', ') : '';
+    return [plan, streamingNames].filter(Boolean).join(', ');
   }
   openNoteComposerQuickAction(): void {
     this.activeTab.set('Notas');
@@ -784,6 +1013,7 @@ export class OperationalRecordDetailPage {
     this.noteMenuId.set(null);
     this.fileMenuId.set(null);
     this.emailMenuId.set(null);
+    this.shareMenuOpen.set(false);
   }
   recordFiles(recordId: string): ReadonlyArray<CrmAttachment> {
     return this.store.attachmentsFor(recordId);
@@ -898,6 +1128,38 @@ export class OperationalRecordDetailPage {
       } as Record<OperationalModuleKey, string>
     )[this.moduleKey];
   }
+  /**
+   * Contratos que incluyen este servicio, leídos de las partidas (`items`)
+   * de cada contrato. Antes era una lista fija de 5 clientes inventados, igual
+   * para todos los servicios.
+   */
+  serviceContracts(serviceId: string): ReadonlyArray<RelatedItem> {
+    const statusTone: Readonly<Record<string, string>> = {
+      ACTIVE: 'green',
+      PENDING_SIGNATURE: 'amber',
+      EXPIRED: 'red',
+      CANCELLED: 'red',
+    };
+    return this.store
+      .recordsFor('contracts')
+      .flatMap((contract) => {
+        const item = this.parseContractItems(contract).find(
+          (entry) => entry.serviceId === serviceId,
+        );
+        if (!item) return [];
+        const status = String(contract['status'] ?? '');
+        return [
+          {
+            icon: '▤',
+            title: `${String(contract['contractNumber'] ?? contract.id)} · ${String(contract['client'] ?? 'Cliente')}`,
+            detail: `${item.quantity} × ${new Intl.NumberFormat(this.i18n.locale(), { style: 'currency', currency: 'MXN', maximumFractionDigits: 2 }).format(item.unitPrice)}/mes`,
+            meta: this.statusLabel(status),
+            tone: statusTone[status] ?? 'blue',
+            route: ['/contracts', contract.id],
+          },
+        ];
+      });
+  }
   equipmentAssignments(record: OperationalRecord): ReadonlyArray<RelatedItem> {
     const assignments = this.store.recordsFor('assignments');
     const equipmentAssignments = assignments.filter((a) => a['equipment'] === record.id);
@@ -965,23 +1227,7 @@ export class OperationalRecordDetailPage {
           tone: 'blue',
         },
       ],
-      services: (() => {
-        const clients = [
-          { id: '817', name: 'José Luis Hernández', detail: `1 × ${this.primaryValue(record)}` },
-          { id: '812', name: 'Morgan Díaz', detail: 'Renovación anual automática' },
-          { id: '805', name: 'Consultorio Dental Sonríe', detail: `2 × ${this.primaryValue(record)}` },
-          { id: '820', name: 'Distribuidora Nova', detail: `1 × ${this.primaryValue(record)}` },
-          { id: '825', name: 'Farmacia El Árnica', detail: 'Plan anual vigente' },
-        ];
-        return clients.map((client, index) => ({
-          icon: '▤',
-          title: `SL-CTR-0${client.id} · ${client.name}`,
-          detail: client.detail,
-          meta: 'Activo',
-          tone: 'green',
-          route: ['/contracts', `CTR-2026-${client.id}`],
-        }));
-      })(),
+      services: this.serviceContracts(record.id),
       equipment: this.equipmentAssignments(record),
       assignments: [
         {

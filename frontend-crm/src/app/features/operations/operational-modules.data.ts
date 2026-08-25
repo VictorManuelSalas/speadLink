@@ -1,3 +1,5 @@
+import { SYSTEM_USER_IDS, SYSTEM_USER_LABELS } from '../../core/data-access/system-users';
+
 export type OperationalModuleKey =
   | 'leads'
   | 'services'
@@ -19,7 +21,7 @@ export interface OperationalRecord {
 export interface ModuleField {
   key: string;
   label: string;
-  type: 'text' | 'number' | 'date' | 'select' | 'status' | 'lookup';
+  type: 'text' | 'number' | 'date' | 'select' | 'status' | 'lookup' | 'user';
   options?: ReadonlyArray<string>;
   required?: boolean;
   placeholder?: string;
@@ -78,11 +80,10 @@ export const OPERATIONAL_MODULES: Readonly<
       { key: 'phone', label: 'Teléfono', type: 'text', required: true, validateAs: 'phone' },
       { key: 'cellphone', label: 'Celular', type: 'text', validateAs: 'phone' },
       {
-        key: 'prospectType',
+        key: 'type',
         label: 'Tipo de prospecto',
         type: 'select',
         options: ['Hogar', 'Negocio'],
-        schemaKey: 'type',
       },
       { key: 'address', label: 'Dirección', type: 'text', minLength: 5, maxLength: 255 },
       { key: 'latitude', label: 'Latitud', type: 'number', min: -90, max: 90 },
@@ -101,15 +102,23 @@ export const OPERATIONAL_MODULES: Readonly<
         required: true,
         options: ['NEW', 'CONTACTED', 'QUALIFIED', 'LOST', 'CONVERTED'],
       },
-      { key: 'notes', label: 'Notas', type: 'text', maxLength: 1000 },
+      {
+        key: 'owner',
+        label: 'Responsable',
+        type: 'user',
+        options: SYSTEM_USER_IDS,
+        optionLabels: SYSTEM_USER_LABELS,
+      },
+      { key: 'description', label: 'Descripción', type: 'text', maxLength: 1000 },
     ],
     records: [
       {
         id: 'LD-1084',
+        owner: 'usr-carlos-madero',
         name: 'Distribuidora Nova',
         email: 'contacto@nova.mx',
         phone: '55 8201 4490',
-        prospectType: 'Negocio',
+        type: 'Negocio',
         address: 'Av. Industria 420, Naucalpan, Estado de México',
         latitude: 19.478331,
         longitude: -99.238182,
@@ -119,10 +128,11 @@ export const OPERATIONAL_MODULES: Readonly<
       },
       {
         id: 'LD-1083',
+        owner: 'usr-sofia-guzman',
         name: 'Roberto Sánchez',
         email: 'roberto@email.mx',
         phone: '55 6123 8801',
-        prospectType: 'Hogar',
+        type: 'Hogar',
         address: 'Calle Morelos 18, Zumpango, Estado de México',
         latitude: 19.796804,
         longitude: -99.099112,
@@ -132,10 +142,11 @@ export const OPERATIONAL_MODULES: Readonly<
       },
       {
         id: 'LD-1082',
+        owner: 'usr-andrea-torres',
         name: 'Café Horizonte',
         email: 'hola@horizonte.mx',
         phone: '55 9012 3387',
-        prospectType: 'Negocio',
+        type: 'Negocio',
         address: 'Paseo del Lago 32, Cuautitlán Izcalli, Estado de México',
         latitude: 19.652808,
         longitude: -99.208419,
@@ -312,7 +323,8 @@ export const OPERATIONAL_MODULES: Readonly<
       { label: 'Sin validar', value: '3', detail: 'Requieren revisión', tone: 'red' },
     ],
     columns: [
-      { key: 'client', label: 'Cliente', type: 'identity' },
+      { key: 'name', label: 'Folio', type: 'identity' },
+      { key: 'client', label: 'Cliente', type: 'text' },
       { key: 'equipment', label: 'Equipo', type: 'text' },
       { key: 'serial', label: 'Serie', type: 'text' },
       { key: 'assignedAt', label: 'Asignado', type: 'date' },
@@ -375,11 +387,12 @@ export const OPERATIONAL_MODULES: Readonly<
         options: ['ACTIVE', 'RETURNED', 'INACTIVE'],
         required: true,
       },
-      { key: 'notes', label: 'Notas', type: 'text', maxLength: 1000 },
+      { key: 'description', label: 'Descripción', type: 'text', maxLength: 1000 },
     ],
     records: [
       {
         id: 'ASG-7831',
+        name: 'ASG-2026-0003',
         client: 'SL-1040',
         equipment: 'EQ-4092',
         serial: 'LBE5AC-4092',
@@ -388,6 +401,7 @@ export const OPERATIONAL_MODULES: Readonly<
       },
       {
         id: 'ASG-7830',
+        name: 'ASG-2026-0002',
         client: 'SL-1041',
         equipment: 'EQ-4091',
         serial: 'ARCHC6-4091',
@@ -396,6 +410,7 @@ export const OPERATIONAL_MODULES: Readonly<
       },
       {
         id: 'ASG-7818',
+        name: 'ASG-2026-0001',
         client: 'SL-1042',
         equipment: 'EQ-4088',
         serial: 'CAPAC-4088',

@@ -11,6 +11,7 @@ import {
   CustomerInvoice,
   CustomerNote,
   CustomerPayment,
+  CustomerStatus,
   CustomerTicket,
   EntityUser,
   TimelineItem,
@@ -30,6 +31,11 @@ import { CustomerTicketsSection, NewCustomerTicket } from '../customer-tickets-s
 import { RecordEventsSection } from '../../operations/lead-events-section/lead-events-section';
 import { RecordField, RecordFieldConfig } from '../../../shared/record-field';
 import { OperationalStore } from '../../operations/operational-store';
+import { CalendarStore } from '../../calendar/calendar-store';
+import { buildPrintableDocument } from '../../operations/printable-document/printable-document.data';
+import { DocumentPdfService } from '../../operations/printable-document/document-pdf.service';
+import JSZip from 'jszip';
+import { buildAccountStatement } from './account-statement';
 import {
   RecordActivitySection,
   RecordAttachmentsSection,
@@ -39,7 +45,16 @@ import {
 
 type ActivityFilter = 'all' | 'payment' | 'ticket' | 'call';
 type EditableCustomerField =
-  'email' | 'phone' | 'address' | 'community' | 'gpsLocation' | 'installDate';
+  'email' | 'phone' | 'address' | 'community' | 'gpsLocation' | 'installDate' | 'status';
+
+/** Estados del cliente con su etiqueta en español, para mostrar y para editar. */
+const CUSTOMER_STATUS_LABELS: Readonly<Record<CustomerStatus, string>> = {
+  active: 'Activo',
+  pending: 'Pendiente',
+  suspended: 'Suspendido',
+  inactive: 'Inactivo',
+  cancelled: 'Cancelado',
+};
 
 interface SubscribedContractService {
   id: string;
@@ -81,11 +96,14 @@ export class CustomerDetailPage {
   private readonly api = inject(CRM_DATA);
   private readonly ticketStore = inject(TicketStore);
   private readonly operationalStore = inject(OperationalStore);
+  private readonly calendarStore = inject(CalendarStore);
+  private readonly pdf = inject(DocumentPdfService);
   private readonly router = inject(Router);
   readonly customer = signal<Customer | undefined>(undefined);
   readonly loading = signal(true);
   readonly activeTab = signal('Resumen');
   readonly changePlanConfirmOpen = signal(false);
+  readonly composeEmail = signal(false);
   readonly noteDraft = signal('');
   readonly noteAttachments = signal<ReadonlyArray<CrmAttachment>>([]);
   readonly noteAttachmentReset = signal(0);
@@ -157,6 +175,24 @@ export class CustomerDetailPage {
       queryParams: { create: 'true', clientId: customer.id, clientName: customer.name },
     });
   }
+  /** Abre el alta de pago en el módulo de pagos, ya con el cliente puesto. */
+  registerPayment(customer: Customer): void {
+    void this.router.navigate(['/payments'], {
+      queryParams: { create: 'true', clientId: customer.id, clientName: customer.name },
+    });
+  }
+  /** Abre el alta de factura con el cliente y el importe de su mensualidad. */
+  createInvoice(customer: Customer): void {
+    void this.router.navigate(['/invoices'], {
+      queryParams: { create: 'true', clientId: customer.id, clientName: customer.name },
+    });
+  }
+  /** Lleva a Correos y abre el redactor, sin un clic extra. */
+  composeMessage(): void {
+    this.activeTab.set('Correos');
+    this.composeEmail.set(true);
+    setTimeout(() => this.composeEmail.set(false));
+  }
   recordString(value: string | number | boolean | undefined): string {
     return String(value ?? '');
   }
@@ -179,17 +215,17 @@ export class CustomerDetailPage {
                   ? this.operationalStore.emailsFor(customer.id).length
                   : label === 'Archivos'
                     ? this.operationalStore.attachmentsFor(customer.id).length
-                    : undefined,
+                    : label === 'Eventos'
+                      ? this.customerEventCount(customer)
+                      : undefined,
     }));
   }
+  /** Eventos del calendario ligados a este cliente (mismo criterio que la pestaña). */
+  customerEventCount(customer: Customer): number {
+    return this.calendarStore.events().filter((event) => event.clientId === customer.id).length;
+  }
   customerStatusLabel(status: Customer['status']): string {
-    return {
-      active: 'Activo',
-      pending: 'Pendiente',
-      suspended: 'Suspendido',
-      inactive: 'Inactivo',
-      cancelled: 'Cancelado',
-    }[status];
+    return CUSTOMER_STATUS_LABELS[status] ?? status;
   }
   customerStatusTone(status: Customer['status']): string {
     return status === 'active' ? 'green' : status === 'pending' ? 'amber' : 'red';
@@ -207,6 +243,19 @@ export class CustomerDetailPage {
     kind: RecordFieldConfig['kind'] = 'text',
   ): RecordFieldConfig {
     return { key, label, kind, editable: true };
+  }
+  /** Estado del cliente: pastilla de color en lectura, lista de opciones al editar. */
+  customerStatusField(customer: Customer): RecordFieldConfig {
+    return {
+      key: 'status',
+      label: 'Estado',
+      kind: 'status',
+      editable: true,
+      options: Object.keys(CUSTOMER_STATUS_LABELS),
+      optionLabels: CUSTOMER_STATUS_LABELS,
+      statusLabel: this.customerStatusLabel(customer.status),
+      statusTone: this.customerStatusTone(customer.status),
+    };
   }
   auditField(key: string, label: string, user: EntityUser): RecordFieldConfig {
     return {
@@ -278,11 +327,15 @@ export class CustomerDetailPage {
       community: 'Comunidad',
       gpsLocation: 'Ubicación GPS',
       installDate: 'Fecha de instalación',
+      status: 'Estado',
     };
+    // El estado se guarda como clave (`active`) pero se registra con su etiqueta.
+    const readable = (value: string): string =>
+      field === 'status' ? (CUSTOMER_STATUS_LABELS[value as CustomerStatus] ?? value) : value;
     const event: TimelineItem = {
       id: `activity-update-${Date.now()}`,
       title: `Campo actualizado — ${labels[field]}`,
-      detail: `Valor anterior: ${previousValue} · Valor nuevo: ${newValue}`,
+      detail: `Valor anterior: ${readable(String(previousValue))} · Valor nuevo: ${readable(newValue)}`,
       date: changedAt,
       type: 'update',
       author: this.currentUser.fullName,
@@ -301,7 +354,7 @@ export class CustomerDetailPage {
     this.operationalStore.logActivity(
       customer.id,
       `Campo actualizado — ${labels[field]}`,
-      `Valor anterior: ${previousValue} · Valor nuevo: ${newValue}`,
+      `Valor anterior: ${readable(String(previousValue))} · Valor nuevo: ${readable(newValue)}`,
       'blue',
       'Clientes',
       'EDIT',
@@ -630,18 +683,129 @@ export class CustomerDetailPage {
     );
     this.invoiceMenuId.set(null);
   }
+  /** Abre la factura como documento y lanza el diálogo de impresión / Guardar PDF. */
   downloadInvoice(invoice: CustomerInvoice, customer: Customer): void {
-    const lines = [
-      `Factura,${invoice.id}`,
-      `Cliente,${customer.name}`,
-      `Descripción,${customer.plan}`,
-      `Emisión,${invoice.issuedAt}`,
-      `Vencimiento,${invoice.dueAt}`,
-      `Total,${invoice.total}`,
-      `Estado,${invoice.status}`,
-    ];
-    this.downloadTextFile(`${invoice.id}.csv`, lines.join('\n'));
+    const document = buildPrintableDocument('invoices', {
+        record: {
+          id: invoice.id,
+          folio: invoice.id,
+          client: customer.name,
+          clientId: customer.id,
+          issueDate: invoice.issuedAt,
+          dueDate: invoice.dueAt,
+          total: invoice.total,
+          status: invoice.status,
+          notes: `${customer.plan} · ${customer.speed}`,
+        },
+        formatMoney: (value) => this.formatMoney(value),
+        formatDate: (value) => this.formatDocumentDate(value),
+        statusLabel: (value) => this.invoiceStatusLabel(String(value)),
+      payments: (invoice.payments ?? []).map((payment) => ({
+        id: payment.id,
+        amount: payment.amount,
+      })),
+    });
+    if (document) this.pdf.download(document);
     this.invoiceMenuId.set(null);
+  }
+  /** Descarga el estado de cuenta del cliente en PDF. */
+  downloadAccountStatement(customer: Customer): void {
+    this.pdf.download(
+      buildAccountStatement(customer, {
+        formatMoney: (value) => this.formatMoney(value),
+        formatDate: (value) => this.formatDocumentDate(value),
+        invoiceStatusLabel: (status) => this.invoiceStatusLabel(status),
+      }),
+      `estado-de-cuenta-${customer.id}.pdf`,
+    );
+  }
+  /** Descarga un ZIP con dos CSV: facturas y pagos del cliente. */
+  async exportBilling(customer: Customer): Promise<void> {
+    const zip = new JSZip();
+    zip.file(
+      'facturas.csv',
+      this.toCsv(
+        ['Folio', 'Cliente', 'Descripción', 'Emisión', 'Vencimiento', 'Total', 'Estado'],
+        customer.invoices.map((invoice) => [
+          invoice.id,
+          customer.name,
+          `${customer.plan} · ${customer.speed}`,
+          invoice.issuedAt,
+          invoice.dueAt,
+          invoice.total,
+          this.invoiceStatusLabel(invoice.status),
+        ]),
+      ),
+    );
+    zip.file(
+      'pagos.csv',
+      this.toCsv(
+        ['Pago', 'Cliente', 'Factura', 'Fecha', 'Método', 'Referencia', 'Monto'],
+        customer.payments.map((payment) => [
+          payment.id,
+          customer.name,
+          this.invoiceForPayment(customer, payment.id),
+          payment.date,
+          payment.method,
+          payment.reference,
+          payment.amount,
+        ]),
+      ),
+    );
+    const blob = await zip.generateAsync({ type: 'blob' });
+    this.downloadBlob(blob, `facturacion-${customer.id}.zip`);
+  }
+  /** CSV con BOM para que Excel respete los acentos. */
+  private toCsv(
+    headers: ReadonlyArray<string>,
+    rows: ReadonlyArray<ReadonlyArray<string | number>>,
+  ): string {
+    const escape = (value: string | number): string => {
+      const text = String(value ?? '');
+      return /[",\n;]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+    };
+    return (
+      '﻿' +
+      [headers, ...rows].map((row) => row.map(escape).join(',')).join('\r\n')
+    );
+  }
+  private downloadBlob(blob: Blob, fileName: string): void {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+  /** Abre la factura en el módulo de Facturas, por su id. */
+  openInvoiceRecord(invoice: CustomerInvoice): void {
+    this.invoiceMenuId.set(null);
+    void this.router.navigate(['/invoices', invoice.id]);
+  }
+  /** Abre el pago en el módulo de Pagos, por su id. */
+  openPaymentRecord(payment: CustomerPayment): void {
+    this.paymentMenuId.set(null);
+    void this.router.navigate(['/payments', payment.id]);
+  }
+  private formatMoney(value: unknown): string {
+    return new Intl.NumberFormat(this.i18n.locale(), {
+      style: 'currency',
+      currency: 'MXN',
+      maximumFractionDigits: 2,
+    }).format(Number(value) || 0);
+  }
+  private formatDocumentDate(value: unknown): string {
+    const date = new Date(String(value ?? ''));
+    return Number.isNaN(date.getTime())
+      ? '—'
+      : new Intl.DateTimeFormat(this.i18n.locale(), {
+          day: '2-digit',
+          month: 'long',
+          year: 'numeric',
+        }).format(date);
+  }
+  private invoiceStatusLabel(status: string): string {
+    return { paid: 'Pagada', overdue: 'Vencida', pending: 'Pendiente' }[status] ?? status;
   }
   togglePaymentMenu(event: Event, paymentId: string): void {
     event.stopPropagation();
@@ -658,24 +822,31 @@ export class CustomerDetailPage {
     );
     this.paymentMenuId.set(null);
   }
+  /** Abre el comprobante del pago y lanza el diálogo de impresión / Guardar PDF. */
   downloadPayment(payment: CustomerPayment, customer: Customer): void {
-    const lines = [
-      `Pago,${payment.id}`,
-      `Cliente,${customer.name}`,
-      `Fecha,${payment.date}`,
-      `Referencia,${payment.reference}`,
-      `Método,${payment.method}`,
-      `Monto,${payment.amount}`,
-    ];
-    this.downloadTextFile(`${payment.id}.csv`, lines.join('\n'));
+    const document = buildPrintableDocument('payments', {
+        record: {
+          id: payment.id,
+          client: customer.name,
+          clientId: customer.id,
+          date: payment.date,
+          amount: payment.amount,
+          method: payment.method,
+          reference: payment.reference,
+          invoice: this.invoiceForPayment(customer, payment.id),
+        },
+        formatMoney: (value) => this.formatMoney(value),
+        formatDate: (value) => this.formatDocumentDate(value),
+      statusLabel: (value) => String(value ?? ''),
+    });
+    if (document) this.pdf.download(document);
     this.paymentMenuId.set(null);
   }
-  private downloadTextFile(fileName: string, content: string): void {
-    const url = URL.createObjectURL(new Blob([content], { type: 'text/csv;charset=utf-8' }));
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = fileName;
-    link.click();
-    URL.revokeObjectURL(url);
+  private invoiceForPayment(customer: Customer, paymentId: string): string {
+    return (
+      customer.invoices.find((invoice) =>
+        (invoice.payments ?? []).some((payment) => payment.id === paymentId),
+      )?.id ?? ''
+    );
   }
 }

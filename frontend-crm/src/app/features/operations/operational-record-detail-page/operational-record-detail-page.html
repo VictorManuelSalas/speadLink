@@ -46,7 +46,50 @@
           [subtitle]="item.id + ' · Actualizado ' + formattedUpdatedAt(item)"
         >
           <div record-actions>
-            <button class="button" type="button">✉ Compartir</button>
+            <div class="share-menu">
+              <button
+                class="button"
+                type="button"
+                [attr.aria-expanded]="shareMenuOpen()"
+                aria-haspopup="menu"
+                (click)="toggleShareMenu($event)"
+              >
+                ↗ Compartir
+              </button>
+              @if (shareMenuOpen()) {
+                <div class="share-menu__panel" role="menu" (click)="$event.stopPropagation()">
+                  <button type="button" role="menuitem" (click)="copyRecordLink()">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1" />
+                      <path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1" />
+                    </svg>
+                    <span
+                      ><b>{{ shareCopied() ? '¡Enlace copiado!' : 'Copiar enlace' }}</b
+                      ><small>{{
+                        shareCopied() ? 'Listo para pegar' : 'Liga directa al registro'
+                      }}</small></span
+                    >
+                  </button>
+                  <a
+                    role="menuitem"
+                    [href]="whatsappShareUrl(item)"
+                    target="_blank"
+                    rel="noopener"
+                    (click)="shareMenuOpen.set(false)"
+                  >
+                    <svg class="whatsapp" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M20 11.6a8 8 0 0 1-11.8 7l-4.2 1 1.1-4A8 8 0 1 1 20 11.6Z" />
+                      <path
+                        d="M8.5 7.8c.3-.4.6-.3.9-.1l1.1 2c.1.3 0 .5-.2.7l-.6.6c.7 1.5 1.8 2.6 3.3 3.2l.6-.7c.2-.2.5-.3.7-.2l2 1c.3.2.4.5.3.8-.3 1-1.2 1.7-2.3 1.7-3.5-.3-7.4-4.2-7.7-7.7 0-.5.3-1 .6-1.3Z"
+                      />
+                    </svg>
+                    <span
+                      ><b>Enviar por WhatsApp</b><small>Ficha lista para el equipo</small></span
+                    >
+                  </a>
+                </div>
+              }
+            </div>
             @if (moduleKey === 'leads') {
               <button
                 class="button button--primary convert-button"
@@ -375,12 +418,24 @@
                   <app-record-quick-actions>
                     @if (moduleKey === 'leads') {
                       <button type="button" (click)="openEmailComposer()">✉ Enviar email</button>
+                      <!-- En los demás módulos el encabezado ya trae "Agregar nota". -->
+                      <button type="button" (click)="openNoteComposerQuickAction()">
+                        ＋ Agregar nota
+                      </button>
                     }
-                    <button type="button" (click)="openNoteComposerQuickAction()">
-                      ＋ Agregar nota
-                    </button>
-                    @if (moduleKey !== 'leads') {
-                      <button type="button">▤ Generar reporte</button>
+                    @if (moduleKey === 'services') {
+                      <button type="button" (click)="sellService(item)">
+                        ▤ Nuevo contrato con este plan
+                      </button>
+                      <button type="button" (click)="duplicateService(item)">
+                        ⧉ Duplicar servicio
+                      </button>
+                      <button type="button" (click)="toggleServiceStatus(item)">
+                        {{ serviceIsActive(item) ? '⊘ Retirar de venta' : '✓ Poner a la venta' }}
+                      </button>
+                    }
+                    @if (documentActionLabel(); as documentLabel) {
+                      <button type="button" (click)="openDocument(item)">{{ documentLabel }}</button>
                     }
                     <button class="danger-action" type="button" (click)="archive(item.id)">
                       ⊘ Archivar registro

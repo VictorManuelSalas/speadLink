@@ -1,6 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { CUSTOMERS } from '../../core/data-access/mock-crm-data';
 import { CrmAttachment } from '../../core/models/customer';
+import { SYSTEM_USER_LABELS } from '../../core/data-access/system-users';
 import {
   OPERATIONAL_MODULES,
   OperationalModuleKey,
@@ -102,14 +103,25 @@ export class OperationalStore {
         record.id === id ? { ...record, ...changes, updatedAt: new Date().toISOString() } : record,
       ),
     }));
+    const definition = OPERATIONAL_MODULES[module];
+    // Los ids sombra de los lookups (`schemaKey`) no se muestran en la ficha,
+    // así que tampoco tienen por qué aparecer en la bitácora.
+    const shadowIdKeys = new Set(
+      definition.fields.map((field) => field.schemaKey).filter(Boolean) as string[],
+    );
     const changed = Object.entries(changes)
+      .filter(([key]) => !shadowIdKeys.has(key))
       .map(([key, value]) => {
-        const definition = OPERATIONAL_MODULES[module];
         const label =
           definition.columns.find((field) => field.key === key)?.label ??
           definition.fields.find((field) => field.key === key)?.label ??
           key;
-        return `${label}: ${String(previous?.[key] ?? '—')} → ${String(value)}`;
+        const readable = (raw: unknown): string => {
+          const text = String(raw ?? '');
+          if (!text) return '—';
+          return SYSTEM_USER_LABELS[text] ?? text;
+        };
+        return `${label}: ${readable(previous?.[key])} → ${readable(value)}`;
       })
       .join(' · ');
     this.addActivity(id, 'Registro actualizado', changed, 'blue', this.moduleLabel(module), 'EDIT');

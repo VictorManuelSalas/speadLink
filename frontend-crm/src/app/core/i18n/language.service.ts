@@ -260,6 +260,7 @@ const ENGLISH: Readonly<Record<string, string>> = {
   'Este es el resumen de tu operación hoy, 14 de julio.':
     'Here is your operations summary for today, July 14.',
   'Ingresos mensuales': 'Monthly revenue',
+  'Ingreso mensual': 'Monthly Revenue',
   'Distribución de planes': 'Plan distribution',
   'Operación de hoy': "Today's operations",
   'Servicios activos': 'Active services',

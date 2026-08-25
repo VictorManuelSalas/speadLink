@@ -9,6 +9,7 @@ import { OperationalStore } from '../../../features/operations/operational-store
 import { OperationalDataService } from './operational-data.service';
 import type { OperationalRecord } from '../../../features/operations/operational-modules.data';
 import { OPERATIONAL_MODULES } from '../../../features/operations/operational-modules.data';
+import { CUSTOMERS } from '../mock-crm-data';
 
 @Injectable({
   providedIn: 'root',
@@ -56,8 +57,17 @@ export class DataInitializerService {
       equipment: this.mapEquipmentToOperationalRecords(),
       assignments: this.mapAssignmentsToOperationalRecords(),
       contracts: this.mapContractsToOperationalRecords(),
-      invoices: this.mapInvoicesToOperationalRecords(),
-      payments: this.mapPaymentsToOperationalRecords(),
+      // Las facturas y pagos que cuelgan de cada cliente también son registros
+      // de sus módulos: así el id que se ve en la ficha del cliente abre el
+      // registro real en Facturas / Pagos.
+      invoices: [
+        ...this.mapCustomerInvoicesToOperationalRecords(),
+        ...this.mapInvoicesToOperationalRecords(),
+      ],
+      payments: [
+        ...this.mapCustomerPaymentsToOperationalRecords(),
+        ...this.mapPaymentsToOperationalRecords(),
+      ],
       expenses: this.mapExpensesToOperationalRecords(),
       customers: this.mapCustomersToOperationalRecords(),
     };
@@ -82,7 +92,8 @@ export class DataInitializerService {
       longitude: lead.longitude,
       source: lead.source,
       status: lead.status,
-      notes: lead.notes,
+      owner: lead.owner ?? '',
+      description: lead.description,
     } as OperationalRecord));
   }
 
@@ -90,12 +101,27 @@ export class DataInitializerService {
    * Map ServiceRecord to OperationalRecord format
    */
   private mapServicesToOperationalRecords(): OperationalRecord[] {
+    // Contratos que incluyen cada servicio e ingreso mensual que generan.
+    // El ingreso sólo cuenta contratos ACTIVE: uno vencido ya no factura.
+    const contractCount = new Map<string, number>();
+    const monthlyRevenue = new Map<string, number>();
+    for (const contract of this.dataService.contracts.getAllSync()) {
+      for (const item of contract.items ?? []) {
+        contractCount.set(item.serviceId, (contractCount.get(item.serviceId) ?? 0) + 1);
+        if (contract.status === 'ACTIVE') {
+          const amount = (Number(item.quantity) || 1) * (Number(item.unitPrice) || 0);
+          monthlyRevenue.set(item.serviceId, (monthlyRevenue.get(item.serviceId) ?? 0) + amount);
+        }
+      }
+    }
     return this.dataService.services.getAllSync().map((service) => ({
       id: service.id,
       name: service.name,
       description: service.description,
       price: service.price,
       type: service.type,
+      contracts: contractCount.get(service.id) ?? 0,
+      monthlyRevenue: monthlyRevenue.get(service.id) ?? 0,
       status: service.status,
     } as OperationalRecord));
   }
@@ -125,14 +151,16 @@ export class DataInitializerService {
   private mapAssignmentsToOperationalRecords(): OperationalRecord[] {
     return this.dataService.assignments.getAllSync().map((assignment) => ({
       id: assignment.id,
+      name: assignment.name,
       clientId: assignment.clientId,
       client: assignment.client,
       equipmentId: assignment.equipmentId,
       equipment: assignment.equipment,
+      serial: assignment.serial,
       assignedAt: assignment.assignedAt,
       returnedAt: assignment.returnedAt,
       status: assignment.status,
-      notes: assignment.notes,
+      description: assignment.description,
     } as OperationalRecord));
   }
 
@@ -158,6 +186,60 @@ export class DataInitializerService {
   /**
    * Map InvoiceRecord to OperationalRecord format
    */
+  /** Facturas anidadas en cada cliente, expuestas como registros de Facturas. */
+  private mapCustomerInvoicesToOperationalRecords(): OperationalRecord[] {
+    const status: Readonly<Record<string, string>> = {
+      paid: 'PAID',
+      pending: 'PENDING',
+      overdue: 'OVERDUE',
+    };
+    return CUSTOMERS.flatMap((customer) =>
+      customer.invoices.map(
+        (invoice) =>
+          ({
+            id: invoice.id,
+            folio: invoice.id,
+            clientId: customer.id,
+            client: customer.name,
+            issueDate: invoice.issuedAt,
+            dueDate: invoice.dueAt,
+            total: invoice.total,
+            status: status[invoice.status] ?? 'PENDING',
+            notes: `${customer.plan} · ${customer.speed}`,
+          }) as OperationalRecord,
+      ),
+    );
+  }
+
+  /** Pagos anidados en cada cliente, expuestos como registros de Pagos. */
+  private mapCustomerPaymentsToOperationalRecords(): OperationalRecord[] {
+    const method: Readonly<Record<string, string>> = {
+      Transferencia: 'BANK_TRANSFER',
+      Efectivo: 'CASH',
+      Tarjeta: 'CREDIT_CARD',
+    };
+    return CUSTOMERS.flatMap((customer) => {
+      const invoiceOf = (paymentId: string): string =>
+        customer.invoices.find((invoice) =>
+          (invoice.payments ?? []).some((payment) => payment.id === paymentId),
+        )?.id ?? '';
+      return customer.payments.map(
+        (payment) =>
+          ({
+            id: payment.id,
+            clientId: customer.id,
+            client: customer.name,
+            invoiceId: invoiceOf(payment.id),
+            invoice: invoiceOf(payment.id),
+            amount: payment.amount,
+            method: method[payment.method] ?? 'OTHER',
+            reference: payment.reference,
+            paidAt: payment.date,
+          }) as OperationalRecord,
+      );
+    });
+  }
+
   private mapInvoicesToOperationalRecords(): OperationalRecord[] {
     return this.dataService.invoices.getAllSync().map((invoice) => ({
       id: invoice.id,
@@ -209,7 +291,35 @@ export class DataInitializerService {
   /**
    * Map CustomerRecord to OperationalRecord format
    */
+  /**
+   * Los clientes salen de `CUSTOMERS`, el mismo origen que muestra el módulo de
+   * Clientes. Antes venían de una lista aparte en `operational-modules.data.ts`,
+   * así que un mismo id era otra persona según el módulo que abrieras.
+   */
   private mapCustomersToOperationalRecords(): OperationalRecord[] {
-    return OPERATIONAL_MODULES.customers.records.map((customer) => customer as OperationalRecord);
+    const status: Readonly<Record<string, string>> = {
+      active: 'ACTIVE',
+      pending: 'ACTIVE',
+      suspended: 'SUSPENDED',
+      inactive: 'INACTIVE',
+      cancelled: 'INACTIVE',
+    };
+    return CUSTOMERS.map(
+      (customer) =>
+        ({
+          id: customer.id,
+          name: customer.name,
+          // El modelo del cliente no distingue hogar/negocio: se infiere del nombre.
+          type: /s\.?a\.?|abarrotes|consultorio|distribuidora|caf[eé]|farmacia|negocio/i.test(
+            customer.name,
+          )
+            ? 'Negocio'
+            : 'Hogar',
+          email: customer.email,
+          phone: customer.phone,
+          address: customer.address,
+          status: status[customer.status] ?? 'ACTIVE',
+        }) as OperationalRecord,
+    );
   }
 }

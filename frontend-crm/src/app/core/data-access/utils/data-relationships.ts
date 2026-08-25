@@ -15,6 +15,7 @@ import type {
   PaymentRecord,
   ExpenseRecord,
 } from '../models/operational-records';
+import { assignmentFolio } from '../models/operational-records';
 
 export interface RelationshipRegistry {
   leads: Map<string, LeadRecord>;
@@ -274,6 +275,7 @@ export class DataRelationships {
 
     return {
       id: `ASG-${Date.now()}`,
+      name: assignmentFolio(this.registry.assignments.size + 1, new Date().getFullYear()),
       clientId: customerId,
       equipmentId: equipmentId,
       assignedAt: new Date().toISOString().split('T')[0],

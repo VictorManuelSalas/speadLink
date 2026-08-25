@@ -50,7 +50,7 @@
         <div class="editor">
           <select #status [value]="value()">
             @for (option of config().options ?? []; track option) {
-              <option [value]="option">{{ option }}</option>
+              <option [value]="option">{{ getOptionLabel(option) }}</option>
             }</select
           ><button class="save" type="button" (click)="save(status.value)">✓</button
           ><button type="button" (click)="editing.set(false)">×</button>
@@ -76,14 +76,28 @@
     @if (editing()) {
       <div class="field">
         <span>{{ config().label }}</span>
-        <div class="editor">
-          <select #choice [value]="value()">
-            @for (option of config().options ?? []; track option) {
-              <option [value]="option">{{ (config().optionLabels || {})[option] || option }}</option>
-            }</select
-          ><button class="save" type="button" (click)="save(choice.value)">✓</button
-          ><button type="button" (click)="editing.set(false)">×</button>
-        </div>
+        @if (config().picklistOptions?.length) {
+          <div class="editor editor--picklist">
+            <app-styled-picklist
+              [options]="config().picklistOptions || []"
+              [value]="value()"
+              [placeholder]="config().placeholder || 'Seleccionar…'"
+              [alwaysSearchable]="true"
+              (valueChange)="save($event)"
+            /><button type="button" (click)="editing.set(false)">×</button>
+          </div>
+        } @else {
+          <div class="editor">
+            <select #choice [value]="value()">
+              @for (option of config().options ?? []; track option) {
+                <option [value]="option">{{
+                  (config().optionLabels || {})[option] || option
+                }}</option>
+              }</select
+            ><button class="save" type="button" (click)="save(choice.value)">✓</button
+            ><button type="button" (click)="editing.set(false)">×</button>
+          </div>
+        }
       </div>
     } @else {
       @if (config().route) {

@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { CRM_DATA } from '../../../core/data-access/crm-data';
+import { assignmentFolio } from '../../../core/data-access/models/operational-records';
 import { LanguageService } from '../../../core/i18n/language.service';
 import { FieldValidatorService } from '../../../core/services/field-validator.service';
 import { Customer } from '../../../core/models/customer';
@@ -29,6 +30,7 @@ import {
   OperationalRecord,
 } from '../operational-modules.data';
 import { OperationalStore } from '../operational-store';
+import { lookupDisplayLabel, lookupPicklistOptions } from '../lookup-options';
 
 interface ContractItemDraft {
   id: string;
@@ -151,14 +153,42 @@ export class OperationalModulePage {
       if (params.get('create') !== 'true') return;
       const clientId = params.get('clientId') ?? '';
       const invoiceId = params.get('invoice') ?? '';
+      const serviceId = params.get('serviceId') ?? '';
       if (this.moduleKey === 'contracts') {
         this.openCreate({
           client: clientId,
           contractNumber: `SL-CTR-${new Date().getFullYear()}-${String(this.records().length + 818).padStart(4, '0')}`,
           startDate: new Date().toISOString().slice(0, 10),
           status: 'PENDING_SIGNATURE',
-          notes: 'Nuevo contrato generado por solicitud de cambio de plan.',
+          notes: serviceId
+            ? 'Nuevo contrato generado desde el catálogo de servicios.'
+            : 'Nuevo contrato generado por solicitud de cambio de plan.',
         });
+        // Se viene desde un servicio: entra ya como primera partida del contrato.
+        const service = serviceId ? this.store.find('services', serviceId) : undefined;
+        if (service) {
+          this.contractItems.set([
+            {
+              id: `contract-item-${service.id}`,
+              serviceId: service.id,
+              quantity: 1,
+              unitPrice: Number(service['price']) || 0,
+            },
+          ]);
+        }
+      } else if (this.moduleKey === 'services') {
+        const source = this.store.find('services', params.get('duplicate') ?? '');
+        this.openCreate(
+          source
+            ? {
+                name: `${String(source['name'])} (copia)`,
+                description: String(source['description'] ?? ''),
+                price: String(source['price'] ?? ''),
+                type: String(source['type'] ?? ''),
+                status: 'INACTIVE',
+              }
+            : {},
+        );
       } else if (this.moduleKey === 'assignments') {
         this.openCreate({
           client: clientId,
@@ -169,6 +199,17 @@ export class OperationalModulePage {
         this.openCreate({
           client: clientId,
           invoice: invoiceId,
+        });
+      } else if (this.moduleKey === 'invoices') {
+        const today = new Date();
+        const due = new Date(today);
+        due.setDate(due.getDate() + 10);
+        this.openCreate({
+          client: clientId,
+          folio: `FAC-${clientId}-${this.records().length + 1}`,
+          issueDate: today.toISOString().slice(0, 10),
+          dueDate: due.toISOString().slice(0, 10),
+          status: 'PENDING',
         });
       }
     });
@@ -432,20 +473,15 @@ export class OperationalModulePage {
     return result.error || null;
   }
   fieldPicklistOptions(field: ModuleField): ReadonlyArray<PicklistOption> {
-    if (this.moduleKey === 'assignments' && field.key === 'equipment') {
-      return this.store
-        .recordsFor('equipment')
-        .filter((record) => record['status'] === 'AVAILABLE')
-        .map((record) => ({
-          value: record.id,
-          label: `${String(record['name'])} · ${String(record['brand'])}`,
-          detail: String(record['serialNumber'] ?? ''),
-        }));
+    if (field.type === 'select') {
+      return (field.options ?? []).map((option) => ({
+        value: option,
+        label: field.optionLabels?.[option] || this.statusLabel(option),
+      }));
     }
-    return (field.options ?? []).map((option) => ({
-      value: option,
-      label: field.optionLabels?.[option] || this.statusLabel(option),
-    }));
+    return lookupPicklistOptions(this.store, field, {
+      currentValue: this.draft()[field.key] || '',
+    });
   }
   private hasOtherInternetItem(currentItemId: string): boolean {
     return this.contractItems().some((item) => {
@@ -575,8 +611,10 @@ export class OperationalModulePage {
       const rawValue = record[field.key];
       if (field.schemaKey && rawValue !== undefined && rawValue !== '') {
         record[field.schemaKey] = rawValue;
-        if (field.optionLabels)
-          record[field.key] = field.optionLabels[String(rawValue)] ?? rawValue;
+        // El campo visible guarda la etiqueta (nombre del cliente, del equipo…)
+        // y `schemaKey` el id; se resuelve contra el catálogo en vivo.
+        if (field.type === 'lookup' || field.optionLabels)
+          record[field.key] = lookupDisplayLabel(this.store, field, String(rawValue)) || rawValue;
       }
       if (field.type === 'number') record[field.key] = Number(record[field.key]) || 0;
     });
@@ -602,8 +640,13 @@ export class OperationalModulePage {
     }
     if (this.moduleKey === 'services')
       record['status'] = record['isActive'] === 'false' ? 'INACTIVE' : 'ACTIVE';
-    if (this.moduleKey === 'assignments')
+    if (this.moduleKey === 'assignments') {
       record['status'] = record['returnedAt'] ? 'RETURNED' : 'ACTIVE';
+      // Folio automático, fijo desde su creación.
+      record['name'] = assignmentFolio(this.records().length + 1, new Date().getFullYear());
+      const unit = this.store.find('equipment', String(record['equipmentId'] ?? ''));
+      if (unit) record['serial'] = String(unit['serialNumber'] ?? '');
+    }
     if (!record['status'] && this.statusOptions().length)
       record['status'] = this.statusOptions()[0];
     this.store.add(this.moduleKey, record);
