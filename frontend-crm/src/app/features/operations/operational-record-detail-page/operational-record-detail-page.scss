@@ -867,44 +867,85 @@
         background: var(--color-muted);
         color: var(--color-primary);
       }
-      .note-action-menu {
+      /* Menús contextuales (notas, archivos, correos, pagos): comparten
+         aspecto y sólo cambian dónde se anclan. */
+      .note-action-menu,
+      .file-action-menu,
+      .email-action-menu,
+      .payment-action-menu {
         position: absolute;
-        right: 18px;
-        top: 58px;
         z-index: 30;
-        width: 160px;
+        width: 158px;
         padding: 7px;
         border: 1px solid var(--color-border);
         border-radius: 10px;
         background: var(--color-surface);
-        box-shadow: 0 14px 35px rgba(15, 23, 42, 0.18);
+        box-shadow: 0 14px 34px rgb(15 23 42 / 17%);
       }
-      .note-action-menu button {
+      .note-action-menu a,
+      .note-action-menu button,
+      .file-action-menu a,
+      .file-action-menu button,
+      .email-action-menu a,
+      .email-action-menu button,
+      .payment-action-menu a,
+      .payment-action-menu button {
         width: 100%;
-        min-height: 39px;
+        min-height: 37px;
         padding: 0 10px;
+        display: flex;
+        align-items: center;
+        gap: 9px;
         border: 0;
         border-radius: 7px;
         background: transparent;
         color: var(--color-text-primary);
-        display: flex;
-        align-items: center;
-        gap: 9px;
+        font: inherit;
+        font-size: 10.5px;
+        font-weight: 640;
         text-align: left;
-        font-weight: 600;
+        text-decoration: none;
       }
-      .note-action-menu button:hover {
+      .note-action-menu a:hover,
+      .note-action-menu button:hover,
+      .file-action-menu a:hover,
+      .file-action-menu button:hover,
+      .email-action-menu a:hover,
+      .email-action-menu button:hover,
+      .payment-action-menu a:hover,
+      .payment-action-menu button:hover {
         background: var(--color-muted);
       }
       .note-action-menu button:disabled {
-        cursor: not-allowed;
         opacity: 0.45;
+        cursor: not-allowed;
       }
-      .note-action-menu button.danger {
+      .note-action-menu .danger,
+      .file-action-menu .danger,
+      .payment-action-menu .danger {
         color: var(--color-danger);
       }
-      .note-action-menu button.danger:hover {
+      .note-action-menu .danger:hover,
+      .payment-action-menu .danger:hover {
         background: #fef2f2;
+      }
+      .note-action-menu {
+        top: 58px;
+        right: 18px;
+      }
+      .file-action-menu {
+        top: 50px;
+        right: 12px;
+      }
+      .email-action-menu {
+        top: 52px;
+        right: 14px;
+      }
+      .payment-action-menu {
+        top: 100%;
+        right: 0;
+        z-index: 1300;
+        margin-top: 4px;
       }
       .note-attachments {
         padding: 0 30px 22px;
@@ -1009,42 +1050,6 @@
       .file-copy small {
         font-size: 9px;
       }
-      .file-action-menu {
-        position: absolute;
-        right: 12px;
-        top: 50px;
-        z-index: 20;
-        width: 145px;
-        padding: 6px;
-        border: 1px solid var(--color-border);
-        border-radius: 9px;
-        background: var(--color-surface);
-        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.16);
-      }
-      .file-action-menu a,
-      .file-action-menu button {
-        width: 100%;
-        height: 36px;
-        padding: 0 9px;
-        border: 0;
-        border-radius: 6px;
-        background: transparent;
-        color: var(--color-text-primary);
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font: inherit;
-        font-size: 10px;
-        font-weight: 650;
-        text-align: left;
-      }
-      .file-action-menu a:hover,
-      .file-action-menu button:hover {
-        background: var(--color-muted);
-      }
-      .file-action-menu .danger {
-        color: var(--color-danger);
-      }
       .section-empty-state {
         min-height: 285px;
         padding: 40px;
@@ -1148,36 +1153,6 @@
       }
       .email-card small {
         color: var(--color-text-secondary);
-      }
-      .email-action-menu {
-        position: absolute;
-        right: 14px;
-        top: 52px;
-        z-index: 30;
-        width: 155px;
-        padding: 6px;
-        border: 1px solid var(--color-border);
-        border-radius: 9px;
-        background: var(--color-surface);
-        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.16);
-      }
-      .email-action-menu button {
-        width: 100%;
-        height: 36px;
-        padding: 0 9px;
-        border: 0;
-        border-radius: 6px;
-        background: transparent;
-        color: var(--color-text-primary);
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font: inherit;
-        font-size: 10px;
-        font-weight: 650;
-      }
-      .email-action-menu button:hover {
-        background: var(--color-muted);
       }
       @media (max-width: 850px) {
         .files-grid {
@@ -1874,47 +1849,6 @@
         display: flex;
         gap: 12px;
         flex-wrap: wrap;
-      }
-      .payment-action-menu {
-        position: absolute;
-        z-index: 1300;
-        width: 160px;
-        padding: 7px;
-        border: 1px solid var(--color-border);
-        border-radius: 10px;
-        background: var(--color-surface);
-        box-shadow: 0 14px 35px rgba(15, 23, 42, 0.18);
-        top: 100%;
-        right: 0;
-        margin-top: 4px;
-      }
-      .payment-action-menu a,
-      .payment-action-menu button {
-        width: 100%;
-        min-height: 37px;
-        padding: 0 10px;
-        display: flex;
-        align-items: center;
-        gap: 9px;
-        border: 0;
-        border-radius: 7px;
-        background: transparent;
-        color: var(--color-text-primary);
-        text-align: left;
-        text-decoration: none;
-        font: inherit;
-        font-weight: 600;
-        font-size: 11px;
-      }
-      .payment-action-menu a:hover,
-      .payment-action-menu button:hover {
-        background: var(--color-muted);
-      }
-      .payment-action-menu button.danger {
-        color: var(--color-danger);
-      }
-      .payment-action-menu button.danger:hover {
-        background: #fef2f2;
       }
       .reference {
         a {
