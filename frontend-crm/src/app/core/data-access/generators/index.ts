@@ -100,10 +100,17 @@ export class DataGenerator {
     // Las asignaciones referencian equipo real del inventario recién generado.
     this.assignmentsGen.setEquipmentPool(equipment);
     const assignments = this.assignmentsGen.generateMultiple(config.assignments);
-    // El equipo asignado deja de estar disponible.
-    const assignedIds = new Set(assignments.filter((a) => a.status === 'ACTIVE').map((a) => a.equipmentId));
+    // El equipo con asignación activa deja de estar disponible y queda ligado
+    // a ese cliente: marcarlo ASSIGNED sin cliente dejaría la ficha a medias.
+    const activeAssignment = new Map(
+      assignments.filter((a) => a.status === 'ACTIVE').map((a) => [a.equipmentId, a]),
+    );
     equipment.forEach((unit) => {
-      if (assignedIds.has(unit.id) && unit.status === 'AVAILABLE') unit.status = 'ASSIGNED';
+      const assignment = activeAssignment.get(unit.id);
+      if (!assignment || unit.status !== 'AVAILABLE') return;
+      unit.status = 'ASSIGNED';
+      unit.assignedToId = assignment.clientId;
+      unit.assignedTo = assignment.client;
     });
     // Los contratos referencian servicios reales del catálogo recién generado.
     this.contractsGen.setServiceCatalog(services);

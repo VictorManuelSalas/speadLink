@@ -211,6 +211,22 @@
         color: var(--color-text-secondary);
         font-size: 10.5px;
       }
+      .assignment-value {
+        width: fit-content;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--color-text-primary);
+        text-decoration: none;
+      }
+      .assignment-value i {
+        color: var(--color-primary);
+        font-size: 11px;
+        font-style: normal;
+      }
+      .assignment-value:hover b {
+        color: var(--color-primary);
+      }
       .whatsapp-value {
         width: fit-content;
         color: var(--color-text-primary);

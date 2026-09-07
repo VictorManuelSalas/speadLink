@@ -57,7 +57,10 @@
         <app-record-emails-section
           [recordId]="c.id"
           [recipientEmail]="c.email"
-          [autoOpen]="composeEmail()"
+          [openKey]="composeEmailKey()"
+          [seedOverride]="emailSeed()"
+          module="customers"
+          [record]="$any(c)"
         />
       } @else if (activeTab() === 'Archivos') {
         <app-record-attachments-section [recordId]="c.id" />

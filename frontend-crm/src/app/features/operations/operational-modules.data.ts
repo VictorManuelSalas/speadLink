@@ -276,7 +276,7 @@ export const OPERATIONAL_MODULES: Readonly<
         schemaKey: 'assignedToId',
         lookupModule: 'customers',
       },
-      { key: 'notes', label: 'Notas', type: 'text', maxLength: 1000 },
+      { key: 'description', label: 'Descripción', type: 'text', maxLength: 1000 },
     ],
     records: [
       {
@@ -470,7 +470,7 @@ export const OPERATIONAL_MODULES: Readonly<
         type: 'select',
         options: ['PENDING_SIGNATURE', 'ACTIVE', 'EXPIRED', 'CANCELLED'],
       },
-      { key: 'notes', label: 'Notas', type: 'text', maxLength: 1000 },
+      { key: 'description', label: 'Descripción', type: 'text', maxLength: 1000 },
     ],
     records: [
       {

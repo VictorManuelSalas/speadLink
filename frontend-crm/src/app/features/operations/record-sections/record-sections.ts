@@ -13,6 +13,7 @@ import { AttachmentPicker } from '../../../shared/attachment-picker';
 import { FileUploadModal } from '../../../shared/file-upload-modal';
 import { InlineEditableDateField } from '../../../shared/inline-editable-date-field';
 import { LeadEmailFormValue, LeadEmailModal, LeadEmailSeed } from '../lead-email-modal/lead-email-modal';
+import { TemplateModule } from '../../../core/data-access/templates/template.model';
 import { OperationalEmail, OperationalStore } from '../operational-store';
 
 const SECTION_STYLES = `
@@ -200,8 +201,17 @@ export class RecordActivitySection {
 export class RecordEmailsSection {
   readonly recordId = input.required<string>();
   readonly recipientEmail = input('');
-  /** Abre el redactor al entrar, para las acciones "Enviar mensaje". */
-  readonly autoOpen = input(false);
+  /**
+   * Contador para abrir el redactor desde fuera. Se usa un contador y no un
+   * booleano porque la sección se monta al cambiar de pestaña: una bandera que
+   * se reinicia en el mismo tick ya llegaría apagada.
+   */
+  readonly openKey = input(0);
+  /** Borrador ya armado (asunto, cuerpo, adjuntos) que otro módulo preparó. */
+  readonly seedOverride = input<LeadEmailSeed | null>(null);
+  /** Módulo y registro: filtran las plantillas y resuelven sus variables. */
+  readonly module = input<TemplateModule>('');
+  readonly record = input<Record<string, unknown> | null>(null);
   readonly store = inject(OperationalStore);
   readonly composer = signal(false);
   readonly preview = signal<OperationalEmail | null>(null);
@@ -211,14 +221,16 @@ export class RecordEmailsSection {
   readonly menuId = signal<string | null>(null);
   constructor() {
     effect(() => {
-      if (this.autoOpen()) this.compose();
+      if (this.openKey() > 0) this.compose();
     });
   }
   emails() {
     return this.store.emailsFor(this.recordId());
   }
   compose() {
-    this.seed.set({ to: this.recipientEmail(), from: 'andrea.torres@speedlink.mx' });
+    this.seed.set(
+      this.seedOverride() ?? { to: this.recipientEmail(), from: 'andrea.torres@speedlink.mx' },
+    );
     this.editingId.set(null);
     this.composeKey.update((v) => v + 1);
     this.composer.set(true);

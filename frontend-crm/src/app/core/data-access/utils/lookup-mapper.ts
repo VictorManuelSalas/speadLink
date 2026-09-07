@@ -3,14 +3,17 @@
  * Maps IDs to names/values for easy access without additional queries
  */
 
+import { CUSTOMERS } from '../mock-crm-data';
+
 export class LookupMapper {
-  private static readonly customerNames: Record<string, string> = {
-    'SL-1040': 'José Luis Hernández García',
-    'SL-1041': 'María del Carmen López Rodríguez',
-    'SL-1042': 'Francisco Javier Martínez López',
-    'SL-1043': 'Rosa María González Sánchez',
-    'SL-1044': 'Juan Carlos Pérez Morales',
-  };
+  /**
+   * Nombres tomados del catálogo real de clientes. Antes era una lista fija
+   * SL-1040..SL-1044 que ya no coincidía con `CUSTOMERS`, así que los registros
+   * generados referenciaban clientes inexistentes.
+   */
+  private static readonly customerNames: Record<string, string> = Object.fromEntries(
+    CUSTOMERS.map((customer) => [customer.id, customer.name]),
+  );
 
   private static readonly equipmentNames: Record<string, string> = {
     'EQ-1000': 'CPE 5GHz Ubiquiti',

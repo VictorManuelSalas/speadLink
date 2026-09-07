@@ -52,6 +52,8 @@
       <app-lead-email-modal
         [seed]="seed()"
         [composeKey]="composeKey()"
+        [module]="module()"
+        [record]="record()"
         (closed)="close()"
         (submitted)="save($event.value, $event.draft)"
       />

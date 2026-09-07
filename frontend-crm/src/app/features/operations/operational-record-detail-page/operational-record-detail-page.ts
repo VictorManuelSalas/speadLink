@@ -40,9 +40,13 @@ import { OperationalEmail, OperationalStore } from '../operational-store';
 import { lookupDisplayLabel, lookupPicklistOptions } from '../lookup-options';
 import {
   DOCUMENT_ACTION_LABEL,
+  ORGANIZATION,
   buildPrintableDocument,
 } from '../printable-document/printable-document.data';
 import { DocumentPdfService } from '../printable-document/document-pdf.service';
+import { PendingEmailService } from '../pending-email.service';
+import { TemplateStore } from '../../../core/data-access/templates/template-store';
+import { RenderContext } from '../../../core/data-access/templates/template.model';
 import {
   RecordActivitySection,
   RecordAttachmentsSection,
@@ -124,6 +128,8 @@ export class OperationalRecordDetailPage {
   private readonly crmData = inject(CRM_DATA);
   readonly store = inject(OperationalStore);
   private readonly pdf = inject(DocumentPdfService);
+  private readonly pendingEmail = inject(PendingEmailService);
+  private readonly templates = inject(TemplateStore);
   readonly i18n = inject(LanguageService);
   readonly moduleKey = this.route.snapshot.data['moduleKey'] as OperationalModuleKey;
   readonly definition = OPERATIONAL_MODULES[this.moduleKey];
@@ -275,6 +281,25 @@ export class OperationalRecordDetailPage {
             { key: 'status', label: 'Estado', type: 'status' as const },
             { key: 'assignedAt', label: 'Fecha de asignación', type: 'date' as const },
           ]
+        : this.moduleKey === 'contracts'
+          ? [
+              // El número de contrato ya es el título y el estado está en la
+              // pastilla: aquí van con quién, cuánto y hasta cuándo.
+              { key: 'client', label: 'Cliente', type: 'text' as const },
+              { key: 'totalMonthly', label: 'Mensualidad', type: 'money' as const },
+              { key: 'startDate', label: 'Inicio', type: 'date' as const },
+              { key: 'endDate', label: 'Vencimiento', type: 'date' as const },
+            ]
+        : this.moduleKey === 'equipment'
+          ? [
+              // El título sólo dice la categoría ("Antena CPE") y el estado ya
+              // está en la pastilla del encabezado: aquí va qué unidad es,
+              // dónde está y cómo identificarla.
+              { key: 'model', label: 'Modelo', type: 'text' as const },
+              { key: 'assignedTo', label: 'Asignado a', type: 'text' as const },
+              { key: 'serialNumber', label: 'Serie', type: 'text' as const },
+              { key: 'macAddress', label: 'MAC', type: 'text' as const },
+            ]
         : this.moduleKey === 'services'
           ? [
               // El nombre del servicio ya es el título de la ficha; ese espacio
@@ -463,6 +488,19 @@ export class OperationalRecordDetailPage {
     if (['NEW', 'ASSIGNED', 'DRAFT'].includes(status)) return 'blue';
     return 'violet';
   }
+  /**
+   * Texto de apoyo del widget. Para el equipo asignado muestra el folio de la
+   * asignación vigente, que es el registro al que lleva el enlace.
+   */
+  summaryHelper(key: string, record: OperationalRecord): string {
+    if (this.moduleKey === 'equipment' && key === 'assignedTo') {
+      const assignment = this.activeAssignmentFor(record.id);
+      return assignment
+        ? String(assignment['client'] ?? assignment['clientId'] ?? 'Cliente')
+        : 'Sin asignación activa';
+    }
+    return this.statHelper(key);
+  }
   statHelper(key: string): string {
     return (
       (
@@ -471,6 +509,13 @@ export class OperationalRecordDetailPage {
           price: 'Precio vigente',
           contracts: 'Clientes con el plan',
           monthlyRevenue: 'De contratos activos',
+          model: 'Marca y modelo',
+          totalMonthly: 'Cargo recurrente',
+          startDate: 'Inicio de vigencia',
+          endDate: 'Fin de vigencia',
+          assignedTo: 'Ubicación del equipo',
+          serialNumber: 'Identificador físico',
+          macAddress: 'Identificador de red',
           total: 'Importe registrado',
           amount: 'Importe registrado',
           client: 'Cuenta relacionada',
@@ -496,6 +541,8 @@ export class OperationalRecordDetailPage {
           !this.shadowIdKeys.has(key) &&
           // El conteo de contratos ya está en los widgets y tiene su pestaña.
           !(this.moduleKey === 'services' && key === 'contracts') &&
+          // Lo mismo con el cliente del equipo: vive en el widget y en su pestaña.
+          !(this.moduleKey === 'equipment' && key === 'assignedTo') &&
           !(this.moduleKey === 'leads' && (key === 'latitude' || key === 'longitude')) &&
           !(this.moduleKey === 'contracts' && key === 'items') &&
           !(this.moduleKey === 'services' && key === 'updatedAt'),
@@ -702,31 +749,95 @@ export class OperationalRecordDetailPage {
       status: this.serviceIsActive(record) ? 'INACTIVE' : 'ACTIVE',
     });
   }
+  /** Cliente del contrato, para saber a dónde mandarlo. */
+  private contractCustomer(record: OperationalRecord) {
+    const id = String(record['clientId'] ?? '');
+    return this.store.recordsFor('customers').find((customer) => customer.id === id);
+  }
+  contractHasCustomer(record: OperationalRecord): boolean {
+    return !!this.contractCustomer(record);
+  }
+  /**
+   * Prepara el correo con el contrato adjunto y abre el redactor en la ficha
+   * del cliente, que es donde vive su historial de correos.
+   */
+  sendContractByEmail(record: OperationalRecord): void {
+    const customer = this.contractCustomer(record);
+    const document = this.buildDocument(record);
+    const template = this.templates.forModule('contracts', 'email')[0];
+    if (!customer || !document || !template) return;
+    const folio = String(record['contractNumber'] ?? record.id);
+    const rendered = this.templates.render(template, this.renderContext(record));
+    this.pendingEmail.queue(customer.id, {
+      title: 'Enviar contrato',
+      to: String(customer['email'] ?? ''),
+      from: 'andrea.torres@speedlink.mx',
+      subject: rendered.subject,
+      body: rendered.body,
+      attachments: [this.pdf.toAttachment(document, `contrato-${folio}.pdf`)],
+    });
+    void this.router.navigate(['/customers', customer.id], { queryParams: { tab: 'Correos' } });
+  }
+  /** Datos con los que se resuelven las variables de una plantilla. */
+  private renderContext(record: OperationalRecord): RenderContext {
+    return {
+      record,
+      organization: ORGANIZATION,
+      userName: 'Andrea Torres',
+      formatMoney: (value) => this.formatMoney(value),
+      formatDate: (value) => this.formatDocumentDate(value),
+    };
+  }
+  /** Mensaje de WhatsApp con el enlace al contrato. */
+  contractWhatsappUrl(record: OperationalRecord): string {
+    const customer = this.contractCustomer(record);
+    const phone = String(customer?.['phone'] ?? '').replace(/\D/g, '');
+    const template = this.templates.forModule('contracts', 'sms')[0];
+    const rendered = template
+      ? this.templates.render(template, this.renderContext(record)).body
+      : `Contrato ${String(record['contractNumber'] ?? record.id)}`;
+    // El enlace apunta al CRM: el PDF no está alojado en ningún lado todavía.
+    const message = `${rendered}
+
+Consúltalo aquí: ${this.recordLink()}`;
+    return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+  }
   /** Etiqueta de la acción de documento, o null si el módulo no tiene uno. */
   documentActionLabel(): string | null {
     return DOCUMENT_ACTION_LABEL[this.moduleKey] ?? null;
   }
-  /** Genera el PDF del registro y lo descarga. */
-  openDocument(record: OperationalRecord): void {
-    const document = buildPrintableDocument(this.moduleKey, {
+  private formatMoney(value: unknown): string {
+    return new Intl.NumberFormat(this.i18n.locale(), {
+      style: 'currency',
+      currency: 'MXN',
+      maximumFractionDigits: 2,
+    }).format(Number(value) || 0);
+  }
+  private formatDocumentDate(value: unknown): string {
+    const date = new Date(String(value ?? ''));
+    return Number.isNaN(date.getTime())
+      ? '—'
+      : new Intl.DateTimeFormat(this.i18n.locale(), {
+          day: '2-digit',
+          month: 'long',
+          year: 'numeric',
+        }).format(date);
+  }
+  /** Documento del registro; null si el módulo no tiene uno definido. */
+  private buildDocument(record: OperationalRecord) {
+    return buildPrintableDocument(this.moduleKey, {
       record,
-      formatMoney: (value) =>
-        new Intl.NumberFormat(this.i18n.locale(), {
-          style: 'currency',
-          currency: 'MXN',
-          maximumFractionDigits: 2,
-        }).format(Number(value) || 0),
-      formatDate: (value) => {
-        const date = new Date(String(value ?? ''));
-        return Number.isNaN(date.getTime())
-          ? '—'
-          : new Intl.DateTimeFormat(this.i18n.locale(), {
-              day: '2-digit',
-              month: 'long',
-              year: 'numeric',
-            }).format(date);
-      },
+      formatMoney: (value) => this.formatMoney(value),
+      formatDate: (value) => this.formatDocumentDate(value),
       statusLabel: (value) => this.statusLabel(value as string),
+      contractItems:
+        this.moduleKey === 'contracts'
+          ? this.parseContractItems(record).map((item) => ({
+              name: String(this.store.find('services', item.serviceId)?.['name'] ?? item.serviceId),
+              quantity: Number(item.quantity) || 1,
+              unitPrice: Number(item.unitPrice) || 0,
+            }))
+          : undefined,
       // `invoiceId` es el enlace estable: `invoice` guarda a veces el folio
       // y a veces el id, según cómo se haya generado el pago.
       payments:
@@ -741,6 +852,10 @@ export class OperationalRecordDetailPage {
               )
           : undefined,
     });
+  }
+  /** Genera el PDF del registro y lo descarga. */
+  openDocument(record: OperationalRecord): void {
+    const document = this.buildDocument(record);
     if (document) this.pdf.download(document);
   }
   toggleShareMenu(event: MouseEvent): void {
@@ -1160,25 +1275,24 @@ export class OperationalRecordDetailPage {
         ];
       });
   }
+  /**
+   * Historial de asignaciones de la unidad. Se filtra por `equipmentId`: el
+   * campo `equipment` guarda el nombre y jamás coincidiría con el id. El
+   * nombre del cliente sale de la propia asignación, no de una tabla fija.
+   */
   equipmentAssignments(record: OperationalRecord): ReadonlyArray<RelatedItem> {
-    const assignments = this.store.recordsFor('assignments');
-    const equipmentAssignments = assignments.filter((a) => a['equipment'] === record.id);
-    const clientNames: Record<string, string> = {
-      'SL-1040': 'José Luis Hernández',
-      'SL-1041': 'Morgan Díaz',
-      'SL-1042': 'Consultorio Dental Sonríe',
-      'SL-1043': 'Distribuidora Nova',
-    };
+    const equipmentAssignments = this.store
+      .recordsFor('assignments')
+      .filter((item) => item['equipmentId'] === record.id);
     return equipmentAssignments.map((assignment) => {
-      const clientId = String(assignment['client'] ?? '');
-      const clientName = clientNames[clientId] || clientId;
+      const clientName = String(assignment['client'] ?? assignment['clientId'] ?? 'Cliente');
       const statusTone = (status: string): string =>
         status === 'ACTIVE' ? 'green' : status === 'RETURNED' ? 'orange' : 'red';
       const statusLabel = (status: string): string =>
         status === 'ACTIVE' ? 'Activo' : status === 'RETURNED' ? 'Devuelto' : 'Inactivo';
       return {
         icon: '⌂',
-        title: clientName,
+        title: `${String(assignment['name'] ?? assignment.id)} · ${clientName}`,
         detail: String(assignment['assignedAt'] ?? 'Sin fecha'),
         meta: statusLabel(String(assignment['status'] ?? 'INACTIVE')),
         tone: statusTone(String(assignment['status'] ?? 'INACTIVE')),
@@ -1480,13 +1594,46 @@ export class OperationalRecordDetailPage {
     });
     this.contractItemsDirty.set(false);
   }
+  /**
+   * Asignación activa de este equipo. Se busca por `equipmentId`, no por
+   * `equipment`, que guarda el nombre y nunca coincidiría con el id.
+   */
+  activeAssignmentFor(equipmentId: string): OperationalRecord | undefined {
+    return this.store
+      .recordsFor('assignments')
+      .find((item) => item['equipmentId'] === equipmentId && item['status'] === 'ACTIVE');
+  }
   canCreateNewAssignment(equipmentId: string): boolean {
     if (this.moduleKey !== 'equipment') return true;
-    const assignments = this.store.recordsFor('assignments');
-    const activeAssignment = assignments.find(
-      (a) => a['equipment'] === equipmentId && a['status'] === 'ACTIVE'
-    );
-    return !activeAssignment;
+    return !this.activeAssignmentFor(equipmentId);
+  }
+  /** Sólo se puede instalar una unidad libre y en buen estado. */
+  canAssignEquipment(record: OperationalRecord): boolean {
+    return String(record['status'] ?? '') === 'AVAILABLE' && this.canCreateNewAssignment(record.id);
+  }
+  /** Cierra la asignación activa y regresa la unidad al inventario. */
+  returnEquipment(record: OperationalRecord): void {
+    const assignment = this.activeAssignmentFor(record.id);
+    if (assignment) {
+      this.store.update('assignments', assignment.id, {
+        status: 'RETURNED',
+        returnedAt: new Date().toISOString().slice(0, 10),
+      });
+    }
+    this.store.update('equipment', record.id, {
+      status: 'AVAILABLE',
+      assignedTo: '',
+      assignedToId: '',
+    });
+  }
+  equipmentNeedsRepair(record: OperationalRecord): boolean {
+    return ['DAMAGED', 'IN_REPAIR'].includes(String(record['status'] ?? ''));
+  }
+  /** Reporta una falla o devuelve la unidad reparada al inventario. */
+  toggleEquipmentFault(record: OperationalRecord): void {
+    this.store.update('equipment', record.id, {
+      status: this.equipmentNeedsRepair(record) ? 'AVAILABLE' : 'DAMAGED',
+    });
   }
   openNewAssignmentForm(equipmentId: string): void {
     this.router.navigate(['/assignments'], {

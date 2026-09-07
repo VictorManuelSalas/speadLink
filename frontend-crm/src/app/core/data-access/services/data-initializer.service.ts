@@ -141,7 +141,8 @@ export class DataInitializerService {
       purchaseCost: equipment.purchaseCost,
       purchaseDate: equipment.purchaseDate,
       assignedToId: equipment.assignedToId,
-      notes: equipment.notes,
+      assignedTo: equipment.assignedTo ?? '',
+      description: equipment.description,
     } as OperationalRecord));
   }
 
@@ -179,7 +180,7 @@ export class DataInitializerService {
       totalMonthly: contract.totalMonthly,
       status: contract.status,
       items: JSON.stringify(contract.items),
-      notes: contract.notes,
+      description: contract.description,
     } as OperationalRecord));
   }
 

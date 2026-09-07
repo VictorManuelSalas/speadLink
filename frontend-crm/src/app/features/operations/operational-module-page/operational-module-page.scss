@@ -533,6 +533,17 @@ table.is-dense td {
   border-color: #93c5fd;
   box-shadow: 0 0 0 3px #dbeafe;
 }
+/* Campo generado por el sistema: se lee, no se edita. */
+.record-form input.is-generated {
+  background: var(--color-muted);
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  cursor: default;
+}
+.record-form input.is-generated:focus {
+  border-color: var(--color-border);
+  box-shadow: none;
+}
 .record-form input.error,
 .record-form textarea.error {
   border-color: #ef4444;

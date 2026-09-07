@@ -96,7 +96,7 @@
             ><span>Plantilla</span
             ><select #template (change)="applyTemplate(template.value)">
               <option value="">Sin plantilla</option>
-              @for (item of templates; track item.id) {
+              @for (item of templates(); track item.id) {
                 <option [value]="item.id">{{ item.name }}</option>
               }
             </select></label
@@ -118,6 +118,7 @@
           <app-attachment-picker
             label="Adjuntar archivos"
             [resetKey]="attachmentReset()"
+            [initial]="seededAttachments()"
             (attachmentsChange)="attachments.set($event)"
           />
         </div>

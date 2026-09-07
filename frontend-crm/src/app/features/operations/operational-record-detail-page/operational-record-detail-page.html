@@ -162,6 +162,15 @@
                   }}</b>
                 } @else if (column.type === 'date') {
                   <b>{{ asString(item[column.key]) | date: 'dd MMM y' : '' : i18n.locale() }}</b>
+                } @else if (moduleKey === 'equipment' && column.key === 'assignedTo') {
+                  <!-- El valor es el registro de la asignación; el cliente va debajo. -->
+                  @if (activeAssignmentFor(item.id); as assignment) {
+                    <a class="assignment-value" [routerLink]="['/assignments', assignment.id]">
+                      <b>Asignación {{ assignment['name'] || assignment.id }}</b><i>↗</i>
+                    </a>
+                  } @else {
+                    <b>—</b>
+                  }
                 } @else if (moduleKey === 'leads' && column.key === 'phone') {
                   <a
                     class="whatsapp-value"
@@ -181,7 +190,7 @@
                 } @else {
                   <b>{{ item[column.key] || '—' }}</b>
                 }
-                <small>{{ statHelper(column.key) }}</small>
+                <small>{{ summaryHelper(column.key, item) }}</small>
               </div>
             }
           }
@@ -199,6 +208,8 @@
           <app-record-emails-section
             [recordId]="item.id"
             [recipientEmail]="asString(item['email'] || '')"
+            [module]="moduleKey"
+            [record]="$any(item)"
           />
         } @else if (activeTab() === 'Actividad') {
           <app-record-activity-section [recordId]="item.id" />
@@ -421,6 +432,44 @@
                       <!-- En los demás módulos el encabezado ya trae "Agregar nota". -->
                       <button type="button" (click)="openNoteComposerQuickAction()">
                         ＋ Agregar nota
+                      </button>
+                    }
+                    @if (moduleKey === 'contracts' && contractHasCustomer(item)) {
+                      <button type="button" (click)="sendContractByEmail(item)">
+                        ✉ Enviar contrato por correo
+                      </button>
+                      <a
+                        class="quick-action-link"
+                        [href]="contractWhatsappUrl(item)"
+                        target="_blank"
+                        rel="noopener"
+                      >
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                          <path d="M20 11.6a8 8 0 0 1-11.8 7l-4.2 1 1.1-4A8 8 0 1 1 20 11.6Z" />
+                          <path
+                            d="M8.5 7.8c.3-.4.6-.3.9-.1l1.1 2c.1.3 0 .5-.2.7l-.6.6c.7 1.5 1.8 2.6 3.3 3.2l.6-.7c.2-.2.5-.3.7-.2l2 1c.3.2.4.5.3.8-.3 1-1.2 1.7-2.3 1.7-3.5-.3-7.4-4.2-7.7-7.7 0-.5.3-1 .6-1.3Z"
+                          />
+                        </svg>
+                        Enviar por WhatsApp
+                      </a>
+                    }
+                    @if (moduleKey === 'equipment') {
+                      @if (canAssignEquipment(item)) {
+                        <button type="button" (click)="openNewAssignmentForm(item.id)">
+                          ⇄ Asignar a cliente
+                        </button>
+                      }
+                      @if (!canCreateNewAssignment(item.id)) {
+                        <button type="button" (click)="returnEquipment(item)">
+                          ↩ Registrar devolución
+                        </button>
+                      }
+                      <button type="button" (click)="toggleEquipmentFault(item)">
+                        {{
+                          equipmentNeedsRepair(item)
+                            ? '✓ Marcar como reparado'
+                            : '⚠ Reportar falla'
+                        }}
                       </button>
                     }
                     @if (moduleKey === 'services') {
@@ -1012,6 +1061,8 @@
           <app-lead-email-modal
             [seed]="emailComposeSeed()"
             [composeKey]="emailComposeKey()"
+            [module]="moduleKey"
+            [record]="$any(item)"
             (closed)="closeEmailComposer()"
             (submitted)="saveLeadEmail(item.id, $event.value, $event.draft)"
           />

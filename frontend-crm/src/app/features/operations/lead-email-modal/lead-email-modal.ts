@@ -3,13 +3,19 @@ import {
   ChangeDetectionStrategy,
   Component,
   HostListener,
+  computed,
   effect,
+  inject,
   input,
   output,
   signal,
   untracked,
 } from '@angular/core';
 import { CrmAttachment } from '../../../core/models/customer';
+import { LanguageService } from '../../../core/i18n/language.service';
+import { TemplateStore } from '../../../core/data-access/templates/template-store';
+import { TemplateModule } from '../../../core/data-access/templates/template.model';
+import { ORGANIZATION } from '../printable-document/printable-document.data';
 import { AttachmentPicker } from '../../../shared/attachment-picker';
 import { OperationalEmail } from '../operational-store';
 
@@ -26,26 +32,6 @@ export interface LeadEmailSeed extends Partial<LeadEmailFormValue> {
   title?: string;
 }
 
-const EMAIL_TEMPLATES = [
-  {
-    id: 'first-contact',
-    name: 'Primer contacto',
-    subject: 'Conoce las soluciones de SpeedLink',
-    body: 'Hola,\n\nGracias por tu interés en SpeedLink. Nos gustaría conocer tus necesidades de conectividad y ayudarte a encontrar el plan ideal.\n\n¿Podemos agendar una llamada breve?\n\nSaludos,\nAndrea Torres',
-  },
-  {
-    id: 'proposal',
-    name: 'Envío de propuesta',
-    subject: 'Propuesta comercial de SpeedLink',
-    body: 'Hola,\n\nAdjunto encontrarás la propuesta preparada para tu empresa. Incluye cobertura, velocidad, mensualidad y condiciones del servicio.\n\nQuedo atenta a tus comentarios.\n\nSaludos,\nAndrea Torres',
-  },
-  {
-    id: 'follow-up',
-    name: 'Seguimiento',
-    subject: 'Seguimiento a nuestra propuesta',
-    body: 'Hola,\n\nQuería dar seguimiento a la información que te compartimos. ¿Tuviste oportunidad de revisarla? Con gusto puedo resolver cualquier duda.\n\nSaludos,\nAndrea Torres',
-  },
-] as const;
 
 @Component({
   selector: 'app-lead-email-modal',
@@ -58,18 +44,27 @@ export class LeadEmailModal {
   readonly preview = input<OperationalEmail | null>(null);
   readonly seed = input<LeadEmailSeed>({});
   readonly composeKey = input(0);
+  /** Módulo desde el que se redacta: filtra las plantillas disponibles. */
+  readonly module = input<TemplateModule>('');
+  /** Registro con el que se resuelven las variables de la plantilla. */
+  readonly record = input<Record<string, unknown> | null>(null);
   readonly closed = output<void>();
   readonly submitted = output<{ value: LeadEmailFormValue; draft: boolean }>();
   readonly resend = output<OperationalEmail>();
   readonly forward = output<OperationalEmail>();
   readonly edit = output<OperationalEmail>();
-  readonly templates = EMAIL_TEMPLATES;
+  private readonly templateStore = inject(TemplateStore);
+  private readonly i18n = inject(LanguageService);
+  /** Plantillas de correo activas para este módulo, más las generales. */
+  readonly templates = computed(() => this.templateStore.forModule(this.module(), 'email'));
   readonly to = signal('');
   readonly cc = signal('');
   readonly from = signal('andrea.torres@speedlink.mx');
   readonly subject = signal('');
   readonly body = signal('');
   readonly attachments = signal<ReadonlyArray<CrmAttachment>>([]);
+  /** Adjuntos que llegaron en el borrador, para precargar el selector. */
+  readonly seededAttachments = signal<ReadonlyArray<CrmAttachment>>([]);
   readonly attachmentReset = signal(0);
   readonly composerTitle = signal('Redactar mensaje');
   constructor() {
@@ -83,6 +78,7 @@ export class LeadEmailModal {
         this.subject.set(seed.subject ?? '');
         this.body.set(seed.body ?? '');
         this.attachments.set(seed.attachments ?? []);
+        this.seededAttachments.set(seed.attachments ?? []);
         this.composerTitle.set(seed.title ?? 'Redactar mensaje');
         this.attachmentReset.update((value) => value + 1);
       });
@@ -98,11 +94,33 @@ export class LeadEmailModal {
       this.to().trim() || this.subject().trim() || this.body().trim() || this.attachments().length,
     );
   }
+  /** Aplica la plantilla con las variables ya resueltas contra el registro. */
   applyTemplate(id: string): void {
-    const template = this.templates.find((item) => item.id === id);
+    const template = this.templates().find((item) => item.id === id);
     if (!template) return;
-    this.subject.set(template.subject);
-    this.body.set(template.body);
+    const rendered = this.templateStore.render(template, {
+      record: this.record() ?? undefined,
+      organization: ORGANIZATION,
+      userName: 'Andrea Torres',
+      formatMoney: (value) =>
+        new Intl.NumberFormat(this.i18n.locale(), {
+          style: 'currency',
+          currency: 'MXN',
+          maximumFractionDigits: 2,
+        }).format(Number(value) || 0),
+      formatDate: (value) => {
+        const date = new Date(String(value ?? ''));
+        return Number.isNaN(date.getTime())
+          ? ''
+          : new Intl.DateTimeFormat(this.i18n.locale(), {
+              day: '2-digit',
+              month: 'long',
+              year: 'numeric',
+            }).format(date);
+      },
+    });
+    this.subject.set(rendered.subject);
+    this.body.set(rendered.body);
   }
   submit(draft: boolean): void {
     if ((draft && !this.hasContent()) || (!draft && !this.canSend())) return;

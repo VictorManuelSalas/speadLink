@@ -15,7 +15,7 @@ import { LookupMapper } from '../utils/lookup-mapper';
 // ============================================================================
 
 export class ContractsGenerator extends BaseGenerator<ContractRecord> {
-  private customerIds = ['SL-1040', 'SL-1041', 'SL-1042', 'SL-1043', 'SL-1044'];
+  private customerIds = LookupMapper.getAllCustomerIds();
   /** Catálogo real de servicios; se inyecta antes de generar. */
   private internetPlans: ReadonlyArray<{ id: string; price: number }> = [];
   private addOns: ReadonlyArray<{ id: string; price: number }> = [];
@@ -83,7 +83,7 @@ export class ContractsGenerator extends BaseGenerator<ContractRecord> {
         totalMonthly: Math.round(totalMonthly * 100) / 100,
         status: status,
         items: items,
-        notes: `Contrato de ${status === 'ACTIVE' ? 'servicio activo' : 'servicio'}`,
+        description: `Contrato de ${status === 'ACTIVE' ? 'servicio activo' : 'servicio'}`,
       },
     );
   }
@@ -132,7 +132,7 @@ export class ContractsGenerator extends BaseGenerator<ContractRecord> {
         totalMonthly: Math.round(totalMonthly * 100) / 100,
         status: 'ACTIVE' as const,
         items: items,
-        notes: 'Contrato de servicio de Internet',
+        description: 'Contrato de servicio de Internet',
       },
     );
   }
@@ -143,7 +143,7 @@ export class ContractsGenerator extends BaseGenerator<ContractRecord> {
 // ============================================================================
 
 export class AssignmentsGenerator extends BaseGenerator<AssignmentRecord> {
-  private customerIds = ['SL-1040', 'SL-1041', 'SL-1042', 'SL-1043', 'SL-1044'];
+  private customerIds = LookupMapper.getAllCustomerIds();
   /** Equipo real del inventario; se inyecta antes de generar. */
   private equipmentPool: ReadonlyArray<{ id: string; name: string; serialNumber?: string }> = [];
 

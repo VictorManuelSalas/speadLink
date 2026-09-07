@@ -14,7 +14,7 @@ import { LookupMapper } from '../utils/lookup-mapper';
 // ============================================================================
 
 export class InvoicesGenerator extends BaseGenerator<InvoiceRecord> {
-  private customerIds = ['SL-1040', 'SL-1041', 'SL-1042', 'SL-1043', 'SL-1044'];
+  private customerIds = LookupMapper.getAllCustomerIds();
 
   generate(index: number = 0): InvoiceRecord {
     const customerId = this.customerIds[index % this.customerIds.length];
@@ -97,7 +97,7 @@ export class InvoicesGenerator extends BaseGenerator<InvoiceRecord> {
 // ============================================================================
 
 export class PaymentsGenerator extends BaseGenerator<PaymentRecord> {
-  private customerIds = ['SL-1040', 'SL-1041', 'SL-1042', 'SL-1043', 'SL-1044'];
+  private customerIds = LookupMapper.getAllCustomerIds();
 
   generate(index: number = 0): PaymentRecord {
     const customerId = this.customerIds[index % this.customerIds.length];

@@ -36,3 +36,32 @@ header p {
 :host ::ng-deep .danger-action {
   color: #dc2626;
 }
+/* Acción que sale de la app (WhatsApp): mismo aspecto que los botones. */
+:host ::ng-deep .quick-action-link {
+  width: 100%;
+  min-height: 37px;
+  padding: 0 11px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: 10px;
+  font-weight: 700;
+  text-decoration: none;
+}
+:host ::ng-deep .quick-action-link svg {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  padding: 2px;
+  border-radius: 50%;
+  background: #22c55e;
+  fill: none;
+  stroke: #fff;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}

@@ -139,6 +139,14 @@ export const routes: Routes = [
             (m) => m.SettingsPortalPage,
           ),
       },
+      {
+        path: 'settings/templates',
+        title: 'Plantillas | SpeedLink CRM',
+        loadComponent: () =>
+          import('./features/settings/settings-templates-page/settings-templates-page').then(
+            (m) => m.SettingsTemplatesPage,
+          ),
+      },
       ...(
         [
           ['organization', 'organization', 'Organización'],
@@ -146,7 +154,6 @@ export const routes: Routes = [
           ['roles', 'roles', 'Roles y permisos'],
           ['smtp', 'smtp', 'Servidor SMTP'],
           ['sms', 'sms', 'Mensajería SMS'],
-          ['templates', 'templates', 'Plantillas'],
           ['modules', 'modules', 'Módulos personalizados'],
           ['workflows', 'workflows', 'Flujos de trabajo'],
           ['schedules', 'schedules', 'Programaciones'],

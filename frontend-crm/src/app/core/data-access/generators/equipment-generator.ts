@@ -7,27 +7,49 @@ import { BaseGenerator } from './base-generator';
 import type { EquipmentRecord } from '../models/operational-records';
 import { IdGenerator } from '../utils/id-generator';
 import { FakerHelpers } from '../utils/faker-helpers';
+import { LookupMapper } from '../utils/lookup-mapper';
 
 export class EquipmentGenerator extends BaseGenerator<EquipmentRecord> {
+  /**
+   * Cada modelo lleva su marca. Antes la marca se sorteaba aparte con
+   * `FakerHelpers.randomBrand()` y salían combinaciones imposibles, como
+   * marca "Mikrotik" con modelo "Ubiquiti LiteBeam 5AC".
+   */
   private equipmentTypes = [
     {
       name: 'Antena CPE',
-      models: ['Ubiquiti LiteBeam 5AC', 'Ubiquiti NanoStation 5AC', 'Mikrotik LHG 5'],
+      models: [
+        { brand: 'Ubiquiti', model: 'LiteBeam 5AC' },
+        { brand: 'Ubiquiti', model: 'NanoStation 5AC' },
+        { brand: 'Mikrotik', model: 'LHG 5' },
+      ],
       cost: 1200,
     },
     {
       name: 'Router Wi-Fi',
-      models: ['TP-Link Archer C6', 'TP-Link C3150', 'Netgear Nighthawk'],
+      models: [
+        { brand: 'TP-Link', model: 'Archer C6' },
+        { brand: 'TP-Link', model: 'C3150' },
+        { brand: 'Netgear', model: 'Nighthawk' },
+      ],
       cost: 800,
     },
     {
       name: 'Switch de Red',
-      models: ['Cisco 2950', 'TP-Link LS105G', 'Netgear GS105'],
+      models: [
+        { brand: 'Cisco', model: 'Catalyst 2950' },
+        { brand: 'TP-Link', model: 'LS105G' },
+        { brand: 'Netgear', model: 'GS105' },
+      ],
       cost: 400,
     },
     {
       name: 'Fuente de Poder',
-      models: ['PoE Injector 48V', 'Fuente 12V 2A', 'Fuente 24V 1A'],
+      models: [
+        { brand: 'Ubiquiti', model: 'PoE Injector 48V' },
+        { brand: 'Mikrotik', model: 'Fuente 12V 2A' },
+        { brand: 'Cisco', model: 'Fuente 24V 1A' },
+      ],
       cost: 150,
     },
   ];
@@ -35,7 +57,7 @@ export class EquipmentGenerator extends BaseGenerator<EquipmentRecord> {
   generate(index: number = 0): EquipmentRecord {
     const typeIndex = index % this.equipmentTypes.length;
     const type = this.equipmentTypes[typeIndex];
-    const model = type.models[Math.floor(index / this.equipmentTypes.length) % type.models.length];
+    const unit = type.models[Math.floor(index / this.equipmentTypes.length) % type.models.length];
 
     const status = FakerHelpers.weightedRandomElement(
       ['AVAILABLE', 'ASSIGNED', 'DAMAGED', 'RETIRED'] as const,
@@ -44,19 +66,26 @@ export class EquipmentGenerator extends BaseGenerator<EquipmentRecord> {
 
     const purchaseDate = FakerHelpers.randomDate(180);
 
+    // Sólo clientes que existen en el catálogo real.
+    const customerIds = LookupMapper.getAllCustomerIds();
+    const assignedToId =
+      status === 'ASSIGNED' ? customerIds[index % customerIds.length] : undefined;
+
     return this.createBaseRecord<EquipmentRecord>(
       IdGenerator.generate('EQ', 1000 + index),
       {
         name: type.name,
-        brand: FakerHelpers.randomBrand(),
-        model: model,
+        brand: unit.brand,
+        model: `${unit.brand} ${unit.model}`,
         serialNumber: FakerHelpers.randomSerialNumber(),
         macAddress: IdGenerator.generateMacAddress(),
         status,
         purchaseCost: type.cost + Math.floor(Math.random() * 500),
         purchaseDate: purchaseDate,
-        assignedToId: status === 'ASSIGNED' ? `SL-${1040 + index % 5}` : undefined,
-        notes: `Equipo de ${type.name.toLowerCase()} modelo ${model}`,
+        assignedToId: assignedToId,
+        // Etiqueta del cliente, para no tener que resolver el id en cada vista.
+        assignedTo: assignedToId ? LookupMapper.getCustomerName(assignedToId) : undefined,
+        description: `Equipo de ${type.name.toLowerCase()} modelo ${unit.brand} ${unit.model}`,
       },
     );
   }
@@ -77,6 +106,7 @@ export class EquipmentGenerator extends BaseGenerator<EquipmentRecord> {
       if (Math.random() < 0.6) {
         record.status = 'ASSIGNED';
         record.assignedToId = customerIds[i % customerIds.length];
+        record.assignedTo = LookupMapper.getCustomerName(record.assignedToId);
       }
 
       records.push(record);

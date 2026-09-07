@@ -1,0 +1,239 @@
+<header class="settings-header settings-header--section">
+  <div>
+    <div class="breadcrumbs">
+      <a routerLink="/settings">Ajustes</a><b>›</b><span>Personalización</span><b>›</b
+      ><span>Plantillas</span>
+    </div>
+    <div class="settings-title">
+      <div>
+        <h1>Plantillas</h1>
+        <p>
+          Contenido reutilizable para correo y SMS. Escribe <b>$</b> en el asunto o el cuerpo para
+          insertar un campo del módulo asociado.
+        </p>
+      </div>
+    </div>
+  </div>
+  <button class="button button--primary" (click)="create()">＋ Nueva plantilla</button>
+</header>
+
+<section class="settings-metrics">
+  <article class="settings-metric settings-metric--blue">
+    <span>Plantillas</span><strong>{{ templates().length }}</strong
+    ><small>{{ emailCount() }} de correo</small>
+  </article>
+  <article class="settings-metric settings-metric--green">
+    <span>Activas</span><strong>{{ activeCount() }}</strong
+    ><small>Disponibles al enviar</small>
+  </article>
+  <article class="settings-metric settings-metric--violet">
+    <span>Campos dinámicos</span><strong>{{ fieldGroups()[0].fields.length }}</strong
+    ><small>Según el módulo</small>
+  </article>
+</section>
+
+<section class="settings-content-card">
+  <header class="settings-content-card__header">
+    <div>
+      <h2>Plantillas</h2>
+      <p>{{ templates().length }} {{ templates().length === 1 ? 'plantilla' : 'plantillas' }}</p>
+    </div>
+    <label class="settings-search"
+      ><span>⌕</span
+      ><input
+        type="search"
+        placeholder="Buscar plantilla…"
+        [ngModel]="query()"
+        (ngModelChange)="query.set($event)"
+    /></label>
+  </header>
+
+  <div class="template-list">
+    @for (template of templates(); track template.id) {
+      <article class="template-row">
+        <span class="template-channel template-channel--{{ template.channel }}">{{
+          channelLabel(template.channel)
+        }}</span>
+        <div class="template-main">
+          <b>{{ template.name }}</b>
+          <small>{{ template.subject || template.body }}</small>
+        </div>
+        <span class="template-tag">{{ moduleLabel(template.module) }}</span>
+        <span class="template-tag">{{ template.format === 'html' ? 'HTML' : 'Texto' }}</span>
+        <span class="template-status template-status--{{ template.status | lowercase }}">{{
+          template.status === 'ACTIVE' ? 'Activa' : 'Borrador'
+        }}</span>
+        <small class="template-date">{{ template.updatedAt | date: 'dd MMM y' }}</small>
+        <div class="template-actions">
+          <button type="button" (click)="edit(template)">Editar</button>
+          <button type="button" (click)="duplicate(template)">Duplicar</button>
+          <button class="danger" type="button" (click)="remove(template)">Eliminar</button>
+        </div>
+      </article>
+    } @empty {
+      <p class="template-empty">No hay plantillas que coincidan con la búsqueda.</p>
+    }
+  </div>
+</section>
+
+@if (editorOpen()) {
+  <div class="template-editor-overlay" (click)="close()">
+    <section class="template-editor" (click)="$event.stopPropagation()">
+      <header>
+        <div>
+          <span>PLANTILLA</span>
+          <h2>{{ draft().name || 'Nueva plantilla' }}</h2>
+        </div>
+        <button class="icon-button" type="button" aria-label="Cerrar" (click)="close()">×</button>
+      </header>
+
+      <div class="template-editor__body">
+        <div class="template-form">
+          <label
+            ><span>Nombre *</span>
+            <input
+              type="text"
+              [ngModel]="draft().name"
+              (ngModelChange)="update('name', $event)"
+              placeholder="Envío de contrato"
+          /></label>
+
+          <div class="template-form__row">
+            <label
+              ><span>Canal *</span>
+              <select [ngModel]="draft().channel" (ngModelChange)="setChannel($event)">
+                <option value="email">Correo</option>
+                <option value="sms">SMS / WhatsApp</option>
+              </select></label
+            >
+            <label
+              ><span>Módulo asociado</span>
+              <select [ngModel]="draft().module" (ngModelChange)="setModule($event)">
+                @for (module of modules; track module.value) {
+                  <option [value]="module.value">{{ module.label }}</option>
+                }
+              </select></label
+            >
+          </div>
+
+          <div class="template-form__row">
+            <label
+              ><span>Formato</span>
+              <select
+                [ngModel]="draft().format"
+                (ngModelChange)="setFormat($event)"
+                [disabled]="draft().channel === 'sms'"
+              >
+                <option value="text">Texto plano</option>
+                <option value="html">HTML</option>
+              </select></label
+            >
+            <label
+              ><span>Estado</span>
+              <select [ngModel]="draft().status" (ngModelChange)="update('status', $event)">
+                <option value="ACTIVE">Activa</option>
+                <option value="DRAFT">Borrador</option>
+              </select></label
+            >
+          </div>
+
+          @if (draft().channel === 'email') {
+            <label
+              ><span>Asunto *</span>
+              <input
+                #subjectInput
+                type="text"
+                [ngModel]="draft().subject"
+                (ngModelChange)="update('subject', $event)"
+                (keydown)="handleKey($event)"
+                placeholder="Tu contrato ${'{'}contract.number{'}'}"
+            /></label>
+          }
+
+          <label class="template-body-label">
+            <span>
+              Contenido *
+              <button
+                class="field-toggle"
+                type="button"
+                (click)="fieldPickerOpen.set(!fieldPickerOpen())"
+              >
+                ＄ Insertar campo
+              </button>
+            </span>
+            <textarea
+              #bodyInput
+              rows="12"
+              [ngModel]="draft().body"
+              (ngModelChange)="update('body', $event)"
+              (keydown)="handleKey($event)"
+              [placeholder]="
+                draft().format === 'html'
+                  ? '<p>Hola ' + '${' + 'customer.name}</p>'
+                  : 'Escribe el contenido…'
+              "
+            ></textarea>
+          </label>
+
+          @if (fieldPickerOpen()) {
+            <div class="field-picker">
+              <header>
+                <b>Campos disponibles</b>
+                <small>Se sustituyen al usar la plantilla</small>
+              </header>
+              @for (group of fieldGroups(); track group.title) {
+                <div class="field-group">
+                  <small>{{ group.title }}</small>
+                  <div>
+                    @for (field of group.fields; track field.token) {
+                      <button type="button" (click)="insertField(field, bodyInput)">
+                        <b>{{ field.label }}</b><code>${{ '{' }}{{ field.token }}{{ '}' }}</code>
+                      </button>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          }
+
+          @if (unknownTokens().length) {
+            <p class="template-warning">
+              Estas variables no existen para el módulo elegido y saldrán vacías:
+              {{ unknownTokens().join(', ') }}
+            </p>
+          }
+        </div>
+
+        <aside class="template-preview">
+          <header>
+            <b>Vista previa</b>
+            <small>Con datos de ejemplo del módulo</small>
+          </header>
+          @if (draft().channel === 'email') {
+            <div class="preview-subject">
+              <small>Asunto</small>
+              <b>{{ preview().subject || '—' }}</b>
+            </div>
+          }
+          <pre>{{ preview().body || 'El contenido aparecerá aquí.' }}</pre>
+        </aside>
+      </div>
+
+      <footer>
+        <button class="button" type="button" (click)="close()">Cancelar</button>
+        <button
+          class="button button--primary"
+          type="button"
+          [disabled]="!canSave()"
+          (click)="save()"
+        >
+          Guardar plantilla
+        </button>
+      </footer>
+    </section>
+  </div>
+}
+
+@if (toast()) {
+  <div class="settings-toast">{{ toast() }}</div>
+}

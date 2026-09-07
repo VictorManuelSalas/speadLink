@@ -157,7 +157,6 @@ export class OperationalModulePage {
       if (this.moduleKey === 'contracts') {
         this.openCreate({
           client: clientId,
-          contractNumber: `SL-CTR-${new Date().getFullYear()}-${String(this.records().length + 818).padStart(4, '0')}`,
           startDate: new Date().toISOString().slice(0, 10),
           status: 'PENDING_SIGNATURE',
           notes: serviceId
@@ -348,11 +347,37 @@ export class OperationalModulePage {
       ] ?? '▦'
     );
   }
+  /**
+   * Siguiente número de contrato libre: `CTR-<año>-<consecutivo>`.
+   *
+   * Se calcula sobre los números ya usados, no sobre el total de registros:
+   * contar registros repetiría folios si alguno se archiva.
+   */
+  private nextContractNumber(): string {
+    const prefix = `CTR-${new Date().getFullYear()}-`;
+    const used = new Set(
+      this.store.recordsFor('contracts').map((record) => String(record['contractNumber'] ?? '')),
+    );
+    const highest = [...used]
+      .filter((number) => number.startsWith(prefix))
+      .reduce((max, number) => Math.max(max, Number(number.slice(prefix.length)) || 0), 3000);
+    let next = highest + 1;
+    while (used.has(`${prefix}${String(next).padStart(4, '0')}`)) next++;
+    return `${prefix}${String(next).padStart(4, '0')}`;
+  }
+  /** Campos que el usuario no captura porque el sistema los genera. */
+  isGeneratedField(key: string): boolean {
+    return this.moduleKey === 'contracts' && key === 'contractNumber';
+  }
   openCreate(seed: Record<string, string> = {}): void {
     this.editingContractId.set(null);
     this.editingContract.set(null);
     const initialDraft =
-      this.moduleKey === 'leads' ? { status: 'NEW', ...seed } : seed;
+      this.moduleKey === 'leads'
+        ? { status: 'NEW', ...seed }
+        : this.moduleKey === 'contracts'
+          ? { ...seed, contractNumber: this.nextContractNumber() }
+          : seed;
     this.draft.set(initialDraft);
     this.validationErrors.set(new Set());
     this.contractItems.set(

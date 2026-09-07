@@ -52,12 +52,14 @@ export const MODULES_WITH_DOCUMENT: ReadonlyArray<OperationalModuleKey> = [
   'invoices',
   'assignments',
   'payments',
+  'contracts',
 ];
 
 export const DOCUMENT_ACTION_LABEL: Partial<Record<OperationalModuleKey, string>> = {
   invoices: '⇩ Descargar factura',
   assignments: '⇩ Descargar acuse de entrega',
   payments: '⇩ Descargar comprobante',
+  contracts: '⇩ Descargar contrato',
 };
 
 export const ORGANIZATION = {
@@ -75,6 +77,8 @@ export interface DocumentContext {
   readonly statusLabel: (value: unknown) => string;
   /** Pagos aplicados a la factura, si el módulo los tiene. */
   readonly payments?: ReadonlyArray<OperationalRecord>;
+  /** Partidas del contrato, ya resueltas contra el catálogo de servicios. */
+  readonly contractItems?: ReadonlyArray<{ name: string; quantity: number; unitPrice: number }>;
 }
 
 function text(value: unknown, fallback = '—'): string {
@@ -221,11 +225,70 @@ function buildPayment(context: DocumentContext): PrintableDocument {
   };
 }
 
+function buildContract(context: DocumentContext): PrintableDocument {
+  const { record, formatMoney, formatDate, statusLabel } = context;
+  const items = context.contractItems ?? [];
+
+  return {
+    title: 'Contrato de servicio',
+    reference: text(record['contractNumber'] ?? record.id),
+    issuedAt: formatDate(record['startDate']),
+    sections: [
+      {
+        title: 'Cliente',
+        rows: [
+          { label: 'Nombre', value: text(record['client']), strong: true },
+          { label: 'Clave de cliente', value: text(record['clientId']) },
+        ],
+      },
+      {
+        title: 'Vigencia',
+        rows: [
+          { label: 'Inicio', value: formatDate(record['startDate']) },
+          { label: 'Vencimiento', value: formatDate(record['endDate']) },
+          { label: 'Fecha de firma', value: formatDate(record['signedAt']) },
+          { label: 'Estado', value: statusLabel(record['status']) },
+        ],
+      },
+    ],
+    tables: [
+      {
+        title: 'Servicios contratados',
+        columns: [
+          { label: 'Servicio' },
+          { label: 'Cantidad', align: 'right' },
+          { label: 'Precio unitario', align: 'right' },
+          { label: 'Subtotal', align: 'right' },
+        ],
+        rows: items.map((item) => [
+          item.name,
+          String(item.quantity),
+          formatMoney(item.unitPrice),
+          formatMoney(item.quantity * item.unitPrice),
+        ]),
+        empty: 'Sin servicios registrados.',
+      },
+    ],
+    total: {
+      label: 'Mensualidad total',
+      value: formatMoney(record['totalMonthly']),
+      strong: true,
+    },
+    notes: text(record['description'], ''),
+    signatureLabel: 'Nombre y firma del cliente',
+    disclaimer:
+      'Al firmar, el cliente acepta las condiciones del servicio contratado con ' +
+      ORGANIZATION.name +
+      '. Documento informativo emitido por el CRM; no es un comprobante fiscal digital (CFDI).',
+  };
+}
+
 const BUILDERS: Partial<Record<OperationalModuleKey, (context: DocumentContext) => PrintableDocument>> =
   {
     invoices: buildInvoice,
     assignments: buildAssignment,
     payments: buildPayment,
+    contracts: buildContract,
   };
 
 export function buildPrintableDocument(

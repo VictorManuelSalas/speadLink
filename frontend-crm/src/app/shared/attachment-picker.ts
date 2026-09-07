@@ -19,6 +19,8 @@ import { CrmAttachment } from '../core/models/customer';
 export class AttachmentPicker implements OnDestroy {
   readonly label = input('Adjuntar fotos o archivos');
   readonly resetKey = input(0);
+  /** Archivos ya adjuntos al abrir (p. ej. un PDF generado por el CRM). */
+  readonly initial = input<ReadonlyArray<CrmAttachment>>([]);
   readonly preserveUrls = input(true);
   readonly attachmentsChange = output<ReadonlyArray<CrmAttachment>>();
   readonly items = signal<ReadonlyArray<CrmAttachment>>([]);
@@ -27,7 +29,15 @@ export class AttachmentPicker implements OnDestroy {
   constructor() {
     effect(() => {
       this.resetKey();
-      untracked(() => this.clear(!this.preserveUrls()));
+      const initial = this.initial();
+      untracked(() => {
+        this.clear(!this.preserveUrls());
+        // Se repuebla tras limpiar: si no, el reset dejaría fuera lo precargado.
+        if (initial.length) {
+          this.items.set([...initial]);
+          this.attachmentsChange.emit(this.items());
+        }
+      });
     });
   }
 

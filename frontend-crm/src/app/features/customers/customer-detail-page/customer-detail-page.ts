@@ -34,6 +34,8 @@ import { OperationalStore } from '../../operations/operational-store';
 import { CalendarStore } from '../../calendar/calendar-store';
 import { buildPrintableDocument } from '../../operations/printable-document/printable-document.data';
 import { DocumentPdfService } from '../../operations/printable-document/document-pdf.service';
+import { PendingEmailService } from '../../operations/pending-email.service';
+import { LeadEmailSeed } from '../../operations/lead-email-modal/lead-email-modal';
 import JSZip from 'jszip';
 import { buildAccountStatement } from './account-statement';
 import {
@@ -98,12 +100,14 @@ export class CustomerDetailPage {
   private readonly operationalStore = inject(OperationalStore);
   private readonly calendarStore = inject(CalendarStore);
   private readonly pdf = inject(DocumentPdfService);
+  private readonly pendingEmail = inject(PendingEmailService);
   private readonly router = inject(Router);
   readonly customer = signal<Customer | undefined>(undefined);
   readonly loading = signal(true);
   readonly activeTab = signal('Resumen');
   readonly changePlanConfirmOpen = signal(false);
-  readonly composeEmail = signal(false);
+  readonly composeEmailKey = signal(0);
+  readonly emailSeed = signal<LeadEmailSeed | null>(null);
   readonly noteDraft = signal('');
   readonly noteAttachments = signal<ReadonlyArray<CrmAttachment>>([]);
   readonly noteAttachmentReset = signal(0);
@@ -189,9 +193,9 @@ export class CustomerDetailPage {
   }
   /** Lleva a Correos y abre el redactor, sin un clic extra. */
   composeMessage(): void {
+    this.emailSeed.set(null);
     this.activeTab.set('Correos');
-    this.composeEmail.set(true);
-    setTimeout(() => this.composeEmail.set(false));
+    this.composeEmailKey.update((key) => key + 1);
   }
   recordString(value: string | number | boolean | undefined): string {
     return String(value ?? '');
@@ -274,7 +278,16 @@ export class CustomerDetailPage {
       .pipe(switchMap((params) => this.api.getCustomer(params.get('id') ?? '')))
       .subscribe((customer) => {
         this.customer.set(customer);
-        if (customer) this.hydrateSharedSections(customer);
+        if (customer) {
+          this.hydrateSharedSections(customer);
+          // Un módulo pudo dejar un correo listo (p. ej. enviar un contrato).
+          const seed = this.pendingEmail.take(customer.id);
+          if (seed) {
+            this.emailSeed.set(seed);
+            this.activeTab.set('Correos');
+            this.composeEmailKey.update((key) => key + 1);
+          }
+        }
         this.loading.set(false);
       });
   }

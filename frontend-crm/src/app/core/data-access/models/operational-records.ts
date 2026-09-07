@@ -96,7 +96,8 @@ export interface EquipmentRecord extends BaseOperationalRecord {
   purchaseCost?: number;
   purchaseDate?: string;
   assignedToId?: string; // Links to Customer ID
-  notes?: string;
+  assignedTo?: string; // Lookup: nombre del cliente
+  description?: string;
 }
 
 // ============================================================================
@@ -150,7 +151,7 @@ export interface ContractRecord extends BaseOperationalRecord {
   totalMonthly: number;
   status: ContractStatus;
   items: ContractItem[];
-  notes?: string;
+  description?: string;
 }
 
 // ============================================================================

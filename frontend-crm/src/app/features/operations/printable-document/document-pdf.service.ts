@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { jsPDF } from 'jspdf';
 import { DocumentTable, ORGANIZATION, PrintableDocument } from './printable-document.data';
+import { CrmAttachment } from '../../../core/models/customer';
 
 /** Márgenes y medidas de la hoja, en milímetros. */
 const PAGE = {
@@ -28,6 +29,25 @@ const COLOR = {
 @Injectable({ providedIn: 'root' })
 export class DocumentPdfService {
   download(document: PrintableDocument, fileName?: string): void {
+    const pdf = this.render(document);
+    pdf.save(fileName ?? this.fileNameFor(document));
+  }
+
+  /** El mismo PDF como adjunto de correo, sin pasar por el disco. */
+  toAttachment(document: PrintableDocument, fileName?: string): CrmAttachment {
+    const blob = this.render(document).output('blob') as Blob;
+    const name = fileName ?? this.fileNameFor(document);
+    return {
+      id: `doc-${name}`,
+      fileName: name,
+      mimeType: 'application/pdf',
+      size: blob.size,
+      url: URL.createObjectURL(blob),
+      createdAt: new Date().toISOString(),
+    };
+  }
+
+  private render(document: PrintableDocument): jsPDF {
     const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
     const contentWidth = PAGE.width - PAGE.marginX * 2;
     let y: number = PAGE.marginTop;
@@ -150,7 +170,7 @@ export class DocumentPdfService {
       pdf.text(disclaimer, PAGE.marginX, footerY);
     }
 
-    pdf.save(fileName ?? this.fileNameFor(document));
+    return pdf;
   }
 
   /** Reparte el ancho útil entre las columnas y devuelve la x de cada una. */

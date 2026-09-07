@@ -70,6 +70,9 @@
       <textarea #textarea rows="4" [required]="field.required" [value]="draft()[field.key] || ''"
         [placeholder]="field.placeholder || ''" (input)="setDraft(field.key, textarea.value)"
         [class.error]="getFieldError(field.key)"></textarea>
+      } @else if (isGeneratedField(field.key)) {
+      <!-- Lo genera el sistema y debe ser único: se muestra, no se captura. -->
+      <input class="is-generated" type="text" [value]="draft()[field.key] || ''" readonly tabindex="-1" />
       } @else {
       <input #input [type]="inputType(field.key, field.type)" [required]="field.required" [min]="field.min ?? null"
         [max]="field.max ?? null" [value]="draft()[field.key] || ''" [placeholder]="field.placeholder || ''"
