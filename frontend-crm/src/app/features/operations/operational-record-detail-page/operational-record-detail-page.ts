@@ -201,9 +201,11 @@ export class OperationalRecordDetailPage {
               ? this.recordFiles(id).length
               : label === 'Correos'
                 ? this.emails(id).length
-                : (label === 'Contratos' || label === 'Asignaciones') && record
-                  ? this.relatedItems(record).length
-                  : undefined,
+                : label === 'Pagos'
+                  ? this.invoicePayments().length
+                  : (label === 'Contratos' || label === 'Asignaciones') && record
+                    ? this.relatedItems(record).length
+                    : undefined,
     }));
   }
   setActiveTab(value: string): void {
@@ -224,10 +226,14 @@ export class OperationalRecordDetailPage {
   readonly pinNewNote = signal(false);
   readonly selectedNoteId = signal<string | null>(null);
   readonly attachments = signal<ReadonlyArray<CrmAttachment>>([]);
+  /** Archivos con los que se precarga el selector al editar una nota. */
+  readonly editingNoteAttachments = signal<ReadonlyArray<CrmAttachment>>([]);
   readonly attachmentReset = signal(0);
   readonly uploadModalOpen = signal(false);
   readonly fileMenuId = signal<string | null>(null);
   readonly paymentMenuId = signal<string | null>(null);
+  readonly paymentToDelete = signal<OperationalRecord | null>(null);
+  readonly paymentMenuPosition = signal<{ top: number; left: number } | null>(null);
   readonly activityModule = signal('');
   readonly activityType = signal<'' | 'CREATE' | 'EDIT' | 'DELETE'>('');
   readonly activityDate = signal('');
@@ -1143,17 +1149,42 @@ Consúltalo aquí: ${this.recordLink()}`;
   }
   togglePaymentMenu(event: MouseEvent, paymentId: string): void {
     event.stopPropagation();
-    this.paymentMenuId.set(this.paymentMenuId() === paymentId ? null : paymentId);
+    const opening = this.paymentMenuId() !== paymentId;
+    this.paymentMenuId.set(opening ? paymentId : null);
+    if (opening) this.positionPaymentMenu(event.currentTarget as HTMLElement);
+  }
+  /**
+   * El menú se posiciona en coordenadas de viewport porque la tabla vive en un
+   * contenedor con `overflow`, que recortaría un menú posicionado dentro.
+   * Si no cabe hacia abajo, se abre hacia arriba.
+   */
+  private positionPaymentMenu(trigger: HTMLElement): void {
+    const rect = trigger.getBoundingClientRect();
+    const menuHeight = 132;
+    const menuWidth = 168;
+    const openUpward = rect.bottom + menuHeight + 8 > window.innerHeight;
+    this.paymentMenuPosition.set({
+      top: Math.max(8, openUpward ? rect.top - menuHeight - 6 : rect.bottom + 6),
+      // El `max` evita que se salga por la izquierda en ventanas angostas.
+      left: Math.max(8, Math.min(rect.right - menuWidth, window.innerWidth - menuWidth - 8)),
+    });
   }
   deleteRecordFile(recordId: string, fileId: string): void {
     this.store.deleteAttachment(recordId, fileId);
     this.fileMenuId.set(null);
   }
-  startEditingNote(noteId: string, message: string, pinned: boolean): void {
+  startEditingNote(recordId: string, noteId: string): void {
+    const note = this.notes(recordId).find((item) => item.id === noteId);
+    if (!note) return;
     this.noteComposerOpen.set(true);
     this.editingNoteId.set(noteId);
-    this.noteDraft.set(message);
-    this.pinNewNote.set(pinned);
+    this.noteDraft.set(note.message);
+    this.pinNewNote.set(note.pinned);
+    // El editor arranca con los archivos actuales de la nota para poder
+    // quitarlos o sumarles otros; al guardar se manda la lista completa.
+    this.attachments.set(note.attachments);
+    this.editingNoteAttachments.set(note.attachments);
+    this.attachmentReset.update((value) => value + 1);
     this.noteMenuId.set(null);
   }
   cancelNoteEdit(): void {
@@ -1161,6 +1192,7 @@ Consúltalo aquí: ${this.recordLink()}`;
     this.pinNewNote.set(false);
     this.editingNoteId.set(null);
     this.attachments.set([]);
+    this.editingNoteAttachments.set([]);
     this.attachmentReset.update((value) => value + 1);
     this.noteComposerOpen.set(false);
   }
@@ -1676,14 +1708,53 @@ Consúltalo aquí: ${this.recordLink()}`;
     }).length;
   });
 
+  /**
+   * Pagos aplicados a ESTA factura. `invoiceId` es el enlace estable; `invoice`
+   * guarda a veces el folio y a veces el id, según cómo se generó el pago.
+   */
   readonly invoicePayments = computed(() => {
     if (this.moduleKey !== 'invoices') return [];
     const record = this.record();
     if (!record) return [];
-    const invoiceId = record.id;
-    return this.allPayments().filter((p: any) => p.invoice === invoiceId) as any[];
+    const folio = String(record['folio'] ?? '');
+    return this.allPayments().filter(
+      (payment: any) =>
+        payment.invoiceId === record.id ||
+        payment.invoice === record.id ||
+        (!!folio && payment.invoice === folio),
+    ) as any[];
   });
 
+  /** Descarga el comprobante del pago, igual que desde el módulo de Pagos. */
+  downloadPaymentReceipt(payment: OperationalRecord): void {
+    const document = buildPrintableDocument('payments', {
+      record: payment,
+      formatMoney: (value) => this.formatMoney(value),
+      formatDate: (value) => this.formatDocumentDate(value),
+      statusLabel: (value) => this.statusLabel(value as string),
+    });
+    this.paymentMenuId.set(null);
+    if (document) this.pdf.download(document);
+  }
+  /** Pide confirmación antes de borrar: un pago es un registro financiero. */
+  confirmDeletePayment(payment: OperationalRecord): void {
+    this.paymentToDelete.set(payment);
+    this.paymentMenuId.set(null);
+  }
+  /** Elimina el pago del módulo de Pagos; la factura recalcula su saldo sola. */
+  deletePayment(): void {
+    const payment = this.paymentToDelete();
+    if (!payment) return;
+    this.store.archive('payments', payment.id);
+    this.paymentToDelete.set(null);
+  }
+  /** Suma de lo aplicado a esta factura. */
+  readonly invoicePaymentsTotal = computed(() =>
+    this.invoicePayments().reduce(
+      (sum: number, payment: any) => sum + (Number(payment.amount) || 0),
+      0,
+    ),
+  );
   paymentMethodIcon(method: string): string {
     switch (method) {
       case 'Transferencia':

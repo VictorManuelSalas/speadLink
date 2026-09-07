@@ -13,25 +13,7 @@ import {
 } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { runtimeConfig } from '../core/runtime-config';
-
-let googleMapsLoader: Promise<void> | undefined;
-
-function loadGoogleMaps(apiKey: string): Promise<void> {
-  if (typeof google !== 'undefined' && google.maps) return Promise.resolve();
-  if (googleMapsLoader) return googleMapsLoader;
-  googleMapsLoader = new Promise<void>((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&loading=async&v=weekly&language=es&region=MX`;
-    script.async = true;
-    script.onload = () =>
-      typeof google !== 'undefined' && google.maps
-        ? resolve()
-        : reject(new Error('Google Maps no se cargó'));
-    script.onerror = () => reject(new Error('No fue posible descargar Google Maps'));
-    document.head.appendChild(script);
-  });
-  return googleMapsLoader;
-}
+import { loadGoogleMaps } from './google-maps-loader';
 
 @Component({
   selector: 'app-gps-location-picker',

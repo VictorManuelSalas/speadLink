@@ -110,6 +110,8 @@ export class CustomerDetailPage {
   readonly emailSeed = signal<LeadEmailSeed | null>(null);
   readonly noteDraft = signal('');
   readonly noteAttachments = signal<ReadonlyArray<CrmAttachment>>([]);
+  /** Archivos con los que se precarga el selector al editar una nota. */
+  readonly editingNoteAttachments = signal<ReadonlyArray<CrmAttachment>>([]);
   readonly noteAttachmentReset = signal(0);
   readonly pinNewNote = signal(false);
   readonly editingNoteId = signal<string | null>(null);
@@ -544,7 +546,9 @@ export class CustomerDetailPage {
                   ...note,
                   content,
                   pinned,
-                  attachments: [...(note.attachments ?? []), ...this.noteAttachments()],
+                  // Lista final, no agregado: el editor abre con los archivos
+                  // que la nota ya tenía, así que concatenar impediría quitarlos.
+                  attachments: this.noteAttachments(),
                 }
               : note,
           ),
@@ -612,6 +616,11 @@ export class CustomerDetailPage {
     this.noteDraft.set(note.content);
     this.pinNewNote.set(note.pinned);
     this.editingNoteId.set(note.id);
+    // El editor arranca con los archivos actuales de la nota para poder
+    // quitarlos o sumarles otros; al guardar se manda la lista completa.
+    this.noteAttachments.set(note.attachments ?? []);
+    this.editingNoteAttachments.set(note.attachments ?? []);
+    this.noteAttachmentReset.update((value) => value + 1);
     this.noteMenuId.set(null);
   }
   cancelNoteEdit(): void {
@@ -619,6 +628,7 @@ export class CustomerDetailPage {
     this.pinNewNote.set(false);
     this.editingNoteId.set(null);
     this.noteAttachments.set([]);
+    this.editingNoteAttachments.set([]);
     this.noteAttachmentReset.update((value) => value + 1);
   }
   deleteNote(customer: Customer, noteId: string): void {

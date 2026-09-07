@@ -44,6 +44,8 @@ export class RecordNotesSection {
   readonly editingId = signal<string | null>(null);
   readonly menuId = signal<string | null>(null);
   readonly attachments = signal<ReadonlyArray<CrmAttachment>>([]);
+  /** Archivos con los que se precarga el selector al editar una nota. */
+  readonly editingAttachments = signal<ReadonlyArray<CrmAttachment>>([]);
   readonly attachmentReset = signal(0);
   constructor() {
     effect(() => {
@@ -75,10 +77,17 @@ export class RecordNotesSection {
       );
     this.cancel();
   }
-  edit(id: string, message: string, pinned: boolean) {
+  edit(id: string) {
+    const note = this.notes().find((item) => item.id === id);
+    if (!note) return;
     this.editingId.set(id);
-    this.draft.set(message);
-    this.pinned.set(pinned);
+    this.draft.set(note.message);
+    this.pinned.set(note.pinned);
+    // El editor arranca con los archivos actuales de la nota para poder
+    // quitarlos o sumarles otros; al guardar se manda la lista completa.
+    this.attachments.set(note.attachments);
+    this.editingAttachments.set(note.attachments);
+    this.attachmentReset.update((value) => value + 1);
     this.composing.set(true);
     this.menuId.set(null);
   }
@@ -100,6 +109,7 @@ export class RecordNotesSection {
     this.pinned.set(false);
     this.editingId.set(null);
     this.attachments.set([]);
+    this.editingAttachments.set([]);
     this.attachmentReset.update((v) => v + 1);
   }
   size(v: number) {

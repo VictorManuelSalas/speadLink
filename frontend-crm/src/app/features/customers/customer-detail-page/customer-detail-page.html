@@ -251,22 +251,40 @@
                       </button>
                     </div>
                     @for (note of pinnedNotes(c); track note.id) {
-                      <button
-                        class="overview-pinned-note"
-                        type="button"
-                        (click)="openPinnedNote(note.id)"
-                      >
-                        <div>
-                          <span class="avatar avatar--sm">{{ note.author.initials }}</span
-                          ><span
-                            ><b>{{ note.author.fullName }}</b
-                            ><small>{{
-                              note.createdAt | date: 'dd MMM y, HH:mm' : '' : i18n.locale()
-                            }}</small></span
-                          >
-                        </div>
-                        <p>{{ note.content }}</p>
-                      </button>
+                      <div class="overview-pinned-note-group">
+                        <button
+                          class="overview-pinned-note"
+                          type="button"
+                          (click)="openPinnedNote(note.id)"
+                        >
+                          <div>
+                            <span class="avatar avatar--sm">{{ note.author.initials }}</span
+                            ><span
+                              ><b>{{ note.author.fullName }}</b
+                              ><small>{{
+                                note.createdAt | date: 'dd MMM y, HH:mm' : '' : i18n.locale()
+                              }}</small></span
+                            >
+                          </div>
+                          <p>{{ note.content }}</p>
+                        </button>
+                        <!--
+                          Los archivos van fuera del botón: un <a> dentro de un
+                          <button> es HTML inválido y el navegador lo saca del
+                          botón al parsear, rompiendo la tarjeta.
+                        -->
+                        @if (note.attachments?.length) {
+                          <div class="overview-pinned-note__files">
+                            @for (file of note.attachments; track file.id) {
+                              <a [href]="file.url" target="_blank" rel="noopener noreferrer"
+                                ><span>{{ file.mimeType.startsWith('image/') ? '▧' : '▤' }}</span
+                                ><b>{{ file.fileName }}</b
+                                ><small>{{ formatAttachmentSize(file.size) }}</small></a
+                              >
+                            }
+                          </div>
+                        }
+                      </div>
                     }
                   </article>
                 }
@@ -532,6 +550,7 @@
                 <div class="note-attachment-picker">
                   <app-attachment-picker
                     [resetKey]="noteAttachmentReset()"
+                    [initial]="editingNoteAttachments()"
                     (attachmentsChange)="noteAttachments.set($event)"
                   />
                 </div>

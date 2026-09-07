@@ -1,0 +1,108 @@
+<div class="card-heading">
+  <div>
+    <h2>Mapa de clientes</h2>
+    <p>
+      {{ points().length }} clientes ubicados
+      @if (unlocatedCount() > 0) {
+        · {{ unlocatedCount() }} sin coordenadas
+      }
+    </p>
+  </div>
+  <div class="customer-map__filters">
+    <button
+      type="button"
+      class="customer-map__filter"
+      [class.is-active]="statusFilter() === 'all'"
+      (click)="filterBy('all')"
+    >
+      Todos
+    </button>
+    @for (entry of legend(); track entry.status) {
+      <button
+        type="button"
+        class="customer-map__filter"
+        [class.is-active]="statusFilter() === entry.status"
+        (click)="filterBy(entry.status)"
+      >
+        <i [style.background]="entry.color"></i>{{ entry.label }}
+        <b>{{ entry.count }}</b>
+      </button>
+    }
+  </div>
+</div>
+
+<div class="customer-map__canvas">
+  @if (loading()) {
+    <div class="customer-map__state">Cargando ubicaciones…</div>
+  } @else if (!points().length) {
+    <div class="customer-map__state">Ningún cliente tiene coordenadas capturadas todavía.</div>
+  }
+
+  <!--
+    El contenedor nunca se oculta: Google Maps no se inicializa sobre un div
+    invisible. Mientras no haya mapa, la vista esquemática lo tapa por encima.
+  -->
+  <div #mapContainer class="customer-map__gmap"></div>
+
+  @if (mode() !== 'map' && !loading()) {
+    <div class="customer-map__plot">
+      @for (point of visiblePoints(); track point.id) {
+        <button
+          type="button"
+          class="customer-map__pin"
+          [class.is-selected]="selected()?.id === point.id"
+          [style.--pin-color]="point.color"
+          [style.left.%]="point.plotX"
+          [style.top.%]="point.plotY"
+          [attr.aria-label]="point.name + ', ' + point.statusLabel"
+          (click)="select(point)"
+        >
+          <span class="customer-map__avatar">{{ point.initials }}</span>
+          <span class="customer-map__pin-name">{{ point.name }}</span>
+        </button>
+      }
+    </div>
+  }
+
+  @if (selected(); as point) {
+    <aside class="customer-map__detail">
+      <button type="button" class="customer-map__close" (click)="clearSelection()" aria-label="Cerrar">
+        ✕
+      </button>
+      <div class="customer-map__detail-head">
+        <span class="customer-map__avatar customer-map__avatar--lg" [style.--pin-color]="point.color">{{
+          point.initials
+        }}</span>
+        <div>
+          <b>{{ point.name }}</b>
+          <small>{{ point.id }}</small>
+        </div>
+      </div>
+      <span class="customer-map__badge" [style.color]="point.color">
+        <i [style.background]="point.color"></i>{{ point.statusLabel }}
+      </span>
+      <dl class="customer-map__facts">
+        <div><dt>Plan</dt><dd>{{ point.plan }} · {{ point.speed }}</dd></div>
+        <div><dt>Dirección</dt><dd>{{ point.address }}</dd></div>
+        <div><dt>Comunidad</dt><dd>{{ point.community }}</dd></div>
+        <div><dt>Técnico</dt><dd>{{ point.technician }}</dd></div>
+        <div>
+          <dt>Saldo</dt>
+          <dd [class.customer-map__due]="point.balance > 0">
+            {{ point.balance | currency: 'MXN' : 'symbol-narrow' : '1.0-0' : i18n.locale() }}
+          </dd>
+        </div>
+      </dl>
+      <div class="customer-map__detail-actions">
+        <a class="button button--primary" [routerLink]="['/customers', point.id]">Ver cliente</a>
+        <a class="button" [href]="googleMapsUrlFor(point)" target="_blank" rel="noopener">
+          Cómo llegar ↗
+        </a>
+      </div>
+    </aside>
+  }
+</div>
+
+@if (message()) {
+  <p class="customer-map__message">{{ message() }}</p>
+}

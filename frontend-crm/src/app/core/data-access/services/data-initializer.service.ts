@@ -206,39 +206,43 @@ export class DataInitializerService {
             dueDate: invoice.dueAt,
             total: invoice.total,
             status: status[invoice.status] ?? 'PENDING',
-            notes: `${customer.plan} · ${customer.speed}`,
+            description: `${customer.plan} · ${customer.speed}`,
           }) as OperationalRecord,
       ),
     );
   }
 
-  /** Pagos anidados en cada cliente, expuestos como registros de Pagos. */
+  /**
+   * Pagos del cliente, tomados de las partidas de cada factura.
+   *
+   * No se usa `customer.payments` porque sus ids (`PAG-6100`) no coinciden con
+   * los de las facturas (`PAG-6100-1`), así que ningún pago quedaba ligado a su
+   * factura y las fichas se veían sin pagos.
+   */
   private mapCustomerPaymentsToOperationalRecords(): OperationalRecord[] {
     const method: Readonly<Record<string, string>> = {
       Transferencia: 'BANK_TRANSFER',
       Efectivo: 'CASH',
       Tarjeta: 'CREDIT_CARD',
     };
-    return CUSTOMERS.flatMap((customer) => {
-      const invoiceOf = (paymentId: string): string =>
-        customer.invoices.find((invoice) =>
-          (invoice.payments ?? []).some((payment) => payment.id === paymentId),
-        )?.id ?? '';
-      return customer.payments.map(
-        (payment) =>
-          ({
-            id: payment.id,
-            clientId: customer.id,
-            client: customer.name,
-            invoiceId: invoiceOf(payment.id),
-            invoice: invoiceOf(payment.id),
-            amount: payment.amount,
-            method: method[payment.method] ?? 'OTHER',
-            reference: payment.reference,
-            paidAt: payment.date,
-          }) as OperationalRecord,
-      );
-    });
+    return CUSTOMERS.flatMap((customer) =>
+      customer.invoices.flatMap((invoice) =>
+        (invoice.payments ?? []).map(
+          (payment) =>
+            ({
+              id: payment.id,
+              clientId: customer.id,
+              client: customer.name,
+              invoiceId: invoice.id,
+              invoice: invoice.id,
+              amount: payment.amount,
+              method: method[payment.method] ?? 'OTHER',
+              reference: payment.reference,
+              paidAt: payment.date,
+            }) as OperationalRecord,
+        ),
+      ),
+    );
   }
 
   private mapInvoicesToOperationalRecords(): OperationalRecord[] {
@@ -253,7 +257,7 @@ export class DataInitializerService {
       taxAmount: invoice.taxAmount,
       total: invoice.total,
       status: invoice.status,
-      notes: invoice.notes,
+      description: invoice.description,
     } as OperationalRecord));
   }
 

@@ -37,13 +37,50 @@ export class CalendarPage {
     { value: 'USR-002', label: 'Carlos Mendoza' },
     { value: 'USR-003', label: 'María García' },
   ];
-  readonly days = Array.from({ length: 35 }, (_, index) => {
-    const date = new Date(2026, 5, 29 + index);
-    return {
-      day: date.getDate(),
-      current: date.getMonth() === 6,
-      iso: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`,
-    };
+  /**
+   * "Hoy" de la demo. Los eventos sembrados viven en julio de 2026, así que
+   * anclar el botón a la fecha real del sistema abriría un mes vacío.
+   */
+  readonly todayIso = '2026-07-18';
+  private readonly monthNames = [
+    'Enero',
+    'Febrero',
+    'Marzo',
+    'Abril',
+    'Mayo',
+    'Junio',
+    'Julio',
+    'Agosto',
+    'Septiembre',
+    'Octubre',
+    'Noviembre',
+    'Diciembre',
+  ];
+  /** Mes en pantalla; `month` es 0-based como en `Date`. */
+  readonly viewMonth = signal(monthOf(this.todayIso));
+  readonly monthLabel = computed(
+    () => `${this.monthNames[this.viewMonth().month]} ${this.viewMonth().year}`,
+  );
+  /** Prefijo `YYYY-MM` del mes visible, para filtrar eventos por fecha ISO. */
+  readonly monthKey = computed(
+    () => `${this.viewMonth().year}-${String(this.viewMonth().month + 1).padStart(2, '0')}`,
+  );
+  readonly days = computed(() => {
+    const { year, month } = this.viewMonth();
+    const first = new Date(year, month, 1);
+    // La rejilla empieza en lunes y `getDay()` da 0 para domingo.
+    const offset = (first.getDay() + 6) % 7;
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    // Filas completas: unos meses caben en 5 semanas y otros necesitan 6.
+    const cells = Math.ceil((offset + daysInMonth) / 7) * 7;
+    return Array.from({ length: cells }, (_, index) => {
+      const date = new Date(year, month, 1 - offset + index);
+      return {
+        day: date.getDate(),
+        current: date.getMonth() === month,
+        iso: isoDate(date),
+      };
+    });
   });
   readonly events = this.calendarStore.events;
   readonly activeFilter = signal<string>('ALL');
@@ -52,7 +89,7 @@ export class CalendarPage {
   readonly editingEventId = signal<string | null>(null);
   readonly draft = signal<Record<string, string>>({ type: 'INSTALLATION', assignedTo: 'USR-001' });
   readonly monthEvents = computed(() =>
-    this.events().filter((event) => event.startsAt.startsWith('2026-07')),
+    this.events().filter((event) => event.startsAt.startsWith(this.monthKey())),
   );
   readonly completedCount = computed(
     () => this.events().filter((event) => event.status === 'COMPLETED').length,
@@ -74,6 +111,16 @@ export class CalendarPage {
       )
       .sort((a, b) => a.startsAt.localeCompare(b.startsAt)),
   );
+  /** Avanza o retrocede meses; `Date` ya maneja el salto de año. */
+  shiftMonth(delta: number): void {
+    this.viewMonth.update(({ year, month }) => {
+      const moved = new Date(year, month + delta, 1);
+      return { year: moved.getFullYear(), month: moved.getMonth() };
+    });
+  }
+  goToToday(): void {
+    this.viewMonth.set(monthOf(this.todayIso));
+  }
   eventsFor(day: string): ReadonlyArray<CalendarEvent> {
     return this.events().filter(
       (event) =>
@@ -186,4 +233,16 @@ export class CalendarPage {
       event?.id === id ? { ...event, status: 'COMPLETED' } : event,
     );
   }
+}
+
+/** `YYYY-MM-DD` en hora local: `toISOString()` desplazaría el día por la zona. */
+function isoDate(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(
+    date.getDate(),
+  ).padStart(2, '0')}`;
+}
+
+function monthOf(iso: string): { year: number; month: number } {
+  const [year, month] = iso.split('-').map(Number);
+  return { year, month: month - 1 };
 }

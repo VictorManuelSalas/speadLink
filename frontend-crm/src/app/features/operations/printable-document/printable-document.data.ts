@@ -138,7 +138,7 @@ function buildInvoice(context: DocumentContext): PrintableDocument {
       value: formatMoney(balance),
       strong: true,
     },
-    notes: text(record['notes'], ''),
+    notes: text(record['description'] ?? record['notes'], ''),
     disclaimer:
       'Documento informativo emitido por el CRM. No es un comprobante fiscal digital (CFDI).',
   };

@@ -329,19 +329,8 @@
         flex-direction: column;
         gap: 12px;
       }
-      .overview-pinned-note {
-        width: 100%;
-        padding: 14px 16px;
-        border: 1px solid #fde68a;
-        border-radius: 10px;
-        background: #fffbeb;
-        text-align: left;
-      }
-      .overview-pinned-note:hover,
-      .overview-pinned-note:focus-visible {
-        border-color: #f59e0b;
-        box-shadow: 0 6px 18px rgba(180, 83, 9, 0.12);
-      }
+      /* La tarjeta y sus archivos se estilan en styles.css: los comparte con la
+         ficha de registro operativo. */
       .overview-pinned-note > div {
         display: flex;
         align-items: center;

@@ -168,7 +168,7 @@ export interface InvoiceRecord extends BaseOperationalRecord {
   taxAmount: number;
   total: number;
   status: InvoiceStatus;
-  notes?: string;
+  description?: string;
   // Computed/related
   paidAmount?: number; // Total of all payments
   remainingAmount?: number; // total - paidAmount

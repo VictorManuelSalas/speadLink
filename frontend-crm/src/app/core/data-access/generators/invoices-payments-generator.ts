@@ -45,7 +45,7 @@ export class InvoicesGenerator extends BaseGenerator<InvoiceRecord> {
         taxAmount: taxAmount,
         total: total,
         status: status,
-        notes: `Factura por servicios de Internet del mes`,
+        description: `Factura por servicios de Internet del mes`,
       },
     );
   }
@@ -81,7 +81,7 @@ export class InvoicesGenerator extends BaseGenerator<InvoiceRecord> {
           taxAmount: taxAmount,
           total: subtotal + taxAmount,
           status: 'PAID',
-          notes: `Factura de servicio del mes`,
+          description: `Factura de servicio del mes`,
         },
       );
 
@@ -98,10 +98,26 @@ export class InvoicesGenerator extends BaseGenerator<InvoiceRecord> {
 
 export class PaymentsGenerator extends BaseGenerator<PaymentRecord> {
   private customerIds = LookupMapper.getAllCustomerIds();
+  /** Facturas reales a las que aplicar los pagos; se inyectan antes de generar. */
+  private invoicePool: ReadonlyArray<{ id: string; folio: string; clientId: string; client?: string }> = [];
+
+  /**
+   * Un pago debe aplicarse a una factura que existe. Sin este pool,
+   * `IdGenerator` (contador compartido por prefijo) inventaría ids `INV-*`
+   * fuera del rango emitido y ninguna factura mostraría sus pagos.
+   */
+  setInvoicePool(
+    invoices: ReadonlyArray<{ id: string; folio: string; clientId: string; client?: string }>,
+  ): void {
+    this.invoicePool = invoices;
+  }
 
   generate(index: number = 0): PaymentRecord {
-    const customerId = this.customerIds[index % this.customerIds.length];
-    const invoiceId = IdGenerator.generate('INV', 4480 + index);
+    const invoice = this.invoicePool.length
+      ? this.invoicePool[index % this.invoicePool.length]
+      : null;
+    const customerId = invoice?.clientId ?? this.customerIds[index % this.customerIds.length];
+    const invoiceId = invoice?.id ?? IdGenerator.generate('INV', 4480 + index);
     const method = FakerHelpers.randomElement([
       'CASH',
       'BANK_TRANSFER',
@@ -113,9 +129,9 @@ export class PaymentsGenerator extends BaseGenerator<PaymentRecord> {
       IdGenerator.generate('PAY', 74000 + index),
       {
         clientId: customerId,
-        client: LookupMapper.getCustomerName(customerId),
+        client: invoice?.client ?? LookupMapper.getCustomerName(customerId),
         invoiceId: invoiceId,
-        invoice: `FAC-${customerId}-${index}`,
+        invoice: invoice?.folio ?? `FAC-${customerId}-${index}`,
         amount: FakerHelpers.randomAmount(300, 3500),
         method: method,
         reference: FakerHelpers.randomPaymentReference(),
@@ -209,9 +225,13 @@ export class PaymentsGenerator extends BaseGenerator<PaymentRecord> {
 
     for (let i = 0; i < count; i++) {
       const record = this.generate(i);
-      const customerId = customers[i % customers.length];
-      record.clientId = customerId;
-      record.client = LookupMapper.getCustomerName(customerId);
+      // Si no hay facturas inyectadas se reparte por cliente; si las hay, el
+      // cliente ya viene de la factura y reasignarlo rompería el vínculo.
+      if (!this.invoicePool.length) {
+        const customerId = customers[i % customers.length];
+        record.clientId = customerId;
+        record.client = LookupMapper.getCustomerName(customerId);
+      }
       payments.push(record);
     }
 

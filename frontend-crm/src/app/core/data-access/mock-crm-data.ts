@@ -245,6 +245,15 @@ const detail = (id: string, offset: number) => ({
   ],
 });
 
+/**
+ * Coordenadas de la antena emisora. Todos los clientes cuelgan de este enlace,
+ * así que sus coordenadas viven dentro de su radio de cobertura (~2 km): un
+ * cliente lejos de la antena no tendría servicio y falsearía el mapa.
+ */
+export const ANTENNA_LOCATION = { latitude: 25.791999, longitude: -103.621043 } as const;
+
+// Cada seed termina con su latitud y longitud: sin ellas el mapa de clientes
+// apilaría todos los pines sobre un mismo punto.
 const seeds = [
   [
     'SL-1042',
@@ -253,7 +262,7 @@ const seeds = [
     'maria.lopez@email.mx',
     '55 1234 8052',
     'Av. Hidalgo 28',
-    'Tepotzotlán, Estado de México',
+    'Matamoros, Coahuila',
     'active',
     'Intermedio',
     '10 Mbps',
@@ -262,6 +271,8 @@ const seeds = [
     0,
     'Carlos Mendoza',
     'Hace 18 min',
+    25.7968,
+    -103.6142,
   ],
   [
     'SL-1043',
@@ -270,7 +281,7 @@ const seeds = [
     'administracion@laesperanza.mx',
     '55 8120 4431',
     'Calle Morelos 114',
-    'Cuautitlán Izcalli, Estado de México',
+    'Ejido La Luz, Matamoros, Coahuila',
     'active',
     'Custom',
     '15 Mbps',
@@ -279,6 +290,8 @@ const seeds = [
     0,
     'Ana Torres',
     'Hace 1 h',
+    25.7856,
+    -103.6281,
   ],
   [
     'SL-1044',
@@ -287,7 +300,7 @@ const seeds = [
     'jose.hernandez@email.mx',
     '55 4421 7603',
     'Priv. Las Flores 7',
-    'Zumpango, Estado de México',
+    'Congregación Hidalgo, Matamoros, Coahuila',
     'pending',
     'Básico',
     '5 Mbps',
@@ -296,6 +309,8 @@ const seeds = [
     300,
     'Carlos Mendoza',
     'Ayer',
+    25.8021,
+    -103.6259,
   ],
   [
     'SL-1045',
@@ -304,7 +319,7 @@ const seeds = [
     'contacto@papeleriaelfaro.mx',
     '55 9022 1187',
     'Plaza Juárez Local 4',
-    'Huehuetoca, Estado de México',
+    'Ejido El Cambio, Matamoros, Coahuila',
     'suspended',
     'Intermedio',
     '10 Mbps',
@@ -313,6 +328,8 @@ const seeds = [
     700,
     'Diego Ramírez',
     'Hace 3 días',
+    25.7883,
+    -103.6118,
   ],
   [
     'SL-1046',
@@ -321,7 +338,7 @@ const seeds = [
     'ale.martinez@email.mx',
     '55 6630 2944',
     'Paseo de los Pinos 42',
-    'Tultepec, Estado de México',
+    'Ejido Solima, Matamoros, Coahuila',
     'active',
     'Custom',
     '15 Mbps',
@@ -330,6 +347,8 @@ const seeds = [
     0,
     'Ana Torres',
     'Hace 5 h',
+    25.7994,
+    -103.6335,
   ],
   [
     'SL-1047',
@@ -338,7 +357,7 @@ const seeds = [
     'citas@dentalsonrie.mx',
     '55 3108 7762',
     'Av. del Trabajo 205',
-    'Coacalco, Estado de México',
+    'Ejido Santa Fe, Matamoros, Coahuila',
     'active',
     'Intermedio',
     '10 Mbps',
@@ -347,6 +366,8 @@ const seeds = [
     0,
     'Diego Ramírez',
     'Ayer',
+    25.7817,
+    -103.6172,
   ],
   [
     'SL-1048',
@@ -355,7 +376,7 @@ const seeds = [
     'ricardo.salgado@email.mx',
     '55 7714 0290',
     'Cerrada Cedros 16',
-    'Jaltenco, Estado de México',
+    'Ejido Purísima, Matamoros, Coahuila',
     'inactive',
     'Básico',
     '5 Mbps',
@@ -364,6 +385,8 @@ const seeds = [
     0,
     'Carlos Mendoza',
     'Hace 12 días',
+    25.8055,
+    -103.6188,
   ],
 ] as const;
 
@@ -389,7 +412,9 @@ export const CUSTOMERS: ReadonlyArray<Customer> = seeds.map((seed, index) => ({
   technician: seed[13],
   lastActivity: seed[14],
   installDate: `2025-01-${String(15 + index).padStart(2, '0')}T16:40:00-06:00`,
-  gpsLocation: '19.7134, -99.2231',
+  latitude: seed[15],
+  longitude: seed[16],
+  gpsLocation: `${seed[15]}, ${seed[16]}`,
   ipAddress: `10.20.4.${20 + index}`,
   ...detail(seed[0], index),
 }));

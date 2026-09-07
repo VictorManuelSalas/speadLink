@@ -655,17 +655,15 @@
         flex-direction: column;
         gap: 10px;
       }
-      .overview-pinned-note {
-        width: 100%;
-        padding: 13px;
-        border: 1px solid #fde68a;
-        border-radius: 9px;
-        background: #fffbeb;
-        color: #111827;
-        text-align: left;
-      }
-      .overview-pinned-note:hover {
-        border-color: #f59e0b;
+      /* La tarjeta y sus archivos se estilan en styles.css (las comparte con la
+         ficha de cliente y este archivo ya roza el budget de 30 kB). */
+      .overview-pinned-note__files span {
+        padding: 2px 5px;
+        border-radius: 4px;
+        background: #fef3c7;
+        color: #92400e;
+        font-size: 8px;
+        font-weight: 700;
       }
       .overview-pinned-note > div {
         display: flex;
@@ -941,11 +939,11 @@
         top: 52px;
         right: 14px;
       }
+      /* Fijo al viewport: el contenedor de la tabla tiene overflow y lo cortaría. */
       .payment-action-menu {
-        top: 100%;
-        right: 0;
+        position: fixed;
         z-index: 1300;
-        margin-top: 4px;
+        width: 168px;
       }
       .note-attachments {
         padding: 0 30px 22px;

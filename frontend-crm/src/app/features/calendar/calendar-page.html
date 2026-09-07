@@ -12,7 +12,7 @@
         <span class="metric-icon metric-icon--blue">▣</span
         ><span
           ><small>Eventos del mes</small><b>{{ monthEvents().length }}</b
-          ><em>Julio 2026</em></span
+          ><em>{{ monthLabel() }}</em></span
         >
       </article>
       <article>
@@ -42,10 +42,10 @@
       <article class="card calendar-card">
         <header class="calendar-toolbar">
           <div class="month-navigation">
-            <button type="button" aria-label="Mes anterior">‹</button
-            ><button type="button">Hoy</button
-            ><button type="button" aria-label="Mes siguiente">›</button>
-            <h2>Julio 2026</h2>
+            <button type="button" aria-label="Mes anterior" (click)="shiftMonth(-1)">‹</button
+            ><button type="button" (click)="goToToday()">Hoy</button
+            ><button type="button" aria-label="Mes siguiente" (click)="shiftMonth(1)">›</button>
+            <h2>{{ monthLabel() }}</h2>
           </div>
           <div class="filters">
             @for (filter of filters; track filter.value) {
@@ -65,12 +65,8 @@
           }
         </div>
         <div class="month-grid">
-          @for (day of days; track day.iso) {
-            <div
-              class="day"
-              [class.outside]="!day.current"
-              [class.today]="day.iso === '2026-07-18'"
-            >
+          @for (day of days(); track day.iso) {
+            <div class="day" [class.outside]="!day.current" [class.today]="day.iso === todayIso">
               <span class="day-number">{{ day.day }}</span>
               <div class="day-events">
                 @for (event of eventsFor(day.iso); track event.id) {

@@ -116,6 +116,8 @@ export class DataGenerator {
     this.contractsGen.setServiceCatalog(services);
     const contracts = this.contractsGen.generateMultiple(config.contracts);
     const invoices = this.invoicesGen.generateMultiple(config.invoices);
+    // Los pagos se aplican a facturas que existen, no a ids inventados.
+    this.paymentsGen.setInvoicePool(invoices);
     const payments = this.paymentsGen.generateBatch(config.payments);
     const expenses = this.expensesGen.generateMultiple(config.expenses);
 

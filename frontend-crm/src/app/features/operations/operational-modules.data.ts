@@ -559,7 +559,7 @@ export const OPERATIONAL_MODULES: Readonly<
         type: 'select',
         options: ['DRAFT', 'PENDING', 'PAID', 'OVERDUE', 'CANCELLED'],
       },
-      { key: 'notes', label: 'Notas', type: 'text', maxLength: 1000 },
+      { key: 'description', label: 'Descripción', type: 'text', maxLength: 1000 },
     ],
     records: [
       {

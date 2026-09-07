@@ -16,6 +16,7 @@
           ></textarea>
           <app-attachment-picker
             [resetKey]="attachmentReset()"
+            [initial]="editingAttachments()"
             (attachmentsChange)="attachments.set($event)"
           />
           <footer>
@@ -67,8 +68,7 @@
                     (click)="togglePin(note.id)"
                   >
                     {{ note.pinned ? 'Desfijar' : 'Fijar en resumen' }}</button
-                  ><button type="button" (click)="edit(note.id, note.message, note.pinned)">
-                    Editar</button
+                  ><button type="button" (click)="edit(note.id)">Editar</button
                   ><button class="danger" type="button" (click)="remove(note.id)">Eliminar</button>
                 </div>
               }

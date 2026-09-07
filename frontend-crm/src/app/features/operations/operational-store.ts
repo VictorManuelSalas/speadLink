@@ -182,6 +182,11 @@ export class OperationalStore {
     );
   }
 
+  /**
+   * `attachments` es la lista final de la nota, no un agregado: el editor abre
+   * con los archivos que ya tenía, así que lo que llega aquí ya refleja lo que
+   * el usuario quitó o añadió. Concatenar haría imposible eliminar un archivo.
+   */
   updateNote(
     recordId: string,
     noteId: string,
@@ -192,9 +197,7 @@ export class OperationalStore {
     this.notes.update((notes) => ({
       ...notes,
       [recordId]: (notes[recordId] ?? []).map((note) =>
-        note.id === noteId
-          ? { ...note, message, pinned, attachments: [...note.attachments, ...attachments] }
-          : note,
+        note.id === noteId ? { ...note, message, pinned, attachments: [...attachments] } : note,
       ),
     }));
     this.addActivity(recordId, 'Nota actualizada', message, 'blue', 'Notas', 'EDIT');

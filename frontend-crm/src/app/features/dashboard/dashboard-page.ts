@@ -5,10 +5,11 @@ import { CRM_DATA } from '../../core/data-access/crm-data';
 import { LanguageService } from '../../core/i18n/language.service';
 import { DashboardSummary } from '../../core/models/customer';
 import { KpiCard } from '../../shared/kpi-card';
+import { CustomerMapCard } from './customer-map-card/customer-map-card';
 
 @Component({
   selector: 'app-dashboard-page',
-  imports: [CurrencyPipe, DecimalPipe, RouterLink, KpiCard],
+  imports: [CurrencyPipe, DecimalPipe, RouterLink, KpiCard, CustomerMapCard],
   templateUrl: './dashboard-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
