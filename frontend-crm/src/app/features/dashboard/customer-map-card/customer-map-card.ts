@@ -268,7 +268,14 @@ export class CustomerMapCard implements AfterViewInit, OnDestroy {
       // pines, pero evita el parpadeo en otra parte del país al abrir.
       center: { lat: ANTENNA_LOCATION.latitude, lng: ANTENNA_LOCATION.longitude },
       zoom: 13,
-      mapTypeControl: false,
+      // Mapa y satélite: en zona rural la vista aérea ayuda a ubicar el predio
+      // del cliente, donde el callejero apenas trae calles.
+      mapTypeControl: true,
+      mapTypeControlOptions: {
+        mapTypeIds: [google.maps.MapTypeId.ROADMAP, google.maps.MapTypeId.SATELLITE],
+        style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+        position: google.maps.ControlPosition.TOP_RIGHT,
+      },
       streetViewControl: false,
       fullscreenControl: true,
       clickableIcons: false,
