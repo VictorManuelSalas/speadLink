@@ -198,4 +198,4 @@ Este proyecto se distribuye bajo licencia MIT.
 
 ## ✨ Autor
 
-**SpeadLink** – Sistema desarrollado para la gestión profesional del negocio.
+**SpeadLink** – Sistema desarrollado para la gestión profesional del negocio 📜.
