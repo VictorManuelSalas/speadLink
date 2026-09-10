@@ -263,7 +263,8 @@ function parseDate(dateStr) {
   const [day, month, year] = dateStr.split('-');
   return new Date(year, month - 1, day);
 }
-let currentSort = false
+let currentSort = false;
+let currentInvoices = [];
 
 function sortTableByDate() {
 
@@ -289,6 +290,7 @@ async function getInvoices(filters_ = null) {
 
   try {
     const invoices = await fetchInvoices(clientId);
+    currentInvoices = invoices.data || [];
 
     invoices.data.forEach(element => {
       console.log(element);
@@ -318,13 +320,16 @@ async function getInvoices(filters_ = null) {
       else if (status === "Canceled") statusClass = "status-gray";
 
       const limitDate = inv.dueDate.split("T")[0];
+      const installationDate = inv.installationDate.split("T")[0];
       table.innerHTML += `
         <tr>
           <td>${inv.invoiceNumber}</td>
           <td>${inv.customerId?.name || "—"}</td>
           <td><b class="${statusClass} status">${status == "Processed" ? "Pendiente" : status
         }</b></td>
+         
           <td>${getMonth(inv.issueDate)}</td>
+          <td>${installationDate}</td>
           <td>${limitDate}</td>
           <td>$${inv.total} ${inv.currency}</td>
           <td>${inv.sendNotification ? "✅" : "❌"}  </td>
@@ -334,6 +339,8 @@ async function getInvoices(filters_ = null) {
             onclick="sendNotification('${customerId}', '${_id}', ${total}, '${dueDate}')" ${inv.sendNotification ? 'disabled' : ''}>✉️</button>
             <button data-text="Eliminar factura" class="btnsText" id="deleteInvoice" style="background-color: rgb(250, 137, 137);" onclick="deleteInvoice('${inv._id
         }', '${inv.invoiceNumber}')">🚫</button>
+
+         <button data-text="Copiar Texto De Cobro" class="btnsText" id="copyText" onclick="copyText('${inv._id}')">📜</button> 
           </td>
         </tr>
       `;
@@ -372,6 +379,60 @@ const invoicesFiltered = (data, filters_) => {
 // ---------- PDF ----------
 function downloadPDF(invoiceId) {
   window.open(`${API_URL}/payments/pdf?invoice_id=${invoiceId}`, "_blank");
+}
+
+async function copyText(invoiceId) {
+  const invoice = currentInvoices.find((item) => item._id === invoiceId);
+  const customerName = invoice?.customerId?.name || "[Nombre del cliente]";
+  const month = invoice?.issueDate ? getMonth(invoice.issueDate) : "[mes]";
+  const amount = invoice ? `$${invoice.total} ${invoice.currency || "MXN"}` : "[Monto]";
+  const dueDate = invoice?.dueDate
+    ? new Date(`${invoice.dueDate.split("T")[0]}T00:00:00`).toLocaleDateString("es-MX")
+    : "[Fecha]";
+
+  const payDate = invoice?.installationDate
+    ? `${invoice.installationDate.split("T")[0].replace(/-/g, "/")}`
+    : "[Fecha]";
+
+//  const installationDate = inv.installationDate.split("T")[0];
+
+  const message = `📢 Recordatorio de Pago - Internet SpeadLink
+Hola ${customerName} 👋, te escribimos para recordarte que aún está pendiente el pago del servicio de Internet correspondiente al mes de ${month}.
+
+💵 Monto: ${amount}
+📅 Fecha de pago: ${payDate}
+📅 Fecha límite de pago: ${dueDate}
+💳 Puedes pagar por: transferencia, depósito o efectivo.
+
+Por favor, realiza el pago antes de la fecha para evitar la suspensión del servicio.
+Si ya realizaste el pago, envíanos el comprobante por aquí ✅
+
+¡Gracias por tu preferencia!
+📲 SPEADLINK
+📞 +52 871 615 6932`;
+
+  try {
+    // Clipboard API funciona en HTTPS y en la mayoría de navegadores modernos.
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(message);
+    } else {
+      // Alternativa para navegadores móviles o contextos sin Clipboard API.
+      const textArea = document.createElement("textarea");
+      textArea.value = message;
+      textArea.setAttribute("readonly", "");
+      textArea.style.position = "fixed";
+      textArea.style.opacity = "0";
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand("copy");
+      textArea.remove();
+    }
+
+    Swal.fire("Texto copiado", "El recordatorio de pago ya está en el portapapeles.", "success");
+  } catch (error) {
+    console.error("No se pudo copiar el recordatorio:", error);
+    Swal.fire("No se pudo copiar", "Selecciona y copia el texto manualmente.", "error");
+  }
 }
 function deleteInvoice(invoiceId, invoiceNumber) {
   try {

@@ -23,9 +23,8 @@ async function getCustomerData() {
     console.log("customer", customerDetails);
     clientInfo.innerHTML = `
      <h3>👤 ${customerDetails.name}</h3>
-    <div class="plan">📦 Plan: <strong>${customerDetails.plan}</strong> · ${
-      customerDetails.megas
-    }mbts</div>
+    <div class="plan">📦 Plan: <strong>${customerDetails.plan}</strong> · ${customerDetails.megas
+      }mbts</div>
 
     <div class="info">
       <span>📧 ${customerDetails.email || "Sin correo"}</span>
@@ -81,14 +80,15 @@ async function getInvoices() {
       else if (inv.status === "Processed") statusClass = "status-yellow";
       else if (inv.status === "Canceled") statusClass = "status-gray";
       const limitDate = inv.dueDate.split("T")[0];
+      const installationDate = inv.installationDate.split("T")[0];
       table.innerHTML += `
         <tr>
           <td>${inv.invoiceNumber}</td>
           <td>${inv.customerId?.name || "—"}</td>
-         <td><b class="${statusClass} status">${
-        inv.status == "Processed" ? "Pendiente" : inv.status
-      }</b></td>
+         <td><b class="${statusClass} status">${inv.status == "Processed" ? "Pendiente" : inv.status
+        }</b></td>
           <td>${getMonth(inv.issueDate)}</td>
+          <td>${installationDate}</td>
           <td>${limitDate}</td>
           <td>$${inv.total} ${inv.currency}</td>
           <td>
