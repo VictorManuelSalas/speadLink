@@ -334,6 +334,7 @@ async function getInvoices(filters_ = null) {
           <td>$${inv.total} ${inv.currency}</td>
           <td>${inv.sendNotification ? "✅" : "❌"}  </td>
           <td>
+           <button data-text="Marcar Como Notificado" class="btnsText" id="markAsNotified" onclick="markAsNotified('${inv._id}')">✅</button> 
             <button data-text="Descargar PDF" class="btnsText" id="downloadPDF" onclick="downloadPDF('${inv._id}')">🧾</button> 
             <button data-text="Notificar al cliente" class="btnsText" id="sendNotification" style="background-color: rgb(255, 252, 99);" 
             onclick="sendNotification('${customerId}', '${_id}', ${total}, '${dueDate}')" ${inv.sendNotification ? 'disabled' : ''}>✉️</button>
@@ -381,6 +382,26 @@ function downloadPDF(invoiceId) {
   window.open(`${API_URL}/payments/pdf?invoice_id=${invoiceId}`, "_blank");
 }
 
+async function markAsNotified(invoiceId) {
+  try {
+    const response = await fetch(`${API_URL}/payments/${invoiceId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sendNotification: true }),
+    });
+
+    if (response.ok) {
+      alert("Factura marcada como notificada.");
+      getInvoices();
+    } else {
+      alert("Error al marcar la factura como notificada.");
+    }
+  } catch (error) {
+    console.error("Error al marcar la factura como notificada:", error);
+    alert("Error al marcar la factura como notificada.");
+  }
+}
+
 async function copyText(invoiceId) {
   const invoice = currentInvoices.find((item) => item._id === invoiceId);
   const customerName = invoice?.customerId?.name || "[Nombre del cliente]";
@@ -394,7 +415,7 @@ async function copyText(invoiceId) {
     ? `${invoice.installationDate.split("T")[0].replace(/-/g, "/")}`
     : "[Fecha]";
 
-//  const installationDate = inv.installationDate.split("T")[0];
+  //  const installationDate = inv.installationDate.split("T")[0];
 
   const message = `📢 Recordatorio de Pago - Internet SpeadLink
 Hola ${customerName} 👋, te escribimos para recordarte que aún está pendiente el pago del servicio de Internet correspondiente al mes de ${month}.
