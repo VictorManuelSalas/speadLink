@@ -407,6 +407,8 @@ Hola ${customerName} 👋, te escribimos para recordarte que aún está pendient
 Por favor, realiza el pago antes de la fecha para evitar la suspensión del servicio.
 Si ya realizaste el pago, envíanos el comprobante por aquí ✅
 
+Descarga tu recibo: ${API_URL}/payments/pdf?invoice_id=${invoiceId}
+
 ¡Gracias por tu preferencia!
 📲 SPEADLINK
 📞 +52 871 615 6932`;
